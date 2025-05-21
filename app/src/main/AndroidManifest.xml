@@ -13,8 +13,11 @@
         android:theme="@style/Theme.CoLearnHub"
         tools:targetApi="31">
         <activity
+            android:name=".LoginActivity"
+            android:exported="false" />
+        <activity
             android:name=".HomeActivity"
-            android:label="Home"/>
+            android:label="Home" />
         <activity
             android:name=".MainActivity"
             android:exported="true">

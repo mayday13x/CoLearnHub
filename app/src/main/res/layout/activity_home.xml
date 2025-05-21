@@ -5,13 +5,6 @@
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".HomeActivity">
+    tools:context=".LoginActivity">
 
-    <TextView
-        android:id="@+id/textView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Home activity"
-        tools:layout_editor_absoluteX="181dp"
-        tools:layout_editor_absoluteY="384dp" />
 </androidx.constraintlayout.widget.ConstraintLayout>
