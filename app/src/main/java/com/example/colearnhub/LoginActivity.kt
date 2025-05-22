@@ -1,5 +1,6 @@
 package com.example.colearnhub
 
+import android.content.Intent
 import android.graphics.Color
 import android.os.Bundle
 import android.text.SpannableString
@@ -39,7 +40,10 @@ class LoginActivity : AppCompatActivity() {
             Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
         )
         signUpText.text = spannable
-
+        signUpText.setOnClickListener {
+            val intent = Intent(this, SignupStep1Activity::class.java)
+            startActivity(intent)
+        }
 
         val passwordInputLayout = findViewById<TextInputLayout>(R.id.passwordInputLayout)
         val passwordEditText = findViewById<TextInputEditText>(R.id.passwordEditText)
