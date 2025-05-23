@@ -27,18 +27,23 @@ class LoginActivity : AppCompatActivity() {
         }
 
         val signUpText = findViewById<TextView>(R.id.SignUp)
-        val fullText = "New to CoLearnHub? Sign Up"
+
+        val fullText = getString(R.string.signup_prompt)
+        val highlightText = getString(R.string.signup_highlight)
+
+        val startIndex = fullText.indexOf(highlightText)
+        val endIndex = startIndex + highlightText.length
+
         val spannable = SpannableString(fullText)
-
-        val startIndex = fullText.indexOf("Sign Up")
-        val endIndex = startIndex + "Sign Up".length
-
         spannable.setSpan(
             ForegroundColorSpan(Color.parseColor("#526C84")),
             startIndex,
             endIndex,
             Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
         )
+
+        signUpText.text = spannable
+
         signUpText.text = spannable
         signUpText.setOnClickListener {
             val intent = Intent(this, SignupStep1Activity::class.java)

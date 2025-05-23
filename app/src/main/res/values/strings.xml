@@ -1,4 +1,17 @@
 <resources>
     <string name="app_name">CoLearnHub</string>
     <string name="logo" />
+    <string name="email_hint">Email</string>
+    <string name="password_hint">Palavra-passe</string>
+    <string name="forgot_password">Esqueceste-te da palavra-passe?</string>
+    <string name="login">Entrar</string>
+    <string name="signup_prompt">Novo no CoLearnHub? Regista-te</string>
+    <string name="signup_highlight">Regista-te</string>
+    <string name="sign_up">Regista-te</string>
+    <string name="name">Nome</string>
+    <string name="email">Email</string>
+    <string name="next">Seguinte</string>
+    <string name="username">Nome de utilizador</string>
+    <string name="password">Palavra-passe</string>
+    <string name="confirm_password">Confirmar palavra-passe</string>
 </resources>
