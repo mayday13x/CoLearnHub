@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -7,6 +9,16 @@ android {
     namespace = "com.example.colearnhub"
     compileSdk = 35
 
+    val properties = Properties().apply {
+        val localPropertiesFile = rootProject.file("local.properties")
+        if (localPropertiesFile.exists()) {
+            localPropertiesFile.inputStream().use { load(it) }
+        }
+    }
+
+    val key: String = properties.getProperty("supabasekey") ?: ""
+    val url: String = properties.getProperty("supabaseurl") ?: ""
+
     defaultConfig {
         applicationId = "com.example.colearnhub"
         minSdk = 24
@@ -15,6 +27,8 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        buildConfigField("String", "supabasekey", "\"$key\"")
+        buildConfigField("String", "supabaseurl", "\"$url\"")
     }
 
     buildTypes {
@@ -36,11 +50,15 @@ android {
     }
     buildFeatures{
             viewBinding = true
+            buildConfig = true
     }
 }
 
 dependencies {
 
+    implementation(platform("io.github.jan-tennert.supabase:bom:3.1.4"))
+    implementation("io.github.jan-tennert.supabase:postgrest-kt")
+    implementation("io.github.jan-tennert.supabase:auth-kt")
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
