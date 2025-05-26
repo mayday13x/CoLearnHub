@@ -46,7 +46,7 @@ class LoginActivity : AppCompatActivity() {
 
         signUpText.text = spannable
         signUpText.setOnClickListener {
-            val intent = Intent(this, SignupStep1Activity::class.java)
+            val intent = Intent(this, SupabaseTestAuth::class.java)
             startActivity(intent)
         }
 
