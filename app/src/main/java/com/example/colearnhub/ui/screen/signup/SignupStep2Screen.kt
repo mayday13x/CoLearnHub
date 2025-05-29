@@ -148,6 +148,9 @@ fun SignupStep2Screen(
     suspend fun handleSignup() {
         if (!validateInputs()) return
 
+        // Atualizar signupData imediatamente com os dados da UI
+        signupData.username = username
+        signupData.password = password
         isLoading = true
         try {
             // Verificar se o username já existe
@@ -168,10 +171,6 @@ fun SignupStep2Screen(
                 isLoading = false
                 return
             }
-
-            // Atualizar signupData
-            signupData.username = username
-            signupData.password = password
 
             // Criar conta no auth
             val userData = mapOf(
@@ -255,26 +254,8 @@ fun SignupStep2Screen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Informações do Step 1 (só para mostrar)
-            Text(
-                text = "Dados inseridos:",
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Medium,
-                color = Color(0xFF395174),
-                modifier = Modifier.padding(horizontal = 16.dp)
-            )
 
-            Spacer(modifier = Modifier.height(8.dp))
 
-            Text(
-                text = "Nome: ${signupData.name}\nEmail: ${signupData.email}",
-                fontSize = 14.sp,
-                color = Color.Gray,
-                modifier = Modifier.padding(horizontal = 16.dp),
-                lineHeight = 20.sp
-            )
-
-            Spacer(modifier = Modifier.height(24.dp))
 
             // Campo Username
             Column {

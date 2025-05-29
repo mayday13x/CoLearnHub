@@ -1,22 +1,19 @@
 package com.example.colearnhub.data
 
-import java.time.LocalDate
-
 /**
  * Classe para armazenar os dados do signup entre os diferentes steps
  */
 data class SignupData(
     var name: String = "",
     var email: String = "",
-    var birthDate: LocalDate? = null,
+    var birthDate: String = "",
     var country: Int = 1, // 1 = Portugal, 2 = Estados Unidos
     var username: String = "",
     var password: String = ""
 ) {
     fun isStep1Valid(): Boolean {
         return name.isNotBlank() &&
-                email.isNotBlank() &&
-                birthDate != null
+                email.isNotBlank()
     }
 
     fun isStep2Valid(): Boolean {

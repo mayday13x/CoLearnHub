@@ -5,7 +5,6 @@ import androidx.annotation.RequiresApi
 import com.example.colearnhub.modelLayer.SupabaseClient
 import io.github.jan.supabase.postgrest.from
 import kotlinx.serialization.Serializable
-import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
 @Serializable
@@ -57,7 +56,7 @@ class UserRepository {
         name: String,
         username: String,
         country: Int,
-        birthDate: LocalDate
+        birthDate: String
     ) {
         val user = User(
             id = userId,
@@ -66,11 +65,11 @@ class UserRepository {
             country = country,
             birth_date = birthDate.format(DateTimeFormatter.ISO_LOCAL_DATE),
             profile_picture = null,
-            role = null
+            role = null,
         )
 
         SupabaseClient.client
-            .from("users")
+            .from("Users")
             .insert(user)
     }
 
@@ -82,7 +81,7 @@ class UserRepository {
     suspend fun getUserById(userId: String): User? {
         return try {
             SupabaseClient.client
-                .from("users")
+                .from("Users")
                 .select {
                     filter {
                         eq("id", userId)
@@ -102,7 +101,7 @@ class UserRepository {
     suspend fun getUserByUsername(username: String): User? {
         return try {
             SupabaseClient.client
-                .from("users")
+                .from("Users")
                 .select {
                     filter {
                         eq("username", username)

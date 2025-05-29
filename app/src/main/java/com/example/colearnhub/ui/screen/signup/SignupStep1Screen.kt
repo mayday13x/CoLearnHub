@@ -63,9 +63,12 @@ fun SignupStep1Screen(
     // Estados dos campos
     var name by remember { mutableStateOf(signupData.name) }
     var email by remember { mutableStateOf(signupData.email) }
-    var day by remember { mutableIntStateOf(signupData.birthDate?.dayOfMonth ?: 0) }
-    var month by remember { mutableIntStateOf(signupData.birthDate?.monthValue ?: 0) }
-    var year by remember { mutableIntStateOf(signupData.birthDate?.year ?: 0) }
+
+    val birthParts = signupData.birthDate.split("-")
+    var year by remember { mutableStateOf(birthParts.getOrNull(0)?.toIntOrNull() ?: 0) }
+    var month by remember { mutableStateOf(birthParts.getOrNull(1)?.toIntOrNull() ?: 0) }
+    var day by remember { mutableStateOf(birthParts.getOrNull(2)?.toIntOrNull() ?: 0) }
+
     var country by remember { mutableIntStateOf(signupData.country) }
 
     // Estados para dropdowns
@@ -494,7 +497,7 @@ fun SignupStep1Screen(
                                     signupData.apply {
                                         this.name = name
                                         this.email = email
-                                        this.birthDate = LocalDate.of(year, month, day)
+                                        this.birthDate = String.format("%04d-%02d-%02d", year, month, day)
                                         this.country = country
                                     }
 
