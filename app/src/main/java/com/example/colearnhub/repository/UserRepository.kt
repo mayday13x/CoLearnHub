@@ -15,7 +15,8 @@ data class User(
     val country: Int, // 1 = Portugal, 2 = Estados Unidos
     val profile_picture: String? = null,
     val birth_date: String,
-    val role: String? = null
+    val role: String? = null,
+    val email: String? = null,
 )
 
 class UserRepository {
@@ -56,7 +57,8 @@ class UserRepository {
         name: String,
         username: String,
         country: Int,
-        birthDate: String
+        birthDate: String,
+        email : String,
     ) {
         val user = User(
             id = userId,
@@ -66,6 +68,7 @@ class UserRepository {
             birth_date = birthDate.format(DateTimeFormatter.ISO_LOCAL_DATE),
             profile_picture = null,
             role = null,
+            email = email
         )
 
         SupabaseClient.client

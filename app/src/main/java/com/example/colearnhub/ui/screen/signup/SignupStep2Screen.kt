@@ -190,7 +190,8 @@ fun SignupStep2Screen(
                 name = signupData.name,
                 username = username,
                 country = signupData.country,
-                birthDate = signupData.birthDate!!
+                birthDate = signupData.birthDate,
+                email = signupData.email
             )
 
             scope.launch {
@@ -253,9 +254,6 @@ fun SignupStep2Screen(
             }
 
             Spacer(modifier = Modifier.height(24.dp))
-
-
-
 
             // Campo Username
             Column {
