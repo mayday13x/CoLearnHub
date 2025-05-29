@@ -3,6 +3,8 @@ import java.util.Properties
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.compose.compiler)
+    alias(libs.plugins.kotlin.serialization)
 }
 
 android {
@@ -49,18 +51,46 @@ android {
         jvmTarget = "11"
     }
     buildFeatures{
+            compose = true
             viewBinding = true
             buildConfig = true
     }
 }
 
 dependencies {
+    val composeBom = platform("androidx.compose:compose-bom:2025.02.00")
+    implementation(composeBom)
+    androidTestImplementation(composeBom)
+
+    // Material Design 3 com Compose
+    implementation("androidx.compose.material3:material3")
+
+    // Suporte a previews no Android Studio
+    implementation("androidx.compose.ui:ui-tooling-preview")
+    debugImplementation("androidx.compose.ui:ui-tooling")
+
+    // Testes de UI com Compose
+    androidTestImplementation("androidx.compose.ui:ui-test-junit4")
+    debugImplementation("androidx.compose.ui:ui-test-manifest")
+
+    // Ícones
+    implementation("androidx.compose.material:material-icons-extended:1.7.8")
+
+    // Navegação com Compose
+    implementation("androidx.navigation:navigation-compose:2.8.9")
+
+    // Imagens com Coil e Compose
+    implementation("io.coil-kt:coil-compose:2.6.0")
+
+    // ViewModel com Compose
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.6.2")
 
     implementation(platform("io.github.jan-tennert.supabase:bom:3.1.4"))
     implementation("io.github.jan-tennert.supabase:postgrest-kt")
     implementation("io.github.jan-tennert.supabase:auth-kt")
 
     implementation("io.ktor:ktor-client-android:3.1.3")
+
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)

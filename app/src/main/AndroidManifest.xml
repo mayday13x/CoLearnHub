@@ -19,19 +19,17 @@
         android:theme="@style/Theme.CoLearnHub"
         tools:targetApi="31">
         <activity
-            android:name=".SupabaseTestAuth"
+            android:name=".ui.screen.authTest.SupabaseTestAuthScreen"
             android:exported="false" />
         <activity
-            android:name=".SignupStep2Activity"
+            android:name=".ui.screen.signup.SignupStep2Screen"
             android:exported="false" />
         <activity
-            android:name=".SignupStep1Activity"
+            android:name=".ui.screen.signup.SignupStep1Screen"
             android:exported="false" />
+
         <activity
-            android:name=".LoginActivity"
-            android:exported="false" />
-        <activity
-            android:name=".HomeActivity"
+            android:name=".ui.screen.home.HomeScreen"
             android:label="Home" />
         <activity
             android:name=".MainActivity"
