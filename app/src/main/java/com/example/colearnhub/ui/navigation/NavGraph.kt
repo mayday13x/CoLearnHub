@@ -12,21 +12,29 @@ import com.example.colearnhub.ui.screen.authTest.SignUpScreen
 import com.example.colearnhub.ui.screen.login.LoginScreen
 import com.example.colearnhub.ui.screen.signup.SignupStep1Screen
 import com.example.colearnhub.ui.screen.signup.SignupStep2Screen
+import com.example.colearnhub.viewmodel.AuthViewModel
 import com.example.colearnhub.viewmodel.SignupViewModel
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun NavGraph(startDestination: String = "login") {
     val navController = rememberNavController()
-
+    val authViewModel: AuthViewModel = viewModel()
     NavHost(navController = navController, startDestination = startDestination) {
 
+        // ===== AUTH ROUTES =====
         composable("login") {
-            LoginScreen(navController)
+            LoginScreen(
+                navController = navController,
+                authViewModel = authViewModel
+            )
         }
 
         composable("signup") {
-            SignUpScreen(navController = navController)
+            SignUpScreen(
+                navController = navController,
+                authViewModel = authViewModel
+            )
         }
 
         // Signup flow with shared ViewModel

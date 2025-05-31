@@ -45,7 +45,7 @@ class UserRepository {
             if (e.message?.contains("List is empty") == true) {
                 false
             } else {
-                Log.e("UserRepository", "Erro ao verificar username: ${e.message}")
+                Log.e("UserRepository", "stringResource(R.string.error_checking_username): ${e.message}")
                 false
             }
         }
@@ -57,7 +57,7 @@ class UserRepository {
 
     /**
      * Cria um novo utilizador na base de dados
-     * @param userId ID do utilizador (deve ser o mesmo do auth)
+     * @param userId ID do utilizador
      * @param name Nome completo
      * @param username Nome de utilizador
      * @param country País (1=Portugal, 2=EUA)

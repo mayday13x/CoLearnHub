@@ -36,4 +36,62 @@
     <string name="december">December</string>
     <string name="portugal">Portugal</string>
     <string name="unitedstates">United States</string>
+
+    <!-- Validation Error Messages -->
+    <string name="email_required">Email is required</string>
+    <string name="email_invalid">Please enter a valid email</string>
+    <string name="password_required">Password is required</string>
+    <string name="password_min_length">Password must be at least 6 characters</string>
+    <string name="name_required">Name is required</string>
+    <string name="username_required">Username is required</string>
+    <string name="confirm_password_required">Confirm password is required</string>
+    <string name="passwords_not_match">Passwords do not match</string>
+    <string name="birthdate_required">Birthdate is required</string>
+    <string name="invalid_date">Invalid date</string>
+    <string name="age_restriction">You must be at least 13 years old</string>
+
+    <!-- Content Descriptions -->
+    <string name="colearnhub_logo">CoLearnHub Logo</string>
+
+    <!-- Success Messages -->
+    <string name="signup_success">Account created successfully</string>
+    <string name="login_success">Login successful</string>
+
+    <!-- Username Validation -->
+    <string name="username_min_length">Username must be at least 3 characters</string>
+    <string name="username_max_length">Username cannot be more than 20 characters</string>
+    <string name="username_invalid_chars">Username can only contain letters, numbers and underscore</string>
+    <string name="username_already_exists">This username is already taken</string>
+
+    <!-- Password Validation -->
+    <string name="password_max_length">Password cannot be more than 50 characters</string>
+    <string name="password_weak">Password is too weak</string>
+
+    <!-- Name Validation -->
+    <string name="name_min_length">Name must be at least 2 characters</string>
+    <string name="name_max_length">Name cannot be more than 50 characters</string>
+    <string name="name_invalid_chars">Name can only contain letters and spaces</string>
+
+    <!-- Email Validation -->
+    <string name="email_already_exists">This email is already registered</string>
+    <string name="email_max_length">Email cannot be more than 100 characters</string>
+
+    <!-- Date Validation -->
+    <string name="select_day">Select day</string>
+    <string name="select_month">Select month</string>
+    <string name="select_year">Select year</string>
+    <string name="future_date_error">Date cannot be in the future</string>
+    <string name="invalid_day_for_month">Invalid day for selected month</string>
+
+    <!-- Generic Error Messages -->
+    <string name="network_error">Network error. Please check your internet connection</string>
+    <string name="server_error">Server error. Please try again later</string>
+    <string name="unknown_error">An unexpected error occurred</string>
+
+    <!-- Repository Error Messages -->
+    <string name="error_getting_user_id">Error getting user ID</string>
+    <string name="error_checking_email">Error checking email</string>
+    <string name="error_checking_username">Error checking username</string>
+
+
 </resources>

@@ -36,7 +36,7 @@ class AuthRepository {
             if (e.message?.contains("List is empty") == true) {
                 false
             } else {
-                Log.e("UserRepository", "Erro ao verificar email: ${e.message}")
+                Log.e("UserRepository", "stringResource(R.string.error_checking_email): ${e.message}")
                 false
             }
         }
@@ -68,11 +68,16 @@ class AuthRepository {
             }
         }
 
-        println("ID: ${response?.id}")
 
-        val userId = response?.id
+        val userId = if (response != null) {
+            response.id
+        } else {
+            val currentUser = getCurrentUser()
+            currentUser?.id
+        }
+
         if (userId == null) {
-            throw Exception("Erro ao obter ID do utilizador")
+            throw Exception("stringResource(R.string.error_getting_user_id)")
         }
 
         return userId

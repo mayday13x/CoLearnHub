@@ -36,4 +36,60 @@
     <string name="december">Dezembro</string>
     <string name="portugal">Portugal</string>
     <string name="unitedstates">Estados Unidos</string>
+
+    <!-- Validation Error Messages -->
+    <string name="email_required">Email é obrigatório</string>
+    <string name="email_invalid">Por favor, introduza um email válido</string>
+    <string name="password_required">Palavra-passe é obrigatória</string>
+    <string name="password_min_length">A palavra-passe deve ter pelo menos 6 caracteres</string>
+    <string name="name_required">Nome é obrigatório</string>
+    <string name="username_required">Nome de utilizador é obrigatório</string>
+    <string name="confirm_password_required">Confirmar palavra-passe é obrigatório</string>
+    <string name="passwords_not_match">As palavras-passe não coincidem</string>
+    <string name="birthdate_required">Data de nascimento é obrigatória</string>
+    <string name="invalid_date">Data inválida</string>
+    <string name="age_restriction">Deve ter pelo menos 13 anos</string>
+
+    <!-- Content Descriptions -->
+    <string name="colearnhub_logo">Logótipo CoLearnHub</string>
+
+    <!-- Success Messages -->
+    <string name="signup_success">Conta criada com sucesso</string>
+    <string name="login_success">Login realizado com sucesso</string>
+
+    <!-- Username Validation -->
+    <string name="username_min_length">Nome de utilizador deve ter pelo menos 3 caracteres</string>
+    <string name="username_max_length">Nome de utilizador não pode ter mais de 20 caracteres</string>
+    <string name="username_invalid_chars">Nome de utilizador só pode conter letras, números e underscore</string>
+    <string name="username_already_exists">Este nome de utilizador já está em uso</string>
+
+    <!-- Password Validation -->
+    <string name="password_max_length">Palavra-passe não pode ter mais de 50 caracteres</string>
+    <string name="password_weak">Palavra-passe muito fraca</string>
+
+    <!-- Name Validation -->
+    <string name="name_min_length">Nome deve ter pelo menos 2 caracteres</string>
+    <string name="name_max_length">Nome não pode ter mais de 50 caracteres</string>
+    <string name="name_invalid_chars">Nome só pode conter letras e espaços</string>
+
+    <!-- Email Validation -->
+    <string name="email_already_exists">Este email já está registado</string>
+    <string name="email_max_length">Email não pode ter mais de 100 caracteres</string>
+
+    <!-- Date Validation -->
+    <string name="select_day">Selecione o dia</string>
+    <string name="select_month">Selecione o mês</string>
+    <string name="select_year">Selecione o ano</string>
+    <string name="future_date_error">A data não pode ser no futuro</string>
+    <string name="invalid_day_for_month">Dia inválido para o mês selecionado</string>
+
+    <!-- Generic Error Messages -->
+    <string name="network_error">Erro de rede. Verifique a sua ligação à internet</string>
+    <string name="server_error">Erro do servidor. Tente novamente mais tarde</string>
+    <string name="unknown_error">Ocorreu um erro inesperado</string>
+
+    <string name="error_getting_user_id">Erro ao obter ID do utilizador</string>
+    <string name="error_checking_email">Erro ao verificar email</string>
+    <string name="error_checking_username">Erro ao verificar nome de utilizador</string>
+
 </resources>

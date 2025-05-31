@@ -28,6 +28,8 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -37,6 +39,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -45,22 +48,34 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.colearnhub.R
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
+import com.example.colearnhub.viewmodel.AuthViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun LoginScreen(navController: NavController) {
+fun LoginScreen(
+    navController: NavController,
+    authViewModel: AuthViewModel = viewModel()
+) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
-    var isLoading by remember { mutableStateOf(false) }
     var emailError by remember { mutableStateOf<String?>(null) }
     var passwordError by remember { mutableStateOf<String?>(null) }
+
+    val authState by authViewModel.authState.collectAsState()
+
+    // Observar mudanças no estado de autenticação
+    LaunchedEffect(authState.isAuthenticated) {
+        if (authState.isAuthenticated && authState.successMessage != null) {
+            //rota temporária enquanto não temos a home
+            navController.navigate("signup") {
+                popUpTo("login") { inclusive = true }
+            }
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -76,7 +91,7 @@ fun LoginScreen(navController: NavController) {
         // Logo
         Image(
             painter = painterResource(id = R.drawable.colearnhubwt),
-            contentDescription = "CoLearnHub Logo",
+            contentDescription = stringResource(R.string.colearnhub_logo),
             modifier = Modifier
                 .width(225.dp)
                 .height(134.dp),
@@ -85,6 +100,19 @@ fun LoginScreen(navController: NavController) {
 
         Spacer(modifier = Modifier.height(24.dp))
 
+        // Mostrar mensagem de erro se houver
+        if (authState.errorMessage != null) {
+            Text(
+                text = authState.errorMessage!!,
+                color = Color.Red,
+                fontSize = 14.sp,
+                textAlign = TextAlign.Center,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
+            )
+        }
+
         // Email Input
         Column(modifier = Modifier.padding(horizontal = 16.dp)) {
             OutlinedTextField(
@@ -92,6 +120,7 @@ fun LoginScreen(navController: NavController) {
                 onValueChange = {
                     email = it
                     emailError = null
+                    authViewModel.clearMessages()
                 },
                 label = { Text("Email") },
                 modifier = Modifier.fillMaxWidth(),
@@ -126,6 +155,7 @@ fun LoginScreen(navController: NavController) {
                 onValueChange = {
                     password = it
                     passwordError = null
+                    authViewModel.clearMessages()
                 },
                 label = { Text("Password") },
                 modifier = Modifier.fillMaxWidth(),
@@ -147,7 +177,7 @@ fun LoginScreen(navController: NavController) {
                     IconButton(onClick = { passwordVisible = !passwordVisible }) {
                         Icon(
                             imageVector = image,
-                            contentDescription = if (passwordVisible) "Hide password" else "Show password"
+                            contentDescription = if (passwordVisible) stringResource(R.string.hide_password) else stringResource(R.string.show_password)
                         )
                     }
                 },
@@ -168,7 +198,7 @@ fun LoginScreen(navController: NavController) {
 
         // Forgot Password
         Text(
-            text = "Forgot password?",
+            text = stringResource(R.string.forgot_password),
             color = Color(0xFF526C84),
             modifier = Modifier
                 .fillMaxWidth()
@@ -186,44 +216,42 @@ fun LoginScreen(navController: NavController) {
         // Login Button
         Button(
             onClick = {
-                // Validação simples
                 var hasError = false
 
+                // Validação de email
                 if (email.isBlank()) {
-                    emailError = "Email is required"
+                    emailError = "stringResource(R.string.email_required)"
+                    hasError = true
+                } else if (!authViewModel.isValidEmail(email)) {
+                    emailError = "stringResource(R.string.email_invalid)"
                     hasError = true
                 }
 
+                // Validação de password
                 if (password.isBlank()) {
-                    passwordError = "Password is required"
+                    passwordError = "stringResource(R.string.password_required)"
+                    hasError = true
+                } else if (!authViewModel.isValidPassword(password)) {
+                    passwordError = "stringResource(R.string.password_min_length)"
                     hasError = true
                 }
 
                 if (!hasError) {
-                    isLoading = true
-                    // Simular login - aqui você faria a chamada para o Supabase
-                    CoroutineScope(Dispatchers.Main).launch {
-                        delay(2000) // Simular delay de rede
-                        isLoading = false
-                        // Após implementar autenticação real:
-                        // navController.navigate("home") {
-                        //     popUpTo("login") { inclusive = true }
-                        // }
-                    }
+                    authViewModel.signIn(email, password)
                 }
             },
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp)
                 .height(48.dp),
-            enabled = !isLoading,
+            enabled = !authState.isLoading,
             colors = ButtonDefaults.buttonColors(
                 containerColor = Color(0xFF395174),
                 contentColor = Color.White
             ),
             shape = RoundedCornerShape(4.dp)
         ) {
-            if (isLoading) {
+            if (authState.isLoading) {
                 CircularProgressIndicator(
                     color = Color.White,
                     modifier = Modifier.size(24.dp)
@@ -240,8 +268,8 @@ fun LoginScreen(navController: NavController) {
         Spacer(modifier = Modifier.height(12.dp))
 
         // Sign Up Text
-        val fullText = "New to CoLearnHub? Sign Up"
-        val signUpText = "Sign Up"
+        val fullText = stringResource(R.string.signup_prompt)
+        val signUpText = stringResource(R.string.signup_highlight)
         val annotatedString = buildAnnotatedString {
             val startIndex = fullText.indexOf(signUpText)
             val endIndex = startIndex + signUpText.length
@@ -278,7 +306,7 @@ fun LoginScreen(navController: NavController) {
                     start = offset,
                     end = offset
                 ).firstOrNull()?.let {
-                    navController.navigate("signup_step1") // Adicione esta linha
+                    navController.navigate("signup_step1")
                 }
             }
         )

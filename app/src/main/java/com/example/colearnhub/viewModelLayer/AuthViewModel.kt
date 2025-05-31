@@ -1,0 +1,90 @@
+package com.example.colearnhub.viewmodel
+
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.example.colearnhub.modelLayer.SupabaseClient
+import io.github.jan.supabase.auth.auth
+import io.github.jan.supabase.auth.providers.builtin.Email
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
+
+data class AuthState(
+    val isLoading: Boolean = false,
+    val isAuthenticated: Boolean = false,
+    val errorMessage: String? = null,
+    val successMessage: String? = null
+)
+
+class AuthViewModel : ViewModel() {
+    private val _authState = MutableStateFlow(AuthState())
+    val authState: StateFlow<AuthState> = _authState.asStateFlow()
+
+    private val supabaseClient = SupabaseClient.client
+
+    fun signUp(email: String, password: String) {
+        viewModelScope.launch {
+            try {
+                _authState.value = _authState.value.copy(isLoading = true, errorMessage = null)
+
+                supabaseClient.auth.signUpWith(Email) {
+                    this.email = email
+                    this.password = password
+                }
+
+                _authState.value = _authState.value.copy(
+                    isLoading = false,
+                    successMessage = "Account created successfully! Please check your email for verification.",
+                    isAuthenticated = true
+                )
+
+            } catch (e: Exception) {
+                _authState.value = _authState.value.copy(
+                    isLoading = false,
+                    errorMessage = e.message ?: "Sign up failed"
+                )
+            }
+        }
+    }
+
+    fun signIn(email: String, password: String) {
+        viewModelScope.launch {
+            try {
+                _authState.value = _authState.value.copy(isLoading = true, errorMessage = null)
+
+                supabaseClient.auth.signInWith(Email) {
+                    this.email = email
+                    this.password = password
+                }
+
+                _authState.value = _authState.value.copy(
+                    isLoading = false,
+                    isAuthenticated = true,
+                    successMessage = "Login successful!"
+                )
+
+            } catch (e: Exception) {
+                _authState.value = _authState.value.copy(
+                    isLoading = false,
+                    errorMessage = e.message ?: "Login failed"
+                )
+            }
+        }
+    }
+
+    fun clearMessages() {
+        _authState.value = _authState.value.copy(
+            errorMessage = null,
+            successMessage = null
+        )
+    }
+
+    fun isValidEmail(email: String): Boolean {
+        return android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()
+    }
+
+    fun isValidPassword(password: String): Boolean {
+        return password.length >= 6
+    }
+}
