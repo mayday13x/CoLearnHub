@@ -147,13 +147,12 @@ fun Indice(){
     var selectedTab by remember { mutableIntStateOf(0) }
     val tabs = listOf("All", "Created")
 
-    // Content area
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(20.dp)
     ) {
-        Spacer(Modifier.height(245.dp))
+        Spacer(modifier = Modifier.height(40.dp))
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -184,7 +183,6 @@ fun Indice(){
                         )
                     }
 
-                    // Bottom stroke for selected tab
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -196,6 +194,8 @@ fun Indice(){
                 }
             }
         }
+        Spacer(modifier = Modifier.height(10.dp))
+        ContentArea()
     }
 }
 
@@ -207,7 +207,7 @@ fun ContentArea(){
             .padding(horizontal = 16.dp)
     ) {
 
-        Spacer(modifier = Modifier.height(350.dp))
+        Spacer(modifier = Modifier.height(40.dp))
 
         Column(
             modifier = Modifier.fillMaxWidth(),
@@ -222,7 +222,7 @@ fun ContentArea(){
 
                 LottieAnimation(
                     composition = composition,
-                    modifier = Modifier.size(500.dp),
+                    modifier = Modifier.size(120.dp),
                     iterations = LottieConstants.IterateForever
                 )
             }
@@ -369,13 +369,28 @@ data class BottomNavItem(
     val drawableRes: Int? = null
 )
 
-@Preview(showBackground = true)
 @Composable
 fun MainScreen() {
-    Group46()
-    Group34()
-    Indice()
-    ContentArea()
-    Nav()
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+    ) {
+        Group46()
+
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+        ) {
+            Group34()
+            Indice()
+        }
+        Nav()
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun Preview() {
+    MainScreen()
 }
 
