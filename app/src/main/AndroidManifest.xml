@@ -2,6 +2,12 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+    <uses-permission android:name="android.permission.INTERNET" /> <!-- For Android 12 and below -->
+    <uses-permission
+        android:name="android.permission.READ_EXTERNAL_STORAGE"
+        android:maxSdkVersion="32" />
+
     <application
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
@@ -13,16 +19,17 @@
         android:theme="@style/Theme.CoLearnHub"
         tools:targetApi="31">
         <activity
-            android:name=".SignupStep2Activity"
+            android:name=".ui.screen.authTest.SupabaseTestAuthScreen"
             android:exported="false" />
         <activity
-            android:name=".SignupStep1Activity"
+            android:name=".ui.screen.signup.SignupStep2Screen"
             android:exported="false" />
         <activity
-            android:name=".LoginActivity"
+            android:name=".ui.screen.signup.SignupStep1Screen"
             android:exported="false" />
+
         <activity
-            android:name=".HomeActivity"
+            android:name=".ui.screen.home.HomeScreen"
             android:label="Home" />
         <activity
             android:name=".MainActivity"
