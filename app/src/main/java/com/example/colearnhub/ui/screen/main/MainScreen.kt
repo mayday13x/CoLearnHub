@@ -55,8 +55,8 @@ import com.airbnb.lottie.compose.LottieCompositionSpec
 import com.airbnb.lottie.compose.LottieConstants
 import com.airbnb.lottie.compose.rememberLottieComposition
 import com.example.colearnhub.R
+import com.example.colearnhub.ui.utils.*
 
-// Composable function to create the UI
 @Composable
 fun Group46() {
     Canvas(modifier = Modifier.fillMaxSize()) {
@@ -81,15 +81,33 @@ fun Group46() {
 
 @Composable
 fun Group34() {
+    val screenSize = getScreenSize()
+    val padding = dynamicPadding()
+    val logoSize = when (screenSize) {
+        ScreenSize.SMALL -> 40.dp
+        ScreenSize.MEDIUM -> 50.dp
+        ScreenSize.LARGE -> 60.dp
+    }
+    val titleFontSize = when (screenSize) {
+        ScreenSize.SMALL -> 10.sp
+        ScreenSize.MEDIUM -> 14.sp
+        ScreenSize.LARGE -> 18.sp
+    }
+    val verticalSpacing = when (screenSize) {
+        ScreenSize.SMALL -> 27.dp
+        ScreenSize.MEDIUM -> 35.dp
+        ScreenSize.LARGE -> 47.dp
+    }
+
     Column(
         modifier = Modifier
-            .padding(26.dp),
+            .padding(padding),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Image(
             painter = painterResource(id = R.drawable.cubewhite),
             contentDescription = "Logo",
-            modifier = Modifier.size(40.dp)
+            modifier = Modifier.size(logoSize)
         )
         Row(
             modifier = Modifier
@@ -100,7 +118,7 @@ fun Group34() {
             Box {
                 Text(
                     text = "COLEARNHUB",
-                    fontSize = 10.sp,
+                    fontSize = titleFontSize,
                     fontWeight = FontWeight.Bold,
                     color = Color.White,
                     style = androidx.compose.ui.text.TextStyle(
@@ -109,7 +127,7 @@ fun Group34() {
                 )
             }
         }
-        Spacer(Modifier.height(27.dp))
+        Spacer(Modifier.height(verticalSpacing))
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -147,12 +165,30 @@ fun Indice(){
     var selectedTab by remember { mutableIntStateOf(0) }
     val tabs = listOf("All", "Created")
 
+    val screenSize = getScreenSize()
+    dynamicPadding()
+    val verticalSpacing = when (screenSize) {
+        ScreenSize.SMALL -> 40.dp
+        ScreenSize.MEDIUM -> 48.dp
+        ScreenSize.LARGE -> 60.dp
+    }
+    val btnHeight = when (screenSize) {
+        ScreenSize.SMALL -> 35.dp
+        ScreenSize.MEDIUM -> 40.dp
+        ScreenSize.LARGE -> 45.dp
+    }
+    val txtSize = when (screenSize) {
+        ScreenSize.SMALL -> 16.sp
+        ScreenSize.MEDIUM -> 18.sp
+        ScreenSize.LARGE -> 20.sp
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(20.dp)
     ) {
-        Spacer(modifier = Modifier.height(40.dp))
+        Spacer(modifier = Modifier.height(verticalSpacing))
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -167,7 +203,7 @@ fun Indice(){
                         onClick = { selectedTab = index },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(35.dp),
+                            .height(btnHeight),
                         shape = RoundedCornerShape(8.dp),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = if (selectedTab == index) Color(0xC9E9F2FF) else Color.Transparent,
@@ -177,7 +213,7 @@ fun Indice(){
                     ) {
                         Text(
                             text = title,
-                            fontSize = 16.sp,
+                            fontSize = txtSize,
                             fontWeight = FontWeight.Bold,
                             color = Color(0xFF395174)
                         )
@@ -194,63 +230,78 @@ fun Indice(){
                 }
             }
         }
-        Spacer(modifier = Modifier.height(10.dp))
+        Spacer(modifier = Modifier.height(verticalSpacing - 30.dp))
         ContentArea()
     }
 }
 
 @Composable
-fun ContentArea(){
+fun ContentArea() {
+    val screenSize = getScreenSize()
+    val padding = dynamicPadding()
+    val animationSize = when (screenSize) {
+        ScreenSize.SMALL -> 120.dp
+        ScreenSize.MEDIUM -> 160.dp
+        ScreenSize.LARGE -> 200.dp
+    }
+    val titleFontSize = when (screenSize) {
+        ScreenSize.SMALL -> 16.sp
+        ScreenSize.MEDIUM -> 18.sp
+        ScreenSize.LARGE -> 20.sp
+    }
+    val verticalSpacing = when (screenSize) {
+        ScreenSize.SMALL -> 40.dp
+        ScreenSize.MEDIUM -> 48.dp
+        ScreenSize.LARGE -> 60.dp
+    }
+    val btnHeight = when (screenSize) {
+        ScreenSize.SMALL -> 50.dp
+        ScreenSize.MEDIUM -> 58.dp
+        ScreenSize.LARGE -> 70.dp
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(horizontal = 16.dp)
+            .padding(horizontal = padding)
     ) {
-
-        Spacer(modifier = Modifier.height(40.dp))
+        Spacer(modifier = Modifier.height(verticalSpacing))
 
         Column(
             modifier = Modifier.fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Box(
-                modifier = Modifier
-                    .size(120.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.animation))
+            val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.animation))
 
-                LottieAnimation(
-                    composition = composition,
-                    modifier = Modifier.size(120.dp),
-                    iterations = LottieConstants.IterateForever
-                )
-            }
+            LottieAnimation(
+                composition = composition,
+                modifier = Modifier.size(animationSize),
+                iterations = LottieConstants.IterateForever
+            )
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(verticalSpacing - 16.dp))
 
             Text(
                 text = "No material was found ...",
-                fontSize = 16.sp,
+                fontSize = titleFontSize,
                 color = Color.Black,
             )
 
             Text(
                 text = "Be the first to share your knowledge !",
-                fontSize = 14.sp,
+                fontSize = (titleFontSize.value - 2).sp,
                 color = Color.Black,
                 modifier = Modifier.padding(top = 4.dp),
                 textAlign = TextAlign.Center
             )
 
-            Spacer(modifier = Modifier.height(40.dp))
+            Spacer(modifier = Modifier.height(verticalSpacing))
 
             Button(
                 onClick = { },
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .height(50.dp)
-                    .padding(horizontal = 20.dp)
+                    .width(dynamicWidth(maxWidth = 300.dp))
+                    .height(btnHeight)
                     .border(
                         width = 1.5.dp,
                         color = Color(0xFF395174),
@@ -265,12 +316,11 @@ fun ContentArea(){
             ) {
                 Text(
                     text = "Share",
-                    fontSize = 16.sp,
+                    fontSize = titleFontSize,
                     fontWeight = FontWeight.Bold
                 )
             }
         }
-
         Spacer(modifier = Modifier.weight(1f))
     }
 }
@@ -278,6 +328,24 @@ fun ContentArea(){
 @Composable
 fun Nav() {
     var selectedItem by remember { mutableIntStateOf(0) }
+
+    val screenSize = getScreenSize()
+    val bottomBarHeight = when (screenSize) {
+        ScreenSize.SMALL -> 90.dp
+        ScreenSize.MEDIUM -> 102.dp
+        ScreenSize.LARGE -> 110.dp
+    }
+    val iconSize = when (screenSize) {
+        ScreenSize.SMALL -> 24.dp
+        ScreenSize.MEDIUM -> 32.dp
+        ScreenSize.LARGE -> 40.dp
+    }
+    val textSize = when (screenSize) {
+        ScreenSize.SMALL -> 12.sp
+        ScreenSize.MEDIUM -> 18.sp
+        ScreenSize.LARGE -> 24.sp
+    }
+
 
     val bottomNavItems = listOf(
         BottomNavItem("Home", drawableRes = R.drawable.cube),
@@ -293,7 +361,7 @@ fun Nav() {
     ) {
         NavigationBar(
             containerColor = Color.White,
-            modifier = Modifier.height(80.dp)
+            modifier = Modifier.height(bottomBarHeight)
                 .drawBehind {
                     val strokeWidth = 1.5.dp.toPx()
                     drawLine(
@@ -312,7 +380,7 @@ fun Nav() {
                         if (index == 2) {
                             Box(
                                 modifier = Modifier
-                                    .size(24.dp)
+                                    .size(iconSize)
                                     .background(
                                         color = Color(0xFFFFFFFF),
                                         shape = RoundedCornerShape(10.dp)
@@ -328,7 +396,7 @@ fun Nav() {
                                     imageVector = item.icon!!,
                                     contentDescription = item.label,
                                     tint = if (selectedItem == index) Color(0xFF395174) else Color.Gray,
-                                    modifier = Modifier.size(24.dp)
+                                    modifier = Modifier.size(iconSize)
                                 )
                             }
                         } else {
@@ -339,7 +407,7 @@ fun Nav() {
                                     colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(
                                         if (selectedItem == index) Color(0xFF395174) else Color.Gray
                                     ),
-                                    modifier = Modifier.size(24.dp)
+                                    modifier = Modifier.size(iconSize)
                                 )
                             } else {
                                 Icon(
@@ -353,7 +421,7 @@ fun Nav() {
                     label = {
                         Text(
                             text = item.label,
-                            fontSize = 12.sp,
+                            fontSize = textSize,
                             color = if (selectedItem == index) Color(0xFF395174) else Color.Gray
                         )
                     }
