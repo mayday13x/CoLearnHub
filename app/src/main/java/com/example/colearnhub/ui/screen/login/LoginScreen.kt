@@ -72,8 +72,7 @@ fun LoginScreen(
     // Observar mudanças no estado de autenticação
     LaunchedEffect(authState.isAuthenticated) {
         if (authState.isAuthenticated && authState.successMessage != null) {
-            //rota temporária enquanto não temos a home
-            navController.navigate("signup") {
+            navController.navigate("MainScreen") {
                 popUpTo("login") { inclusive = true }
             }
         }

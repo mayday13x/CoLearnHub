@@ -7,7 +7,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
-import com.example.colearnhub.ui.screen.authTest.SignUpScreen
 import com.example.colearnhub.ui.screen.login.LoginScreen
 import com.example.colearnhub.ui.screen.signup.SignupStep1Screen
 import com.example.colearnhub.ui.screen.signup.SignupStep2Screen
@@ -22,13 +21,6 @@ fun NavGraphBuilder.authRoutes(
     // ===== AUTH ROUTES =====
     composable("login") {
         LoginScreen(
-            navController = navController,
-            authViewModel = authViewModel
-        )
-    }
-
-    composable("signup") {
-        SignUpScreen(
             navController = navController,
             authViewModel = authViewModel
         )

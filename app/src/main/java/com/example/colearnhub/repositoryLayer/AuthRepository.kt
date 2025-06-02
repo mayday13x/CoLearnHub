@@ -67,7 +67,7 @@ class AuthRepository {
                 }
             }
         }
-
+        
 
         val userId = if (response != null) {
             response.id

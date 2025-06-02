@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.colearnhub.modelLayer.SupabaseClient
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.auth.providers.builtin.Email
+import io.github.jan.supabase.auth.user.UserInfo
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -23,6 +24,17 @@ class AuthViewModel : ViewModel() {
 
     private val supabaseClient = SupabaseClient.client
 
+    private val _currentUser = MutableStateFlow<UserInfo?>(null)
+    val currentUser: StateFlow<UserInfo?> = _currentUser.asStateFlow()
+
+    init {
+        getCurrentUser()
+    }
+
+    fun getCurrentUser() {
+        _currentUser.value = supabaseClient.auth.currentUserOrNull()
+    }
+
     fun signUp(email: String, password: String) {
         viewModelScope.launch {
             try {
@@ -32,6 +44,8 @@ class AuthViewModel : ViewModel() {
                     this.email = email
                     this.password = password
                 }
+
+                getCurrentUser()
 
                 _authState.value = _authState.value.copy(
                     isLoading = false,
@@ -58,6 +72,8 @@ class AuthViewModel : ViewModel() {
                     this.password = password
                 }
 
+                getCurrentUser()
+
                 _authState.value = _authState.value.copy(
                     isLoading = false,
                     isAuthenticated = true,
@@ -68,6 +84,23 @@ class AuthViewModel : ViewModel() {
                 _authState.value = _authState.value.copy(
                     isLoading = false,
                     errorMessage = e.message ?: "Login failed"
+                )
+            }
+        }
+    }
+
+    fun signOut() {
+        viewModelScope.launch {
+            try {
+                supabaseClient.auth.signOut()
+                _currentUser.value = null
+                _authState.value = _authState.value.copy(
+                    isAuthenticated = false,
+                    successMessage = "Logged out successfully"
+                )
+            } catch (e: Exception) {
+                _authState.value = _authState.value.copy(
+                    errorMessage = e.message ?: "Logout failed"
                 )
             }
         }

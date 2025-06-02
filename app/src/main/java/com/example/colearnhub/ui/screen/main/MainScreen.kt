@@ -276,7 +276,25 @@ fun ContentArea(){
 }
 
 @Composable
-fun Nav() {
+fun ProfileScreen() {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Text(
+            text = "Profile Screen",
+            fontSize = 24.sp,
+            fontWeight = FontWeight.Bold,
+            color = Color(0xFF395174)
+        )
+    }
+}
+
+@Composable
+fun Nav(onNavigateToProfile: () -> Unit = {}) { // Adicionar este parâmetro
     var selectedItem by remember { mutableIntStateOf(0) }
 
     val bottomNavItems = listOf(
@@ -307,7 +325,12 @@ fun Nav() {
             bottomNavItems.forEachIndexed { index, item ->
                 NavigationBarItem(
                     selected = selectedItem == index,
-                    onClick = { selectedItem = index },
+                    onClick = {
+                        selectedItem = index
+                        if (index == 4) { // Profile é o índice 4
+                            onNavigateToProfile()
+                        }
+                    },
                     icon = {
                         if (index == 2) {
                             Box(
@@ -370,7 +393,7 @@ data class BottomNavItem(
 )
 
 @Composable
-fun MainScreen() {
+fun MainScreen(onNavigateToProfile: () -> Unit = {}) {
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -384,9 +407,11 @@ fun MainScreen() {
             Group34()
             Indice()
         }
-        Nav()
+
+        Nav(onNavigateToProfile = onNavigateToProfile)
     }
 }
+
 
 @Preview(showBackground = true)
 @Composable
