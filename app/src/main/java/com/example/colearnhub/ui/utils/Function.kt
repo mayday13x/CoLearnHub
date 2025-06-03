@@ -48,7 +48,7 @@ import com.example.colearnhub.R
 import com.example.colearnhub.ui.screen.main.BottomNavItem
 import com.example.colearnhub.ui.screen.main.Indice
 import com.example.colearnhub.ui.screen.main.Indice2
-import com.example.colearnhub.ui.screen.main.Indice3
+import com.example.colearnhub.ui.screen.main.Indice5
 
 @Composable
 fun Circles() {
