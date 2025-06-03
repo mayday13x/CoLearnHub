@@ -39,6 +39,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -47,6 +48,7 @@ import com.example.colearnhub.R
 import com.example.colearnhub.ui.screen.main.BottomNavItem
 import com.example.colearnhub.ui.screen.main.Indice
 import com.example.colearnhub.ui.screen.main.Indice2
+import com.example.colearnhub.ui.screen.main.Indice5
 
 @Composable
 fun Circles() {
@@ -225,12 +227,18 @@ fun Nav(
         ScreenSize.LARGE -> 24.sp
     }
 
+    val label1 = stringResource(R.string.Home)
+    val label2 = stringResource(R.string.Sessions)
+    val label3 = stringResource(R.string.Share)
+    val label4 = stringResource(R.string.Groups)
+    val label5 = stringResource(R.string.Profile)
+
     val bottomNavItems = listOf(
-        BottomNavItem("Home", drawableRes = R.drawable.cube),
-        BottomNavItem("Sessions", icon = Icons.Default.Schedule),
-        BottomNavItem("Share", icon = Icons.Default.Add),
-        BottomNavItem("Groups", icon = Icons.Default.Group),
-        BottomNavItem("Profile", icon = Icons.Default.Person)
+        BottomNavItem(label1, drawableRes = R.drawable.cube),
+        BottomNavItem(label2, icon = Icons.Default.Schedule),
+        BottomNavItem(label3, icon = Icons.Default.Add),
+        BottomNavItem(label4, icon = Icons.Default.Group),
+        BottomNavItem(label5, icon = Icons.Default.Person)
     )
 
     Box(
@@ -283,6 +291,6 @@ fun ScreenContent(selectedItem: Int) {
         1 -> Indice2()
         // 2 -> ShareScreen()
         // 3 -> GroupsScreen()
-        // 4 -> ProfileScreen()
+        4 -> Indice5()
     }
 }
