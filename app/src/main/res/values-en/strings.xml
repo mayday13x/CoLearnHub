@@ -105,5 +105,16 @@
     <string name="Share">Share</string>
     <string name="Groups">Groups</string>
     <string name="Profile">Profile</string>
+    <string name="Created">Shared</string>
+    <string name="Created2">Shared</string>
+    <string name="All">All</string>
+    <string name="Search">Searching for...</string>
+    <string name="Knowledge">Share your knowledge</string>
+    <string name="Knowledge2">Create sessions and invite friends</string>
+    <string name="not_found">No material was found...</string>
+    <string name="not_found2">No sessions were found...</string>
+    <string name="be_the_first">Be the first to share your knowledge!</string>
+    <string name="New_Session">New Session</string>
+    <string name="Joined">Joined</string>
 
 </resources>
