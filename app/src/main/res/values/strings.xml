@@ -104,5 +104,16 @@
     <string name="Share">Partilhar</string>
     <string name="Groups">Grupos</string>
     <string name="Profile">Perfil</string>
+    <string name="Created">Partilhado</string>
+    <string name="Created2">Part.</string>
+    <string name="All">Todos</string>
+    <string name="Search">Procurando por...</string>
+    <string name="Knowledge">Partilha o teu conhecimento</string>
+    <string name="Knowledge2">Cria sessões e convida os teus amigos</string>
+    <string name="not_found">Nenhum material encontrado...</string>
+    <string name="not_found2">Nenhuma sessão encontrada...</string>
+    <string name="be_the_first">Sê o primeiro a partilhar o teu conhecimento!</string>
+    <string name="New_Session">Nova Sessão</string>"
+    <string name="Joined">Aderiu</string>
 
 </resources>

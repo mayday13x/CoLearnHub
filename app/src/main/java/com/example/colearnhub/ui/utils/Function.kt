@@ -131,7 +131,7 @@ fun SearchBar() {
             Icon(Icons.Default.Search, contentDescription = "Search")
             Spacer(Modifier.width(8.dp))
             Text(
-                "Search",
+                stringResource(R.string.Search),
                 color = Color.Gray,
                 modifier = Modifier.weight(1f),
                 style = MaterialTheme.typography.bodyMedium
@@ -145,7 +145,7 @@ fun SearchBar() {
             horizontalArrangement = Arrangement.Center
         ) {
             Text(
-                "Share your knowledge",
+                stringResource(R.string.Knowledge),
                 color = Color.White,
                 fontWeight = FontWeight.Bold
             )

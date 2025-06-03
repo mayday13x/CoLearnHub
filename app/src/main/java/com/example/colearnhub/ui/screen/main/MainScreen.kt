@@ -26,6 +26,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -48,7 +49,9 @@ import com.example.colearnhub.ui.utils.getScreenSize
 @Composable
 fun Indice(){
     var selectedTab by remember { mutableIntStateOf(0) }
-    val tabs = listOf("All", "Created")
+    val label1 = stringResource(id = R.string.All)
+    val label2 = stringResource(id = R.string.Created)
+    val tabs = listOf(label1, label2)
 
     val screenSize = getScreenSize()
     dynamicPadding()
@@ -167,13 +170,13 @@ fun ContentArea() {
             Spacer(modifier = Modifier.height(verticalSpacing - 16.dp))
 
             Text(
-                text = "No material was found ...",
+                text = stringResource(R.string.not_found),
                 fontSize = titleFontSize,
                 color = Color.Black,
             )
 
             Text(
-                text = "Be the first to share your knowledge !",
+                text = stringResource(R.string.be_the_first),
                 fontSize = (titleFontSize.value - 2).sp,
                 color = Color.Black,
                 modifier = Modifier.padding(top = 4.dp),
@@ -200,7 +203,7 @@ fun ContentArea() {
                 elevation = ButtonDefaults.buttonElevation(defaultElevation = 2.dp)
             ) {
                 Text(
-                    text = "Share",
+                    text = stringResource(R.string.Share),
                     fontSize = titleFontSize,
                     fontWeight = FontWeight.Bold
                 )
