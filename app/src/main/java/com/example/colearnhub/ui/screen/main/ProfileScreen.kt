@@ -51,6 +51,7 @@ import com.example.colearnhub.ui.utils.Circles
 import com.example.colearnhub.ui.utils.Nav
 import com.example.colearnhub.ui.utils.ScreenContent
 import com.example.colearnhub.ui.utils.ScreenSize
+import com.example.colearnhub.ui.utils.SearchBar
 import com.example.colearnhub.ui.utils.dynamicWidth
 import com.example.colearnhub.ui.utils.getScreenSize
 
@@ -462,8 +463,8 @@ fun ProfileScreen(){
         Column(
             modifier = Modifier.fillMaxSize()
         ) {
-            if(selectedItem == 0 || selectedItem == 1 || selectedItem == 4) {
-                Indice5()
+            if(selectedItem == 0 || selectedItem == 1) {
+                SearchBar()
             }
             ScreenContent(selectedItem)
         }

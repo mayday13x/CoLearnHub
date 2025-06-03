@@ -233,7 +233,7 @@ fun MainScreen() {
         Column(
             modifier = Modifier.fillMaxSize()
         ) {
-            if(selectedItem == 0 || selectedItem == 1 || selectedItem == 4) {
+            if(selectedItem == 0 || selectedItem == 1) {
                 SearchBar()
             }
             ScreenContent(selectedItem)
