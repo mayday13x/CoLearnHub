@@ -6,7 +6,7 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
 import com.example.colearnhub.ui.screen.login.LoginScreen
-import com.example.colearnhub.ui.screen.test.TestScreen
+//import com.example.colearnhub.ui.screen.test.TestScreen
 import com.example.colearnhub.viewmodel.AuthViewModel
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -15,6 +15,6 @@ fun NavGraphBuilder.testRoutes(
 ) {
     // ===== AUTH ROUTES =====
     composable("test") {
-        TestScreen()
+        //TestScreen()
     }
 }

@@ -6,19 +6,21 @@ import androidx.compose.runtime.Composable
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.rememberNavController
+import androidx.compose.ui.platform.LocalContext
 import com.example.colearnhub.viewmodel.AuthViewModel
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun NavGraph(startDestination: String = "test") {
+fun NavGraph() {
     val navController = rememberNavController()
-    val authViewModel: AuthViewModel = viewModel()
+    val context = LocalContext.current
+    val authViewModel: AuthViewModel = viewModel { AuthViewModel(context) }
+
+    val startDestination = if (authViewModel.isUserLoggedIn()) "MainScreen" else "login"
 
     NavHost(navController = navController, startDestination = startDestination) {
         authRoutes(navController, authViewModel)
         mainRoutes(navController)
-
-        //Rota de test
         testRoutes(navController)
     }
 }

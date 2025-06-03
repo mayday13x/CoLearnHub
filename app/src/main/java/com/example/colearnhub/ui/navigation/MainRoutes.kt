@@ -14,7 +14,7 @@ fun NavGraphBuilder.mainRoutes(
     navController: NavHostController
 ) {
     // ===== AUTH ROUTES =====
-    composable("login") {
+    composable("MainScreen") {
         MainScreen()
     }
 }

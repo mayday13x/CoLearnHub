@@ -1,8 +1,10 @@
 package com.example.colearnhub.viewmodel
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.colearnhub.modelLayer.SupabaseClient
+import com.example.colearnhub.ui.utils.SharedPreferenceHelper
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.auth.providers.builtin.Email
 import io.github.jan.supabase.auth.user.UserInfo
@@ -18,21 +20,32 @@ data class AuthState(
     val successMessage: String? = null
 )
 
-class AuthViewModel : ViewModel() {
+class AuthViewModel(private val context: Context) : ViewModel() {
     private val _authState = MutableStateFlow(AuthState())
     val authState: StateFlow<AuthState> = _authState.asStateFlow()
 
     private val supabaseClient = SupabaseClient.client
+    private val sharedPreferenceHelper = SharedPreferenceHelper(context)
 
     private val _currentUser = MutableStateFlow<UserInfo?>(null)
     val currentUser: StateFlow<UserInfo?> = _currentUser.asStateFlow()
 
     init {
         getCurrentUser()
+        checkSavedAuthState()
+    }
+
+    private fun checkSavedAuthState() {
+        val isLoggedIn = sharedPreferenceHelper.getBooleanData(SharedPreferenceHelper.IS_USER_LOGGED_IN)
+        _authState.value = _authState.value.copy(isAuthenticated = isLoggedIn)
     }
 
     fun getCurrentUser() {
         _currentUser.value = supabaseClient.auth.currentUserOrNull()
+    }
+
+    fun isUserLoggedIn(): Boolean {
+        return sharedPreferenceHelper.getBooleanData(SharedPreferenceHelper.IS_USER_LOGGED_IN)
     }
 
     fun signUp(email: String, password: String) {
@@ -46,6 +59,15 @@ class AuthViewModel : ViewModel() {
                 }
 
                 getCurrentUser()
+
+                // Guardar estado de autenticação
+                sharedPreferenceHelper.saveBooleanData(SharedPreferenceHelper.IS_USER_LOGGED_IN, true)
+                sharedPreferenceHelper.saveStringData(SharedPreferenceHelper.USER_EMAIL, email)
+
+                // Guardar token se disponível
+                supabaseClient.auth.currentSessionOrNull()?.accessToken?.let { token ->
+                    sharedPreferenceHelper.saveStringData(SharedPreferenceHelper.ACCESS_TOKEN, token)
+                }
 
                 _authState.value = _authState.value.copy(
                     isLoading = false,
@@ -74,6 +96,15 @@ class AuthViewModel : ViewModel() {
 
                 getCurrentUser()
 
+                // Guardar estado de autenticação
+                sharedPreferenceHelper.saveBooleanData(SharedPreferenceHelper.IS_USER_LOGGED_IN, true)
+                sharedPreferenceHelper.saveStringData(SharedPreferenceHelper.USER_EMAIL, email)
+
+                // Guardar token se disponível
+                supabaseClient.auth.currentSessionOrNull()?.accessToken?.let { token ->
+                    sharedPreferenceHelper.saveStringData(SharedPreferenceHelper.ACCESS_TOKEN, token)
+                }
+
                 _authState.value = _authState.value.copy(
                     isLoading = false,
                     isAuthenticated = true,
@@ -94,6 +125,10 @@ class AuthViewModel : ViewModel() {
             try {
                 supabaseClient.auth.signOut()
                 _currentUser.value = null
+
+                // Limpar dados guardados
+                sharedPreferenceHelper.clearPreferences()
+
                 _authState.value = _authState.value.copy(
                     isAuthenticated = false,
                     successMessage = "Logged out successfully"
