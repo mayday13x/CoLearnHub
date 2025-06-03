@@ -418,6 +418,7 @@ fun EditProfileBtn(){
             modifier = Modifier
                 .width(dynamicWidth(maxWidth = 300.dp))
                 .height(btnHeight)
+                .offset(y = (-30).dp)
                 .border(
                     width = 1.5.dp,
                     color = Color(0xFF395174),
@@ -455,6 +456,7 @@ fun ProfileScreen(){
 
     Box(
         modifier = Modifier.fillMaxSize()
+            .background(Color.White)
     ) {
         if(selectedItem == 0 || selectedItem == 1 || selectedItem == 4) {
             Circles()
