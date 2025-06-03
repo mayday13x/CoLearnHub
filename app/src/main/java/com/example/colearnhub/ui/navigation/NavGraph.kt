@@ -10,12 +10,15 @@ import com.example.colearnhub.viewmodel.AuthViewModel
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun NavGraph(startDestination: String = "login") {
+fun NavGraph(startDestination: String = "test") {
     val navController = rememberNavController()
     val authViewModel: AuthViewModel = viewModel()
 
     NavHost(navController = navController, startDestination = startDestination) {
         authRoutes(navController, authViewModel)
         mainRoutes(navController)
+
+        //Rota de test
+        testRoutes(navController)
     }
 }
