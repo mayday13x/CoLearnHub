@@ -93,5 +93,17 @@
     <string name="error_checking_email">Error checking email</string>
     <string name="error_checking_username">Error checking username</string>
 
+    <string name="edit_profile_btn">Edit Profile</string>
+    <string name="course_label">Course</string>
+    <string name="curricular_year_label">Curricular Year</string>
+    <string name="member_since_label">Member Since</string>
+    <string name="school_label">School/Institution</string>
+    <string name="contributions_label">Contributions</string>
+    <string name="evaluations_label">Average Evaluation</string>
+    <string name="Home">Home</string>
+    <string name="Sessions">Sessions</string>
+    <string name="Share">Share</string>
+    <string name="Groups">Groups</string>
+    <string name="Profile">Profile</string>
 
 </resources>

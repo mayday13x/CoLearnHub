@@ -92,4 +92,17 @@
     <string name="error_checking_email">Erro ao verificar email</string>
     <string name="error_checking_username">Erro ao verificar nome de utilizador</string>
 
+    <string name="edit_profile_btn">Editar Perfil</string>
+    <string name="course_label">Curso</string>
+    <string name="curricular_year_label">Ano Curricular</string>
+    <string name="member_since_label">Membro Desde</string>
+    <string name="school_label">Escola/Instituição</string>
+    <string name="contributions_label">Contribuições</string>
+    <string name="evaluations_label">Avaliação Média</string>
+    <string name="Home">Início</string>
+    <string name="Sessions">Sessões</string>
+    <string name="Share">Partilhar</string>
+    <string name="Groups">Grupos</string>
+    <string name="Profile">Perfil</string>
+
 </resources>
