@@ -234,6 +234,7 @@ fun StudySessionScreen() {
 
     Box(
         modifier = Modifier.fillMaxSize()
+            .background(Color.White)
     ) {
         if(selectedItem == 0 || selectedItem == 1 || selectedItem == 4) {
             Circles()
