@@ -126,5 +126,10 @@
     <string name="description">Descrição</string>
     <string name="area">Área</string>
     <string name="priv">Privado</string>
+    <string name="study_session">Sessões de Estudo</string>
+    <string name="Invites">Convites</string>
+    <string name="no_group">Não está num grupo ainda!</string>
+    <string name="invitation">Aceita um convite ou cria um novo grupo.</string>
+    <string name="new_group">Novo Grupo</string>
 
 </resources>

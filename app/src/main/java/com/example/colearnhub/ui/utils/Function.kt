@@ -52,6 +52,7 @@ import com.example.colearnhub.R
 import com.example.colearnhub.ui.screen.main.BottomNavItem
 import com.example.colearnhub.ui.screen.main.Indice
 import com.example.colearnhub.ui.screen.main.Indice2
+import com.example.colearnhub.ui.screen.main.Indice3
 import com.example.colearnhub.ui.screen.main.Indice4
 import com.example.colearnhub.ui.screen.main.Indice5
 
@@ -143,6 +144,80 @@ fun SearchBar() {
             )
             Icon(Icons.Default.FilterList, contentDescription = "Filter")
         }
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 8.dp),
+            horizontalArrangement = Arrangement.Center
+        ) {
+            Text(
+                stringResource(R.string.Knowledge),
+                color = Color.White,
+                fontWeight = FontWeight.Bold
+            )
+        }
+    }
+}
+
+@Composable
+fun SBar(title: String) {
+    val screenSize = getScreenSize()
+    val padding = dynamicPadding()
+
+    val titleFontSize = when (screenSize) {
+        ScreenSize.SMALL -> 16.sp
+        ScreenSize.MEDIUM -> 20.sp
+        ScreenSize.LARGE -> 24.sp
+    }
+
+    val verticalSpacing = when (screenSize) {
+        ScreenSize.SMALL -> 27.dp
+        ScreenSize.MEDIUM -> 35.dp
+        ScreenSize.LARGE -> 47.dp
+    }
+
+    Column(
+        modifier = Modifier
+            .padding(padding),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 5.dp),
+            horizontalArrangement = Arrangement.Center
+        ) {
+            Box {
+                Text(
+                    text = title, // <- Título dinâmico
+                    fontSize = titleFontSize,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White,
+                )
+            }
+        }
+
+        Spacer(Modifier.height(verticalSpacing + 33.dp))
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(Color.White, RoundedCornerShape(10))
+                .padding(horizontal = 16.dp, vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(Icons.Default.Search, contentDescription = "Search")
+            Spacer(Modifier.width(8.dp))
+            Text(
+                stringResource(R.string.Search),
+                color = Color.Gray,
+                modifier = Modifier.weight(1f),
+                style = MaterialTheme.typography.bodyMedium
+            )
+            Icon(Icons.Default.FilterList, contentDescription = "Filter")
+        }
+
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -291,7 +366,7 @@ fun ScreenContent(selectedItem: Int) {
         0 -> Indice()
         1 -> Indice2()
         2 -> Indice4()
-        // 3 -> GroupsScreen()
+        3 -> Indice3()
         4 -> Indice5()
     }
 }

@@ -49,6 +49,7 @@ import androidx.compose.ui.unit.sp
 import com.example.colearnhub.R
 import com.example.colearnhub.ui.utils.Circles
 import com.example.colearnhub.ui.utils.Nav
+import com.example.colearnhub.ui.utils.SBar
 import com.example.colearnhub.ui.utils.ScreenContent
 import com.example.colearnhub.ui.utils.ScreenSize
 import com.example.colearnhub.ui.utils.SearchBar
@@ -401,20 +402,26 @@ fun ProfileScreen(){
         modifier = Modifier.fillMaxSize()
             .background(Color.White)
     ) {
-        if(selectedItem == 0 || selectedItem == 1 || selectedItem == 4) {
+        if(selectedItem == 0 || selectedItem == 1 || selectedItem == 3 || selectedItem == 4) {
             Circles()
         }
 
         Column(
             modifier = Modifier.fillMaxSize()
         ) {
-            if(selectedItem == 0 || selectedItem == 1) {
+            if(selectedItem == 0){
                 SearchBar()
+            }
+            if(selectedItem == 1) {
+                SBar(title = stringResource(R.string.study_session))
+            }
+            if(selectedItem == 3) {
+                SBar(title = stringResource(R.string.Groups))
             }
             ScreenContent(selectedItem)
         }
 
-        if (selectedItem == 0 || selectedItem == 1 || selectedItem == 2 || selectedItem == 4) {
+        if (selectedItem == 0 || selectedItem == 1 || selectedItem == 2 || selectedItem == 3 || selectedItem == 4) {
             Nav(
                 selectedItem = selectedItem,
                 onItemSelected = { newIndex ->
