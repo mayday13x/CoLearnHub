@@ -54,31 +54,19 @@ import com.example.colearnhub.ui.utils.ScreenSize
 import com.example.colearnhub.ui.utils.SearchBar
 import com.example.colearnhub.ui.utils.dynamicWidth
 import com.example.colearnhub.ui.utils.getScreenSize
+import com.example.colearnhub.ui.utils.logoSize
+import com.example.colearnhub.ui.utils.spacer
+import com.example.colearnhub.ui.utils.titleFontSize
+import com.example.colearnhub.ui.utils.txtSize
+import com.example.colearnhub.ui.utils.verticalSpacing
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TopBar2() {
-    val screenSize = getScreenSize()
-    val logoSize = when (screenSize) {
-        ScreenSize.SMALL -> 40.dp
-        ScreenSize.MEDIUM -> 50.dp
-        ScreenSize.LARGE -> 60.dp
-    }
-    val titleFontSize = when (screenSize) {
-        ScreenSize.SMALL -> 12.sp
-        ScreenSize.MEDIUM -> 15.sp
-        ScreenSize.LARGE -> 18.sp
-    }
-    val paddingValue = when (screenSize) {
-        ScreenSize.SMALL -> 30.dp
-        ScreenSize.MEDIUM -> 40.dp
-        ScreenSize.LARGE -> 50.dp
-    }
-    val top = when (screenSize) {
-        ScreenSize.SMALL -> 90.dp
-        ScreenSize.MEDIUM -> 100.dp
-        ScreenSize.LARGE -> 110.dp
-    }
+    val logoSize = logoSize()
+    val titleFontSize = titleFontSize()
+    val paddingValue = logoSize() - 10.dp
+    val top = logoSize() + 50.dp
 
     TopAppBar(
         modifier = Modifier.height(top),
@@ -127,17 +115,9 @@ fun TopBar2() {
 
 @Composable
 fun Identity(modifier: Modifier = Modifier) {
-    val screenSize = getScreenSize()
-    val titleFontSize = when (screenSize) {
-        ScreenSize.SMALL -> 18.sp
-        ScreenSize.MEDIUM -> 20.sp
-        ScreenSize.LARGE -> 22.sp
-    }
-    val sizeValue = when (screenSize) {
-        ScreenSize.SMALL -> 40.dp
-        ScreenSize.MEDIUM -> 50.dp
-        ScreenSize.LARGE -> 60.dp
-    }
+    val titleFontSize = (txtSize().value + 2).sp
+    val sizeValue = logoSize()
+
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = modifier
@@ -178,22 +158,10 @@ fun Identity(modifier: Modifier = Modifier) {
 
 @Composable
 fun StatsCardGroup() {
-    val screenSize = getScreenSize()
-    val sizeValue = when (screenSize) {
-        ScreenSize.SMALL -> 20.dp
-        ScreenSize.MEDIUM -> 30.dp
-        ScreenSize.LARGE -> 40.dp
-    }
-    val padding = when (screenSize) {
-        ScreenSize.SMALL -> 50.dp
-        ScreenSize.MEDIUM -> 60.dp
-        ScreenSize.LARGE -> 70.dp
-    }
-    val titleFontSize = when (screenSize) {
-        ScreenSize.SMALL -> 20.sp
-        ScreenSize.MEDIUM -> 22.sp
-        ScreenSize.LARGE -> 24.sp
-    }
+    val sizeValue = logoSize() - 20.dp
+    val padding = logoSize() + 10.dp
+    val titleFontSize = (txtSize().value + 4).sp
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -279,22 +247,10 @@ fun StatsCardGroup() {
 
 @Composable
 fun ProfileDetailsSection() {
-    val screenSize = getScreenSize()
-    val padding = when (screenSize) {
-        ScreenSize.SMALL -> 50.dp
-        ScreenSize.MEDIUM -> 60.dp
-        ScreenSize.LARGE -> 70.dp
-    }
-    val spacer = when (screenSize) {
-        ScreenSize.SMALL -> 16.dp
-        ScreenSize.MEDIUM -> 24.dp
-        ScreenSize.LARGE -> 30.dp
-    }
-    val titleFontSize = when (screenSize) {
-        ScreenSize.SMALL -> 16.sp
-        ScreenSize.MEDIUM -> 18.sp
-        ScreenSize.LARGE -> 20.sp
-    }
+    val padding = logoSize() + 10.dp
+    val spacer = spacer()
+    val titleFontSize = txtSize()
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -356,12 +312,7 @@ fun ProfileDetailRow(
     label2: String,
     value2: String
 ) {
-    val screenSize = getScreenSize()
-    val titleFontSize = when (screenSize) {
-        ScreenSize.SMALL -> 16.sp
-        ScreenSize.MEDIUM -> 18.sp
-        ScreenSize.LARGE -> 20.sp
-    }
+    val titleFontSize = txtSize()
 
     Row {
         Column(modifier = Modifier.weight(1f)) {
@@ -398,17 +349,9 @@ fun ProfileDetailRow(
 
 @Composable
 fun EditProfileBtn(){
-    val screenSize = getScreenSize()
-    val btnHeight = when (screenSize) {
-        ScreenSize.SMALL -> 50.dp
-        ScreenSize.MEDIUM -> 58.dp
-        ScreenSize.LARGE -> 70.dp
-    }
-    val titleFontSize = when (screenSize) {
-        ScreenSize.SMALL -> 16.sp
-        ScreenSize.MEDIUM -> 18.sp
-        ScreenSize.LARGE -> 20.sp
-    }
+    val btnHeight = verticalSpacing() + 10.dp
+    val titleFontSize = txtSize()
+
     Column(
         modifier = Modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally
@@ -471,12 +414,14 @@ fun ProfileScreen(){
             ScreenContent(selectedItem)
         }
 
-        if(selectedItem == 0 || selectedItem == 1 || selectedItem == 4) {
+        if (selectedItem == 0 || selectedItem == 1 || selectedItem == 2 || selectedItem == 4) {
             Nav(
                 selectedItem = selectedItem,
                 onItemSelected = { newIndex ->
                     selectedItem = newIndex
-                }
+                },
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
             )
         }
     }

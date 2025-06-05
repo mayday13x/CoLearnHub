@@ -116,5 +116,16 @@
     <string name="be_the_first">Be the first to share your knowledge!</string>
     <string name="New_Session">New Session</string>
     <string name="Joined">Joined</string>
+    <string name="Title_label">Title</string>
+    <string name="file_uploaded">File Uploaded</string>
+    <string name="unknown_file">Unknown File</string>
+    <string name="change_file">Change File</string>
+    <string name="upload_file">Upload File</string>
+    <string name="ingles">English</string>
+    <string name="portugues">Portuguese</string>
+    <string name="language">Content Language</string>
+    <string name="description">Description</string>
+    <string name="area">Area</string>
+    <string name="priv">Private</string>
 
 </resources>

@@ -40,11 +40,13 @@ import com.example.colearnhub.R
 import com.example.colearnhub.ui.utils.Circles
 import com.example.colearnhub.ui.utils.Nav
 import com.example.colearnhub.ui.utils.ScreenContent
-import com.example.colearnhub.ui.utils.ScreenSize
 import com.example.colearnhub.ui.utils.SearchBar
+import com.example.colearnhub.ui.utils.animation
+import com.example.colearnhub.ui.utils.btnHeight
 import com.example.colearnhub.ui.utils.dynamicPadding
 import com.example.colearnhub.ui.utils.dynamicWidth
-import com.example.colearnhub.ui.utils.getScreenSize
+import com.example.colearnhub.ui.utils.txtSize
+import com.example.colearnhub.ui.utils.verticalSpacing
 
 @Composable
 fun Indice(){
@@ -52,24 +54,11 @@ fun Indice(){
     val label1 = stringResource(id = R.string.All)
     val label2 = stringResource(id = R.string.Created)
     val tabs = listOf(label1, label2)
+    val verticalSpacing = verticalSpacing()
+    val btnHeight = btnHeight()
+    val txtSize = txtSize()
 
-    val screenSize = getScreenSize()
     dynamicPadding()
-    val verticalSpacing = when (screenSize) {
-        ScreenSize.SMALL -> 40.dp
-        ScreenSize.MEDIUM -> 48.dp
-        ScreenSize.LARGE -> 60.dp
-    }
-    val btnHeight = when (screenSize) {
-        ScreenSize.SMALL -> 35.dp
-        ScreenSize.MEDIUM -> 40.dp
-        ScreenSize.LARGE -> 45.dp
-    }
-    val txtSize = when (screenSize) {
-        ScreenSize.SMALL -> 16.sp
-        ScreenSize.MEDIUM -> 18.sp
-        ScreenSize.LARGE -> 20.sp
-    }
 
     Column(
         modifier = Modifier
@@ -125,28 +114,11 @@ fun Indice(){
 
 @Composable
 fun ContentArea() {
-    val screenSize = getScreenSize()
     val padding = dynamicPadding()
-    val animationSize = when (screenSize) {
-        ScreenSize.SMALL -> 120.dp
-        ScreenSize.MEDIUM -> 160.dp
-        ScreenSize.LARGE -> 200.dp
-    }
-    val titleFontSize = when (screenSize) {
-        ScreenSize.SMALL -> 16.sp
-        ScreenSize.MEDIUM -> 18.sp
-        ScreenSize.LARGE -> 20.sp
-    }
-    val verticalSpacing = when (screenSize) {
-        ScreenSize.SMALL -> 40.dp
-        ScreenSize.MEDIUM -> 48.dp
-        ScreenSize.LARGE -> 60.dp
-    }
-    val btnHeight = when (screenSize) {
-        ScreenSize.SMALL -> 50.dp
-        ScreenSize.MEDIUM -> 58.dp
-        ScreenSize.LARGE -> 70.dp
-    }
+    val animationSize = animation()
+    val titleFontSize = txtSize()
+    val verticalSpacing = verticalSpacing()
+    val btnHeight = verticalSpacing() + 10.dp
 
     Column(
         modifier = Modifier
@@ -240,12 +212,14 @@ fun MainScreen() {
             ScreenContent(selectedItem)
         }
 
-        if(selectedItem == 0 || selectedItem == 1 || selectedItem == 4) {
+        if (selectedItem == 0 || selectedItem == 1 || selectedItem == 2 || selectedItem == 4) {
             Nav(
                 selectedItem = selectedItem,
                 onItemSelected = { newIndex ->
                     selectedItem = newIndex
-                }
+                },
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
             )
         }
     }

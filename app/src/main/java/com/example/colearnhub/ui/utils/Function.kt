@@ -18,11 +18,15 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.Group
+import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.PictureAsPdf
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.TextSnippet
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
@@ -48,6 +52,7 @@ import com.example.colearnhub.R
 import com.example.colearnhub.ui.screen.main.BottomNavItem
 import com.example.colearnhub.ui.screen.main.Indice
 import com.example.colearnhub.ui.screen.main.Indice2
+import com.example.colearnhub.ui.screen.main.Indice4
 import com.example.colearnhub.ui.screen.main.Indice5
 
 @Composable
@@ -204,11 +209,11 @@ fun NavBarIcon(
     }
 }
 
-
 @Composable
 fun Nav(
     selectedItem: Int,
-    onItemSelected: (Int) -> Unit
+    onItemSelected: (Int) -> Unit,
+    modifier: Modifier = Modifier
 ) {
     val screenSize = getScreenSize()
     val bottomBarHeight = when (screenSize) {
@@ -241,45 +246,41 @@ fun Nav(
         BottomNavItem(label5, icon = Icons.Default.Person)
     )
 
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.BottomCenter
-    ) {
-        NavigationBar(
-            containerColor = Color.White,
-            modifier = Modifier
-                .height(bottomBarHeight)
-                .drawBehind {
-                    val strokeWidth = 1.5.dp.toPx()
-                    drawLine(
-                        color = Color(0xFF395174),
-                        start = Offset(0f, 0f),
-                        end = Offset(size.width, 0f),
-                        strokeWidth = strokeWidth
-                    )
-                }
-        ) {
-            bottomNavItems.forEachIndexed { index, item ->
-                NavigationBarItem(
-                    selected = selectedItem == index,
-                    onClick = { onItemSelected(index) },
-                    icon = {
-                        NavBarIcon(
-                            item = item,
-                            isSelected = selectedItem == index,
-                            iconSize = iconSize,
-                            isCenterButton = index == 2
-                        )
-                    },
-                    label = {
-                        Text(
-                            text = item.label,
-                            fontSize = textSize,
-                            color = if (selectedItem == index) Color(0xFF395174) else Color.Gray
-                        )
-                    }
+    // ⬇️ Elimina este Box, não é necessário e pode estar a atrapalhar o alinhamento externo
+    NavigationBar(
+        containerColor = Color.White,
+        modifier = modifier
+            .height(bottomBarHeight)
+            .drawBehind {
+                val strokeWidth = 1.5.dp.toPx()
+                drawLine(
+                    color = Color(0xFF395174),
+                    start = Offset(0f, 0f),
+                    end = Offset(size.width, 0f),
+                    strokeWidth = strokeWidth
                 )
             }
+    ) {
+        bottomNavItems.forEachIndexed { index, item ->
+            NavigationBarItem(
+                selected = selectedItem == index,
+                onClick = { onItemSelected(index) },
+                icon = {
+                    NavBarIcon(
+                        item = item,
+                        isSelected = selectedItem == index,
+                        iconSize = iconSize,
+                        isCenterButton = index == 2
+                    )
+                },
+                label = {
+                    Text(
+                        text = item.label,
+                        fontSize = textSize,
+                        color = if (selectedItem == index) Color(0xFF395174) else Color.Gray
+                    )
+                }
+            )
         }
     }
 }
@@ -289,8 +290,23 @@ fun ScreenContent(selectedItem: Int) {
     when (selectedItem) {
         0 -> Indice()
         1 -> Indice2()
-        // 2 -> ShareScreen()
+        2 -> Indice4()
         // 3 -> GroupsScreen()
         4 -> Indice5()
     }
+}
+
+fun getFileExtension(fileName: String): String {
+    return fileName.substringAfterLast('.', "pdf")
+}
+
+fun getFileIcon(fileName: String?) = when {
+    fileName?.endsWith(".pdf", ignoreCase = true) == true -> Icons.Default.PictureAsPdf
+    fileName?.endsWith(".doc", ignoreCase = true) == true ||
+            fileName?.endsWith(".docx", ignoreCase = true) == true -> Icons.Default.Description
+    fileName?.endsWith(".txt", ignoreCase = true) == true -> Icons.Default.TextSnippet
+    fileName?.endsWith(".jpg", ignoreCase = true) == true ||
+            fileName?.endsWith(".jpeg", ignoreCase = true) == true ||
+            fileName?.endsWith(".png", ignoreCase = true) == true -> Icons.Default.Image
+    else -> Icons.Default.Description
 }
