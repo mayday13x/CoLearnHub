@@ -1,4 +1,3 @@
-// ============== REPOSITORY CORRIGIDO ==============
 package com.example.colearnhub.repositoryLayer
 
 import android.util.Log
@@ -21,12 +20,13 @@ class MaterialRepository {
         fileUrl: String? = null,
         visibility: Boolean = true,
         languageId: Long? = null,
-        authorId: Long? = null,
+        authorId: String? = null, // String agora
         tagId: Long? = null
     ): Material? = withContext(Dispatchers.IO) {
         return@withContext try {
             Log.d("MaterialRepository", "=== CRIANDO MATERIAL ===")
             Log.d("MaterialRepository", "Title: '$title'")
+            Log.d("MaterialRepository", "Author ID: $authorId")
             Log.d("MaterialRepository", "Visibility: $visibility")
             Log.d("MaterialRepository", "Language ID: $languageId")
 
@@ -52,7 +52,8 @@ class MaterialRepository {
             Log.d("MaterialRepository", "MATERIAL CRIADO:")
             Log.d("MaterialRepository", "  - ID: ${result.id}")
             Log.d("MaterialRepository", "  - Title: '${result.title}'")
-            Log.d("MaterialRepository", "  - Visibility: ${result.visibility}") // Deve ser true para ser visivel
+            Log.d("MaterialRepository", "  - Author: ${result.author_id}")
+            Log.d("MaterialRepository", "  - Visibility: ${result.visibility}")
             Log.d("MaterialRepository", "  - Language: ${result.language}")
 
             result
@@ -82,6 +83,7 @@ class MaterialRepository {
             if (result != null) {
                 Log.d("MaterialRepository", "Material encontrado:")
                 Log.d("MaterialRepository", "  - Visibility: ${result.visibility}")
+                Log.d("MaterialRepository", "  - Author: ${result.author_id}")
                 Log.d("MaterialRepository", "  - Language: ${result.language}")
             } else {
                 Log.w("MaterialRepository", "Material $materialId não encontrado")
@@ -178,11 +180,13 @@ class MaterialRepository {
     }
 
     /**
-     * Obtém materiais por autor
+     * Obtém materiais por autor (String agora)
      */
-    suspend fun getMaterialsByAuthor(authorId: Long): List<Material> = withContext(Dispatchers.IO) {
+    suspend fun getMaterialsByAuthor(authorId: String): List<Material> = withContext(Dispatchers.IO) {
         return@withContext try {
-            SupabaseClient.client
+            Log.d("MaterialRepository", "Buscando materiais do autor: $authorId")
+
+            val result = SupabaseClient.client
                 .from("Materials")
                 .select {
                     filter {
@@ -190,6 +194,9 @@ class MaterialRepository {
                     }
                 }
                 .decodeList<Material>()
+
+            Log.d("MaterialRepository", "Encontrados ${result.size} materiais do autor $authorId")
+            result
         } catch (e: Exception) {
             Log.e("MaterialRepository", "Erro ao buscar por autor: ${e.message}")
             emptyList()
