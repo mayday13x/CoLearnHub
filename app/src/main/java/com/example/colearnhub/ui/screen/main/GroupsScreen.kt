@@ -2,6 +2,7 @@ package com.example.colearnhub.ui.screen.main
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,8 +15,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Email
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -25,10 +29,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -43,78 +47,41 @@ import com.example.colearnhub.ui.utils.SBar
 import com.example.colearnhub.ui.utils.ScreenContent
 import com.example.colearnhub.ui.utils.SearchBar
 import com.example.colearnhub.ui.utils.animation
-import com.example.colearnhub.ui.utils.btnHeight
 import com.example.colearnhub.ui.utils.dynamicPadding
 import com.example.colearnhub.ui.utils.dynamicWidth
 import com.example.colearnhub.ui.utils.txtSize
 import com.example.colearnhub.ui.utils.verticalSpacing
 
 @Composable
-fun Indice(){
-    var selectedTab by remember { mutableIntStateOf(0) }
-    val label1 = stringResource(id = R.string.All)
-    val label2 = stringResource(id = R.string.Created)
-    val tabs = listOf(label1, label2)
-    val verticalSpacing = verticalSpacing()
-    val btnHeight = btnHeight()
-    val txtSize = txtSize()
-
-    dynamicPadding()
-
-    Column(
+fun InvitesLink(onClick: () -> Unit) {
+    Row(
         modifier = Modifier
-            .fillMaxSize()
-            .padding(20.dp)
+            .fillMaxWidth()
+            .padding(horizontal = 20.dp)
+            .padding(top = 50.dp),
+        horizontalArrangement = Arrangement.End,
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Spacer(modifier = Modifier.height(verticalSpacing))
-        Row(
+        Icon(
+            imageVector = Icons.Default.Email,
+            contentDescription = "Invites",
+            tint = Color(0xFF395174),
+            modifier = Modifier.size(23.dp)
+        )
+        Spacer(Modifier.width(4.dp))
+        Text(
+            text = stringResource(R.string.Invites),
+            color = Color(0xFF395174),
+            fontSize = 14.sp,
+            textDecoration = TextDecoration.Underline, // opcional
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            tabs.forEachIndexed { index, title ->
-                Column(
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Button(
-                        onClick = { selectedTab = index },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(btnHeight),
-                        shape = RoundedCornerShape(8.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = if (selectedTab == index) Color(0xC9E9F2FF) else Color.Transparent,
-                            contentColor = Color(0xFF395174)
-                        ),
-                        elevation = ButtonDefaults.buttonElevation(0.dp)
-                    ) {
-                        Text(
-                            text = title,
-                            fontSize = txtSize,
-                            fontWeight = FontWeight.Bold,
-                            color = Color(0xFF395174)
-                        )
-                    }
-
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(2.dp)
-                            .background(
-                                if (selectedTab == index) Color(0xFF395174) else Color.Transparent
-                            )
-                    )
-                }
-            }
-        }
-        Spacer(modifier = Modifier.height(verticalSpacing - 30.dp))
-        ContentArea()
+                .clickable(onClick = onClick)
+        )
     }
 }
 
 @Composable
-fun ContentArea() {
+fun ContentArea3() {
     val padding = dynamicPadding()
     val animationSize = animation()
     val titleFontSize = txtSize()
@@ -143,13 +110,13 @@ fun ContentArea() {
             Spacer(modifier = Modifier.height(verticalSpacing - 16.dp))
 
             Text(
-                text = stringResource(R.string.not_found),
+                text = stringResource(R.string.no_group),
                 fontSize = titleFontSize,
                 color = Color.Black,
             )
 
             Text(
-                text = stringResource(R.string.be_the_first),
+                text = stringResource(R.string.invitation),
                 fontSize = (titleFontSize.value - 2).sp,
                 color = Color.Black,
                 modifier = Modifier.padding(top = 4.dp),
@@ -176,7 +143,7 @@ fun ContentArea() {
                 elevation = ButtonDefaults.buttonElevation(defaultElevation = 2.dp)
             ) {
                 Text(
-                    text = stringResource(R.string.Share),
+                    text = stringResource(R.string.new_group),
                     fontSize = titleFontSize,
                     fontWeight = FontWeight.Bold
                 )
@@ -186,15 +153,21 @@ fun ContentArea() {
     }
 }
 
-data class BottomNavItem(
-    val label: String,
-    val icon: ImageVector? = null,
-    val drawableRes: Int? = null
-)
+@Composable
+fun Indice3(){
+    InvitesLink(onClick = { /* Acción al hacer clic en "Invites" */ })
+    ContentArea3()
+}
+
+@Preview(showBackground = true)
+@Composable
+fun PreviewGroupsScreen() {
+    GroupsScreen()
+}
 
 @Composable
-fun MainScreen() {
-    var selectedItem by remember { mutableIntStateOf(0) }
+fun GroupsScreen(){
+    var selectedItem by remember { mutableIntStateOf(3) }
 
     Box(
         modifier = Modifier.fillMaxSize()
@@ -230,10 +203,4 @@ fun MainScreen() {
             )
         }
     }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun PreviewMainScreen() {
-    MainScreen()
 }

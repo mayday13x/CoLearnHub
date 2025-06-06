@@ -115,5 +115,21 @@
     <string name="be_the_first">Sê o primeiro a partilhar o teu conhecimento!</string>
     <string name="New_Session">Nova Sessão</string>"
     <string name="Joined">Aderiu</string>
+    <string name="Title_label">Título</string>
+    <string name="file_uploaded">Documento Carregado</string>
+    <string name="unknown_file">Documento Desconhecido</string>
+    <string name="change_file">Alterar Documento</string>
+    <string name="upload_file">Carregar Dcoumento</string>
+    <string name="ingles">Inglês</string>
+    <string name="portugues">Português</string>
+    <string name="language">Idioma do Conteúdo</string>
+    <string name="description">Descrição</string>
+    <string name="area">Área</string>
+    <string name="priv">Privado</string>
+    <string name="study_session">Sessões de Estudo</string>
+    <string name="Invites">Convites</string>
+    <string name="no_group">Não está num grupo ainda!</string>
+    <string name="invitation">Aceita um convite ou cria um novo grupo.</string>
+    <string name="new_group">Novo Grupo</string>
 
 </resources>

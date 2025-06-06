@@ -38,12 +38,15 @@ import com.airbnb.lottie.compose.rememberLottieComposition
 import com.example.colearnhub.R
 import com.example.colearnhub.ui.utils.Circles
 import com.example.colearnhub.ui.utils.Nav
+import com.example.colearnhub.ui.utils.SBar
 import com.example.colearnhub.ui.utils.ScreenContent
-import com.example.colearnhub.ui.utils.ScreenSize
 import com.example.colearnhub.ui.utils.SearchBar
+import com.example.colearnhub.ui.utils.animation
+import com.example.colearnhub.ui.utils.btnHeight
 import com.example.colearnhub.ui.utils.dynamicPadding
 import com.example.colearnhub.ui.utils.dynamicWidth
-import com.example.colearnhub.ui.utils.getScreenSize
+import com.example.colearnhub.ui.utils.txtSize
+import com.example.colearnhub.ui.utils.verticalSpacing
 
 @Composable
 fun Indice2(){
@@ -53,23 +56,10 @@ fun Indice2(){
     val label3 = stringResource(R.string.Created2)
     val tabs = listOf(label1, label2, label3)
 
-    val screenSize = getScreenSize()
     dynamicPadding()
-    val verticalSpacing = when (screenSize) {
-        ScreenSize.SMALL -> 40.dp
-        ScreenSize.MEDIUM -> 48.dp
-        ScreenSize.LARGE -> 60.dp
-    }
-    val btnHeight = when (screenSize) {
-        ScreenSize.SMALL -> 35.dp
-        ScreenSize.MEDIUM -> 40.dp
-        ScreenSize.LARGE -> 45.dp
-    }
-    val txtSize = when (screenSize) {
-        ScreenSize.SMALL -> 16.sp
-        ScreenSize.MEDIUM -> 18.sp
-        ScreenSize.LARGE -> 20.sp
-    }
+    val verticalSpacing = verticalSpacing()
+    val btnHeight = btnHeight()
+    val txtSize = txtSize()
 
     Column(
         modifier = Modifier
@@ -127,23 +117,10 @@ fun Indice2(){
 
 @Composable
 fun ContentArea2() {
-    val screenSize = getScreenSize()
     val padding = dynamicPadding()
-    val animationSize = when (screenSize) {
-        ScreenSize.SMALL -> 120.dp
-        ScreenSize.MEDIUM -> 160.dp
-        ScreenSize.LARGE -> 200.dp
-    }
-    val titleFontSize = when (screenSize) {
-        ScreenSize.SMALL -> 16.sp
-        ScreenSize.MEDIUM -> 18.sp
-        ScreenSize.LARGE -> 20.sp
-    }
-    val verticalSpacing = when (screenSize) {
-        ScreenSize.SMALL -> 40.dp
-        ScreenSize.MEDIUM -> 48.dp
-        ScreenSize.LARGE -> 60.dp
-    }
+    val animationSize = animation()
+    val titleFontSize = txtSize()
+    val verticalSpacing = verticalSpacing()
 
     Column(
         modifier = Modifier
@@ -186,17 +163,8 @@ fun ContentArea2() {
 
 @Composable
 fun NewSessionBtn(){
-    val screenSize = getScreenSize()
-    val btnHeight = when (screenSize) {
-        ScreenSize.SMALL -> 50.dp
-        ScreenSize.MEDIUM -> 58.dp
-        ScreenSize.LARGE -> 70.dp
-    }
-    val titleFontSize = when (screenSize) {
-        ScreenSize.SMALL -> 16.sp
-        ScreenSize.MEDIUM -> 18.sp
-        ScreenSize.LARGE -> 20.sp
-    }
+    val btnHeight = verticalSpacing() + 10.dp
+    val titleFontSize = txtSize()
 
     Column(
         modifier = Modifier.fillMaxWidth(),
@@ -236,25 +204,33 @@ fun StudySessionScreen() {
         modifier = Modifier.fillMaxSize()
             .background(Color.White)
     ) {
-        if(selectedItem == 0 || selectedItem == 1 || selectedItem == 4) {
+        if(selectedItem == 0 || selectedItem == 1 || selectedItem == 3 || selectedItem == 4) {
             Circles()
         }
 
         Column(
             modifier = Modifier.fillMaxSize()
         ) {
-            if(selectedItem == 0 || selectedItem == 1) {
+            if(selectedItem == 0){
                 SearchBar()
+            }
+            if(selectedItem == 1) {
+                SBar(title = stringResource(R.string.study_session))
+            }
+            if(selectedItem == 3) {
+                SBar(title = stringResource(R.string.Groups))
             }
             ScreenContent(selectedItem)
         }
 
-        if(selectedItem == 0 || selectedItem == 1 || selectedItem == 4) {
+        if (selectedItem == 0 || selectedItem == 1 || selectedItem == 2 || selectedItem == 3 || selectedItem == 4) {
             Nav(
                 selectedItem = selectedItem,
                 onItemSelected = { newIndex ->
                     selectedItem = newIndex
-                }
+                },
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
             )
         }
     }
