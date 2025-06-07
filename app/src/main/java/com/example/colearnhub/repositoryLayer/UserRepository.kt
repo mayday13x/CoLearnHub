@@ -18,7 +18,7 @@ data class User(
     val country: Int, // 1 = Portugal, 2 = Estados Unidos
     val profile_picture: String? = null,
     val birth_date: String,
-    val role: String? = null,
+    val role: Long? = null,
     val email: String? = null,
 )
 
@@ -127,4 +127,23 @@ class UserRepository {
             null
         }
     }
+
+    suspend fun getUsersByIds(userIds: List<String>): List<User> = withContext(Dispatchers.IO) {
+        try {
+            if (userIds.isEmpty()) return@withContext emptyList()
+
+            SupabaseClient.client
+                .from("Users")
+                .select {
+                    filter {
+                        User::id isIn userIds
+                    }
+                }
+                .decodeList<User>()
+        } catch (e: Exception) {
+            Log.e("UserRepository", "Erro ao buscar utilizadores: ${e.message}", e)
+            emptyList()
+        }
+    }
+
 }

@@ -1,6 +1,7 @@
 package com.example.colearnhub.ui.navigation
 
 import android.os.Build
+import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -15,6 +16,8 @@ fun NavGraph() {
     val navController = rememberNavController()
     val context = LocalContext.current
     val authViewModel: AuthViewModel = viewModel { AuthViewModel(context) }
+
+    Log.d("NavGraph", "isUserLoggedIn: ${authViewModel.isUserLoggedIn()}")
 
     val startDestination = if (authViewModel.isUserLoggedIn()) "MainScreen" else "login"
 

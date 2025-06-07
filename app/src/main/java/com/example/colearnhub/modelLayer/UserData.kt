@@ -9,7 +9,8 @@ data class UserData(
     var birthDate: String = "",
     var country: Int = 1, // 1 = Portugal, 2 = Estados Unidos
     var username: String = "",
-    var password: String = ""
+    var password: String = "",
+    val role: Long? = null,
 ) {
     fun isStep1Valid(): Boolean {
         return name.isNotBlank() &&

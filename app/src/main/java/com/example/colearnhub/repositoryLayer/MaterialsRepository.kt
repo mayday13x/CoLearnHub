@@ -19,24 +19,24 @@ class MaterialRepository {
         description: String? = null,
         fileUrl: String? = null,
         visibility: Boolean = true,
-        languageId: Long? = null,
-        authorId: String? = null, // String agora
+        language: Long? = null,
+        author_id: String? = null, // String agora
         tagId: Long? = null
     ): Material? = withContext(Dispatchers.IO) {
         return@withContext try {
-            Log.d("MaterialRepository", "=== CRIANDO MATERIAL ===")
+            Log.d("MaterialRepository", "=== A criar material ===")
             Log.d("MaterialRepository", "Title: '$title'")
-            Log.d("MaterialRepository", "Author ID: $authorId")
+            Log.d("MaterialRepository", "Author ID: $author_id")
             Log.d("MaterialRepository", "Visibility: $visibility")
-            Log.d("MaterialRepository", "Language ID: $languageId")
+            Log.d("MaterialRepository", "Language ID: $language")
 
             val materialRequest = CreateMaterialRequest(
                 title = title,
                 description = description,
                 file_url = fileUrl,
                 visibility = visibility,
-                language = languageId,
-                author_id = authorId,
+                language = language,
+                author_id = author_id,
                 tag_id = tagId,
             )
 
