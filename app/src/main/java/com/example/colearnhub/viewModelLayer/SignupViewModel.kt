@@ -373,7 +373,7 @@ class SignupViewModel(
     }
 
     // Get current user data as User object
-    fun getCurrentUserData(): UserData {
+ /*   fun getCurrentUserData(): UserData {
         val currentState = _uiState.value
         val birthDate = String.format("%04d-%02d-%02d", currentState.year, currentState.month, currentState.day)
 
@@ -383,7 +383,7 @@ class SignupViewModel(
             username = currentState.username,
             password = currentState.password,
             country = currentState.country,
-            birthDate = birthDate
+            birth_date = birthDate
         )
-    }
+    }*/
 }

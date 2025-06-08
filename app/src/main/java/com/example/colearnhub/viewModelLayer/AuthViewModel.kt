@@ -3,10 +3,8 @@ package com.example.colearnhub.viewmodel
 import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.colearnhub.modelLayer.SupabaseClient
+import com.example.colearnhub.repositoryLayer.AuthRepository
 import com.example.colearnhub.ui.utils.SharedPreferenceHelper
-import io.github.jan.supabase.auth.auth
-import io.github.jan.supabase.auth.providers.builtin.Email
 import io.github.jan.supabase.auth.user.UserInfo
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -24,7 +22,7 @@ class AuthViewModel(private val context: Context) : ViewModel() {
     private val _authState = MutableStateFlow(AuthState())
     val authState: StateFlow<AuthState> = _authState.asStateFlow()
 
-    private val supabaseClient = SupabaseClient.client
+    private val authRepository = AuthRepository()
     private val sharedPreferenceHelper = SharedPreferenceHelper(context)
 
     private val _currentUser = MutableStateFlow<UserInfo?>(null)
@@ -41,33 +39,28 @@ class AuthViewModel(private val context: Context) : ViewModel() {
     }
 
     fun getCurrentUser() {
-        _currentUser.value = supabaseClient.auth.currentUserOrNull()
+        _currentUser.value = authRepository.getCurrentUser()
     }
 
     fun isUserLoggedIn(): Boolean {
         return sharedPreferenceHelper.getBooleanData(SharedPreferenceHelper.IS_USER_LOGGED_IN)
     }
 
-    fun signUp(email: String, password: String) {
+/*    fun signUp(email: String, password: String) {
         viewModelScope.launch {
             try {
                 _authState.value = _authState.value.copy(isLoading = true, errorMessage = null)
 
-                supabaseClient.auth.signUpWith(Email) {
-                    this.email = email
-                    this.password = password
-                }
-
+                val userData = mapOf(
+                    "email" to email
+                )
+                
+                authRepository.signUp(email, password, userData)
                 getCurrentUser()
 
                 // Guardar estado de autenticação
                 sharedPreferenceHelper.saveBooleanData(SharedPreferenceHelper.IS_USER_LOGGED_IN, true)
                 sharedPreferenceHelper.saveStringData(SharedPreferenceHelper.USER_EMAIL, email)
-
-                // Guardar token se disponível
-                supabaseClient.auth.currentSessionOrNull()?.accessToken?.let { token ->
-                    sharedPreferenceHelper.saveStringData(SharedPreferenceHelper.ACCESS_TOKEN, token)
-                }
 
                 _authState.value = _authState.value.copy(
                     isLoading = false,
@@ -82,28 +75,19 @@ class AuthViewModel(private val context: Context) : ViewModel() {
                 )
             }
         }
-    }
+    }*/
 
     fun signIn(email: String, password: String) {
         viewModelScope.launch {
             try {
                 _authState.value = _authState.value.copy(isLoading = true, errorMessage = null)
 
-                supabaseClient.auth.signInWith(Email) {
-                    this.email = email
-                    this.password = password
-                }
-
+                authRepository.signIn(email, password)
                 getCurrentUser()
 
                 // Guardar estado de autenticação
                 sharedPreferenceHelper.saveBooleanData(SharedPreferenceHelper.IS_USER_LOGGED_IN, true)
                 sharedPreferenceHelper.saveStringData(SharedPreferenceHelper.USER_EMAIL, email)
-
-                // Guardar token se disponível
-                supabaseClient.auth.currentSessionOrNull()?.accessToken?.let { token ->
-                    sharedPreferenceHelper.saveStringData(SharedPreferenceHelper.ACCESS_TOKEN, token)
-                }
 
                 _authState.value = _authState.value.copy(
                     isLoading = false,
@@ -123,7 +107,7 @@ class AuthViewModel(private val context: Context) : ViewModel() {
     fun signOut() {
         viewModelScope.launch {
             try {
-                supabaseClient.auth.signOut()
+                authRepository.signOut()
                 _currentUser.value = null
 
                 // Limpar dados guardados

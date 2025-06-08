@@ -31,6 +31,8 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
@@ -46,12 +48,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.colearnhub.R
 import com.example.colearnhub.ui.utils.Circles
 import com.example.colearnhub.ui.utils.Nav
 import com.example.colearnhub.ui.utils.SBar
 import com.example.colearnhub.ui.utils.ScreenContent
-import com.example.colearnhub.ui.utils.ScreenSize
 import com.example.colearnhub.ui.utils.SearchBar
 import com.example.colearnhub.ui.utils.dynamicWidth
 import com.example.colearnhub.ui.utils.getScreenSize
@@ -60,6 +62,10 @@ import com.example.colearnhub.ui.utils.spacer
 import com.example.colearnhub.ui.utils.titleFontSize
 import com.example.colearnhub.ui.utils.txtSize
 import com.example.colearnhub.ui.utils.verticalSpacing
+import com.example.colearnhub.viewmodel.UserViewModel
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
+import java.time.format.FormatStyle
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -115,9 +121,13 @@ fun TopBar2() {
 }
 
 @Composable
-fun Identity(modifier: Modifier = Modifier) {
+fun Identity(
+    modifier: Modifier = Modifier,
+    userViewModel: UserViewModel = viewModel()
+) {
     val titleFontSize = (txtSize().value + 2).sp
     val sizeValue = logoSize()
+    val user by userViewModel.user.collectAsState()
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -143,14 +153,14 @@ fun Identity(modifier: Modifier = Modifier) {
         Spacer(modifier = Modifier.height(8.dp))
 
         Text(
-            text = "Miguel Silva",
+            text = user?.name ?: "User",
             fontSize = titleFontSize,
             fontWeight = FontWeight.Bold,
             color = Color.White
         )
 
         Text(
-            text = "@michelangelo",
+            text = "@${user?.username ?: "username"}",
             fontSize = (titleFontSize.value - 4).sp,
             color = Color.White.copy(alpha = 0.8f)
         )
@@ -247,10 +257,15 @@ fun StatsCardGroup() {
 }
 
 @Composable
-fun ProfileDetailsSection() {
+fun ProfileDetailsSection(
+    userViewModel: UserViewModel = viewModel()
+) {
     val padding = logoSize() + 10.dp
     val spacer = spacer()
     val titleFontSize = txtSize()
+    val user by userViewModel.user.collectAsState()
+    val countryName by userViewModel.countryName.collectAsState()
+    val formattedCreatedAt by userViewModel.formattedCreatedAt.collectAsState()
 
     Column(
         modifier = Modifier
@@ -261,27 +276,27 @@ fun ProfileDetailsSection() {
     ) {
         ProfileDetailRow(
             label1 = stringResource(R.string.member_since_label),
-            value1 = "25/04/2025",
+            value1 = formattedCreatedAt,
             label2 = stringResource(R.string.school_label),
-            value2 = "Not defined"
+            value2 = user?.school ?: "Not defined"
         )
 
         Spacer(modifier = Modifier.height(spacer))
 
         ProfileDetailRow(
             label1 = stringResource(R.string.email),
-            value1 = "mjosea@ipvc.pt",
+            value1 = user?.email ?: "Not defined",
             label2 = stringResource(R.string.course_label),
-            value2 = "Not defined"
+            value2 = user?.course ?: "Not defined"
         )
 
         Spacer(modifier = Modifier.height(spacer))
 
         ProfileDetailRow(
             label1 = stringResource(R.string.country),
-            value1 = "Portugal",
+            value1 = countryName ?: "Not defined",
             label2 = stringResource(R.string.curricular_year_label),
-            value2 = "Not defined"
+            value2 = user?.curricularYear?.toString() ?: "Not defined"
         )
 
         Spacer(modifier = Modifier.height(spacer))
@@ -295,7 +310,7 @@ fun ProfileDetailsSection() {
                     fontWeight = FontWeight.Medium
                 )
                 Text(
-                    text = "22/06/1996",
+                    text = user?.birth_date ?: "Not defined",
                     fontSize = (titleFontSize.value - 2).sp,
                     color = Color.Black,
                     fontWeight = FontWeight.Normal
@@ -385,18 +400,28 @@ fun EditProfileBtn(){
 }
 
 @Composable
-fun Indice5(){
+fun Indice5(
+    userViewModel: UserViewModel = viewModel()
+){
+    LaunchedEffect(Unit) {
+        userViewModel.getCurrentUser()
+    }
+    
     TopBar2()
-    Identity(modifier = Modifier.offset(y = (-60).dp)
-        .offset(x = 10.dp))
+    Identity(
+        modifier = Modifier.offset(y = (-60).dp)
+            .offset(x = 10.dp),
+        userViewModel = userViewModel
+    )
     StatsCardGroup()
-    ProfileDetailsSection()
+    ProfileDetailsSection(userViewModel = userViewModel)
     EditProfileBtn()
 }
 
 @Composable
 fun ProfileScreen(){
     var selectedItem by remember { mutableIntStateOf(4) }
+    val userViewModel: UserViewModel = viewModel()
 
     Box(
         modifier = Modifier.fillMaxSize()

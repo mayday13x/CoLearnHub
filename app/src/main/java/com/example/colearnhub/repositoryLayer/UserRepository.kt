@@ -20,7 +20,15 @@ data class User(
     val birth_date: String,
     val role: Long? = null,
     val email: String? = null,
+    val school: String? = null,
+    val course: String? = null,
+    val curricularYear: Int? = null,
+    val created_at: String? = null
 )
+
+
+@Serializable
+data class UserUsername(val username: String)
 
 class UserRepository {
 
@@ -50,9 +58,6 @@ class UserRepository {
             }
         }
     }
-
-    @Serializable
-    data class UserUsername(val username: String)
 
 
     /**
@@ -145,5 +150,6 @@ class UserRepository {
             emptyList()
         }
     }
+
 
 }

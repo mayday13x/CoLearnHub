@@ -11,18 +11,4 @@ data class UserData(
     var username: String = "",
     var password: String = "",
     val role: Long? = null,
-) {
-    fun isStep1Valid(): Boolean {
-        return name.isNotBlank() &&
-                email.isNotBlank()
-    }
-
-    fun isStep2Valid(): Boolean {
-        return username.isNotBlank() &&
-                password.isNotBlank()
-    }
-
-    fun isComplete(): Boolean {
-        return isStep1Valid() && isStep2Valid()
-    }
-}
+)
