@@ -1,6 +1,7 @@
 package com.example.colearnhub.repositoryLayer
 
 import android.util.Log
+import com.example.colearnhub.modelLayer.Material
 import com.example.colearnhub.modelLayer.Rating
 import com.example.colearnhub.modelLayer.SupabaseClient
 import io.github.jan.supabase.postgrest.from
@@ -163,10 +164,10 @@ class RatingRepository {
                 .from("Materials")
                 .select {
                     filter {
-                        eq("user_id", userId)
+                        eq("author_id", userId)
                     }
                 }
-                .decodeList<Map<String, Any>>()
+                .decodeList<Material>()
 
             if (userMaterials.isEmpty()) {
                 Log.d("RatingRepository", "Usuário não possui materiais")
@@ -174,12 +175,13 @@ class RatingRepository {
             }
 
             // Para cada material, buscar suas avaliações
-            val materialIds = userMaterials.mapNotNull { it["id"] as? Long }
             val allRatings = mutableListOf<Long>()
 
-            materialIds.forEach { materialId ->
-                val ratings = getMaterialRatings(materialId)
-                ratings.mapNotNull { it.rating }.let { allRatings.addAll(it) }
+            userMaterials.forEach { material ->
+                material.id?.let { materialId ->
+                    val ratings = getMaterialRatings(materialId)
+                    ratings.mapNotNull { it.rating }.let { allRatings.addAll(it) }
+                }
             }
 
             if (allRatings.isEmpty()) {
@@ -207,10 +209,10 @@ class RatingRepository {
                 .from("Materials")
                 .select {
                     filter {
-                        eq("user_id", userId)
+                        eq("author_id", userId)
                     }
                 }
-                .decodeList<Map<String, Any>>()
+                .decodeList<Material>()
 
             Log.d("RatingRepository", "Total de contribuições: ${result.size}")
             result.size
