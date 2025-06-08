@@ -7,6 +7,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.colearnhub.repositoryLayer.AuthRepository
 import com.example.colearnhub.repositoryLayer.CountryRepository
+import com.example.colearnhub.repositoryLayer.RatingRepository
 import com.example.colearnhub.repositoryLayer.User
 import com.example.colearnhub.repositoryLayer.UserRepository
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -21,6 +22,7 @@ class UserViewModel : ViewModel() {
     private val userRepository = UserRepository()
     private val authRepository = AuthRepository()
     private val countryRepository = CountryRepository()
+    private val ratingRepository = RatingRepository()
 
     private val _user = MutableStateFlow<User?>(null)
     val user: StateFlow<User?> = _user
@@ -30,6 +32,12 @@ class UserViewModel : ViewModel() {
 
     private val _formattedCreatedAt = MutableStateFlow<String>("Not defined")
     val formattedCreatedAt: StateFlow<String> = _formattedCreatedAt
+
+    private val _userContributions = MutableStateFlow(0)
+    val userContributions: StateFlow<Int> = _userContributions
+
+    private val _averageRating = MutableStateFlow(0.0)
+    val averageRating: StateFlow<Double> = _averageRating
 
     // Crud do utilizador
     fun getUserById(userId: String) {
@@ -43,6 +51,11 @@ class UserViewModel : ViewModel() {
             // Format created_at date
             user?.created_at?.let { dateStr ->
                 formatCreatedAtDate(dateStr)
+            }
+            // Get user contributions and average rating
+            user?.id?.let { id ->
+                getUserContributions(id)
+                getAverageRatingForUserMaterials(id)
             }
         }
     }
@@ -58,6 +71,11 @@ class UserViewModel : ViewModel() {
             // Format created_at date
             user?.created_at?.let { dateStr ->
                 formatCreatedAtDate(dateStr)
+            }
+            // Get user contributions and average rating
+            user?.id?.let { id ->
+                getUserContributions(id)
+                getAverageRatingForUserMaterials(id)
             }
         }
     }
@@ -83,6 +101,20 @@ class UserViewModel : ViewModel() {
             _formattedCreatedAt.value = dateTime.format(DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM))
         } catch (e: Exception) {
             _formattedCreatedAt.value = "Not defined"
+        }
+    }
+
+    private fun getUserContributions(userId: String) {
+        viewModelScope.launch {
+            val contributions = ratingRepository.getUserContributions(userId)
+            _userContributions.value = contributions
+        }
+    }
+
+    private fun getAverageRatingForUserMaterials(userId: String) {
+        viewModelScope.launch {
+            val average = ratingRepository.getAverageRatingForUserMaterials(userId)
+            _averageRating.value = average
         }
     }
 

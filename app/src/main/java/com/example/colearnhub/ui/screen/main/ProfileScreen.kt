@@ -168,10 +168,14 @@ fun Identity(
 }
 
 @Composable
-fun StatsCardGroup() {
+fun StatsCardGroup(
+    userViewModel: UserViewModel = viewModel()
+) {
     val sizeValue = logoSize() - 20.dp
     val padding = logoSize() + 10.dp
     val titleFontSize = (txtSize().value + 4).sp
+    val contributions by userViewModel.userContributions.collectAsState()
+    val averageRating by userViewModel.averageRating.collectAsState()
 
     Card(
         modifier = Modifier
@@ -202,7 +206,7 @@ fun StatsCardGroup() {
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        text = "5",
+                        text = contributions.toString(),
                         fontSize = titleFontSize,
                         fontWeight = FontWeight.Bold,
                         color = Color.Black
@@ -238,7 +242,7 @@ fun StatsCardGroup() {
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        text = "4.0",
+                        text = String.format("%.1f", averageRating),
                         fontSize = titleFontSize,
                         fontWeight = FontWeight.Bold,
                         color = Color.Black
@@ -413,7 +417,7 @@ fun Indice5(
             .offset(x = 10.dp),
         userViewModel = userViewModel
     )
-    StatsCardGroup()
+    StatsCardGroup(userViewModel = userViewModel)
     ProfileDetailsSection(userViewModel = userViewModel)
     EditProfileBtn()
 }
