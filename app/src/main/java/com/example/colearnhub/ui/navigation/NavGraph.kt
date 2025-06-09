@@ -3,10 +3,14 @@ package com.example.colearnhub.ui.navigation
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
-import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.rememberNavController
 import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavGraphBuilder
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import com.example.colearnhub.ui.screen.others.SettingsScreen
 import com.example.colearnhub.viewmodel.AuthViewModel
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -22,5 +26,12 @@ fun NavGraph() {
         authRoutes(navController, authViewModel)
         mainRoutes(navController)
         testRoutes(navController)
+        otherRoutes(navController)
+    }
+}
+
+fun NavGraphBuilder.otherRoutes(navController: NavHostController) {
+    composable("settings") {
+        SettingsScreen(navController = navController)
     }
 }

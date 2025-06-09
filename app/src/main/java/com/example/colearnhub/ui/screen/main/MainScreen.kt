@@ -29,9 +29,9 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
 import com.airbnb.lottie.compose.LottieAnimation
 import com.airbnb.lottie.compose.LottieCompositionSpec
 import com.airbnb.lottie.compose.LottieConstants
@@ -193,8 +193,8 @@ data class BottomNavItem(
 )
 
 @Composable
-fun MainScreen() {
-    var selectedItem by remember { mutableIntStateOf(0) }
+fun MainScreen(navController: NavController, initialSelectedItem: Int = 0) {
+    var selectedItem by remember { mutableIntStateOf(initialSelectedItem) }
 
     Box(
         modifier = Modifier.fillMaxSize()
@@ -216,7 +216,7 @@ fun MainScreen() {
             if(selectedItem == 3) {
                 SBar(title = stringResource(R.string.Groups))
             }
-            ScreenContent(selectedItem)
+            ScreenContent(selectedItem, navController)
         }
 
         if (selectedItem == 0 || selectedItem == 1 || selectedItem == 2 || selectedItem == 3 || selectedItem == 4) {
@@ -230,10 +230,4 @@ fun MainScreen() {
             )
         }
     }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun PreviewMainScreen() {
-    MainScreen()
 }

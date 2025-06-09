@@ -46,8 +46,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -72,7 +70,8 @@ fun LoginScreen(
     // Observar mudanças no estado de autenticação
     LaunchedEffect(authState.isAuthenticated) {
         if (authState.isAuthenticated && authState.successMessage != null) {
-            navController.navigate("MainScreen") {
+            //rota temporária enquanto não temos a home
+            navController.navigate("signup") {
                 popUpTo("login") { inclusive = true }
             }
         }

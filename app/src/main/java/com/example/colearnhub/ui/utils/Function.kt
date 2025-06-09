@@ -31,6 +31,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -48,6 +49,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
 import com.example.colearnhub.R
 import com.example.colearnhub.ui.screen.main.BottomNavItem
 import com.example.colearnhub.ui.screen.main.Indice
@@ -321,7 +323,6 @@ fun Nav(
         BottomNavItem(label5, icon = Icons.Default.Person)
     )
 
-    // ⬇️ Elimina este Box, não é necessário e pode estar a atrapalhar o alinhamento externo
     NavigationBar(
         containerColor = Color.White,
         modifier = modifier
@@ -329,7 +330,7 @@ fun Nav(
             .drawBehind {
                 val strokeWidth = 1.5.dp.toPx()
                 drawLine(
-                    color = Color(0xFF395174),
+                    color = Color(0xFFA4A4A4),
                     start = Offset(0f, 0f),
                     end = Offset(size.width, 0f),
                     strokeWidth = strokeWidth
@@ -345,29 +346,35 @@ fun Nav(
                         item = item,
                         isSelected = selectedItem == index,
                         iconSize = iconSize,
-                        isCenterButton = index == 2
+                        isCenterButton = index == 2,
                     )
                 },
                 label = {
                     Text(
                         text = item.label,
-                        fontSize = textSize,
-                        color = if (selectedItem == index) Color(0xFF395174) else Color.Gray
+                        fontSize = textSize
                     )
-                }
+                },
+                colors = NavigationBarItemDefaults.colors(
+                    selectedIconColor = Color(0xFF395174),
+                    unselectedIconColor = Color.Gray,
+                    selectedTextColor = Color(0xFF395174),
+                    unselectedTextColor = Color.Gray,
+                    indicatorColor = Color(0x46395174)
+                )
             )
         }
     }
 }
 
 @Composable
-fun ScreenContent(selectedItem: Int) {
+fun ScreenContent(selectedItem: Int, navController: NavController) {
     when (selectedItem) {
         0 -> Indice()
         1 -> Indice2()
         2 -> Indice4()
         3 -> Indice3()
-        4 -> Indice5()
+        4 -> Indice5(navController)
     }
 }
 

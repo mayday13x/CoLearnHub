@@ -92,3 +92,14 @@ fun sbutton(): Dp {
     }
     return spacer
 }
+
+@Composable
+fun spacer3(): Dp {
+    val screenSize = getScreenSize()
+    val spacer = when (screenSize) {
+        ScreenSize.SMALL -> 56.dp
+        ScreenSize.MEDIUM -> 60.dp
+        ScreenSize.LARGE -> 64.dp
+    }
+    return spacer
+}
