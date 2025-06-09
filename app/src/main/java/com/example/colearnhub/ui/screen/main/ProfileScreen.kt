@@ -45,9 +45,9 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.colearnhub.R
 import com.example.colearnhub.ui.utils.Circles
@@ -56,7 +56,6 @@ import com.example.colearnhub.ui.utils.SBar
 import com.example.colearnhub.ui.utils.ScreenContent
 import com.example.colearnhub.ui.utils.SearchBar
 import com.example.colearnhub.ui.utils.dynamicWidth
-import com.example.colearnhub.ui.utils.getScreenSize
 import com.example.colearnhub.ui.utils.logoSize
 import com.example.colearnhub.ui.utils.spacer
 import com.example.colearnhub.ui.utils.titleFontSize
@@ -69,7 +68,7 @@ import java.time.format.FormatStyle
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TopBar2() {
+fun TopBar2(onSettingsClick: () -> Unit) {
     val logoSize = logoSize()
     val titleFontSize = titleFontSize()
     val paddingValue = logoSize() - 10.dp
@@ -80,12 +79,11 @@ fun TopBar2() {
         title = {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
                     .padding(horizontal = paddingValue - 15.dp)
             ) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Spacer(modifier = Modifier.height(paddingValue))
                     Image(
                         painter = painterResource(id = R.drawable.cubewhite),
@@ -105,7 +103,7 @@ fun TopBar2() {
 
                 Spacer(modifier = Modifier.weight(1f))
 
-                IconButton(onClick = {}) {
+                IconButton(onClick = onSettingsClick) {
                     Icon(
                         imageVector = Icons.Default.Settings,
                         contentDescription = "Settings",
@@ -242,7 +240,7 @@ fun StatsCardGroup(
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        text = String.format("%.1f", averageRating),
+                        text = "4.0",
                         fontSize = titleFontSize,
                         fontWeight = FontWeight.Bold,
                         color = Color.Black
@@ -275,7 +273,7 @@ fun ProfileDetailsSection(
         modifier = Modifier
             .fillMaxWidth()
             .padding(padding)
-            .offset(y = (-40).dp),
+            .offset(y = (-50).dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         ProfileDetailRow(
@@ -404,26 +402,28 @@ fun EditProfileBtn(){
 }
 
 @Composable
-fun Indice5(
-    userViewModel: UserViewModel = viewModel()
-){
+fun Indice5(navController: NavController? = null,
+            userViewModel: UserViewModel = viewModel()){
+
     LaunchedEffect(Unit) {
         userViewModel.getCurrentUser()
     }
-    
-    TopBar2()
-    Identity(
-        modifier = Modifier.offset(y = (-60).dp)
-            .offset(x = 10.dp),
-        userViewModel = userViewModel
+
+    TopBar2(
+        onSettingsClick = {
+            navController?.navigate("settings")
+        }
     )
+    Identity(modifier = Modifier.offset(y = (-60).dp)
+        .offset(x = 10.dp),
+        userViewModel = userViewModel)
     StatsCardGroup(userViewModel = userViewModel)
     ProfileDetailsSection(userViewModel = userViewModel)
     EditProfileBtn()
 }
 
 @Composable
-fun ProfileScreen(){
+fun ProfileScreen(navController: NavController){
     var selectedItem by remember { mutableIntStateOf(4) }
     val userViewModel: UserViewModel = viewModel()
 
@@ -447,7 +447,7 @@ fun ProfileScreen(){
             if(selectedItem == 3) {
                 SBar(title = stringResource(R.string.Groups))
             }
-            ScreenContent(selectedItem)
+            ScreenContent(selectedItem, navController)
         }
 
         if (selectedItem == 0 || selectedItem == 1 || selectedItem == 2 || selectedItem == 3 || selectedItem == 4) {
@@ -461,10 +461,4 @@ fun ProfileScreen(){
             )
         }
     }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun PreviewProfileScreen() {
-    ProfileScreen()
 }

@@ -1,5 +1,6 @@
 <resources>
     <string name="app_name">CoLearnHub</string>
+    <string name="app_name2">COLEARNHUB</string>
     <string name="logo" />
     <string name="email_hint">Email</string>
     <string name="password_hint">Palavra-passe</string>
@@ -123,6 +124,7 @@
     <string name="ingles">Inglês</string>
     <string name="portugues">Português</string>
     <string name="language">Idioma do Conteúdo</string>
+    <string name="language2">Idioma</string>
     <string name="description">Descrição</string>
     <string name="area">Área</string>
     <string name="priv">Privado</string>
@@ -131,5 +133,12 @@
     <string name="no_group">Não está num grupo ainda!</string>
     <string name="invitation">Aceita um convite ou cria um novo grupo.</string>
     <string name="new_group">Novo Grupo</string>
+    <string name="settings">Definições</string>
+    <string name="change_password">Alterar Palavra-passe</string>
+    <string name="change_email">Alterar Email</string>
+    <string name="Provide_Feedback">Fornecer Feedback</string>"
+    <string name="about">Sobre a Aplicação</string>
+    <string name="Delete_Account">Apagar Conta</string>
+    <string name="Logout">Sair</string>
 
 </resources>

@@ -58,10 +58,10 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
 import com.example.colearnhub.R
 import com.example.colearnhub.ui.utils.Circles
 import com.example.colearnhub.ui.utils.Nav
@@ -100,7 +100,7 @@ fun TopBar() {
         contentAlignment = Alignment.Center
     ) {
         Text(
-            text = "Share",
+            text = stringResource(R.string.Share),
             color = Color.White,
             fontSize = txtSize,
             fontWeight = FontWeight.Medium
@@ -270,9 +270,10 @@ fun Upload(selectedFileUri: Uri?, onFileSelected: (Uri?) -> Unit) {
             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF395174)),
             shape = RoundedCornerShape(8.dp)
         ) {
-            Icon(Icons.Default.Upload, contentDescription = "Upload", modifier = Modifier.size(18.dp))
+            Icon(Icons.Default.Upload, contentDescription = "Upload", tint = Color.White, modifier = Modifier.size(18.dp))
             Spacer(modifier = Modifier.width(8.dp))
-            Text(if (selectedFileUri != null) stringResource(R.string.change_file) else stringResource(R.string.upload_file))
+            Text(if (selectedFileUri != null) stringResource(R.string.change_file) else stringResource(R.string.upload_file)
+                    ,color = Color.White,)
         }
     }
 }
@@ -313,7 +314,8 @@ fun Language() {
                 onValueChange = {},
                 readOnly = true,
                 textStyle = TextStyle(
-                    fontSize = titleFontSize
+                    fontSize = titleFontSize,
+                    color = Color(0xFF000000)
                 ),
                 shape = RoundedCornerShape(12.dp),
                 modifier = Modifier
@@ -338,7 +340,8 @@ fun Language() {
 
             ExposedDropdownMenu(
                 expanded = isDropdownExpanded,
-                onDismissRequest = { isDropdownExpanded = false }
+                onDismissRequest = { isDropdownExpanded = false },
+                modifier = Modifier.background(Color.White)
             ) {
                 languages.forEach { language ->
                     DropdownMenuItem(
@@ -347,15 +350,16 @@ fun Language() {
                                 Text(
                                     text = getFlagEmoji(language),
                                     fontSize = titleFontSize2,
-                                    modifier = Modifier.padding(end = 8.dp)
+                                    modifier = Modifier.padding(end = 8.dp),
                                 )
-                                Text(text = language)
+                                Text(text = language,
+                                    color = Color(0xFF000000),)
                             }
                         },
                         onClick = {
                             selectedLanguage = language
                             isDropdownExpanded = false
-                        }
+                        },
                     )
                 }
             }
@@ -491,12 +495,15 @@ fun ShareBtn(enabled: Boolean) {
     ) {
         Button(
             onClick = { /* ação de partilhar */ },
-            enabled = enabled,
+            enabled = enabled, // usar o parâmetro passado
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(bottom = paddingValue2),
             colors = ButtonDefaults.buttonColors(
-                containerColor = if (enabled) Color(0xFF395174) else Color(0xFFCCCCCC)
+                containerColor = Color(0xFF395174),
+                disabledContainerColor = Color(0xFFB0B0B0), // cor quando desativado (ex: cinzento claro)
+                contentColor = Color.White,
+                disabledContentColor = Color.White.copy(alpha = 0.6f)
             ),
             shape = RoundedCornerShape(8.dp)
         ) {
@@ -509,17 +516,10 @@ fun ShareBtn(enabled: Boolean) {
     }
 }
 
-@Preview(showBackground = true)
-@Composable
-fun PreviewShareScreen() {
-    ShareScreen()
-}
-
 @Composable
 fun Indice4(){
     var title by remember { mutableStateOf("") }
     var selectedFileUri by remember { mutableStateOf<Uri?>(null) }
-
     val isShareEnabled = title.isNotBlank() && selectedFileUri != null
 
     Column(
@@ -540,7 +540,7 @@ fun Indice4(){
 }
 
 @Composable
-fun ShareScreen() {
+fun ShareScreen(navController: NavController) {
     var selectedItem by remember { mutableIntStateOf(2) }
 
     Box(
@@ -565,7 +565,7 @@ fun ShareScreen() {
             if(selectedItem == 3) {
                 SBar(title = stringResource(R.string.Groups))
             }
-            ScreenContent(selectedItem)
+            ScreenContent(selectedItem, navController)
         }
 
         Box(

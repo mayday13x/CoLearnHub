@@ -36,6 +36,7 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
 import com.airbnb.lottie.compose.LottieAnimation
 import com.airbnb.lottie.compose.LottieCompositionSpec
 import com.airbnb.lottie.compose.LottieConstants
@@ -159,14 +160,8 @@ fun Indice3(){
     ContentArea3()
 }
 
-@Preview(showBackground = true)
 @Composable
-fun PreviewGroupsScreen() {
-    GroupsScreen()
-}
-
-@Composable
-fun GroupsScreen(){
+fun GroupsScreen(navController: NavController){
     var selectedItem by remember { mutableIntStateOf(3) }
 
     Box(
@@ -189,7 +184,7 @@ fun GroupsScreen(){
             if(selectedItem == 3) {
                 SBar(title = stringResource(R.string.Groups))
             }
-            ScreenContent(selectedItem)
+            ScreenContent(selectedItem, navController)
         }
 
         if (selectedItem == 0 || selectedItem == 1 || selectedItem == 2 || selectedItem == 3 || selectedItem == 4) {
