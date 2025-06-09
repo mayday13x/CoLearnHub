@@ -1,9 +1,9 @@
 package com.example.colearnhub.ui.screen.main
 
-import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.Image
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -15,145 +15,120 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.FilterList
-import androidx.compose.material.icons.filled.Group
+import androidx.compose.material.icons.filled.Download
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Schedule
-import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
-import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.airbnb.lottie.compose.LottieAnimation
 import com.airbnb.lottie.compose.LottieCompositionSpec
 import com.airbnb.lottie.compose.LottieConstants
 import com.airbnb.lottie.compose.rememberLottieComposition
 import com.example.colearnhub.R
-
-// Composable function to create the UI
-@Composable
-fun Group46() {
-    Canvas(modifier = Modifier.fillMaxSize()) {
-        drawIntoCanvas {
-            // Draw the first circle
-            translate(left = -size.width / 4, top = -(size.height / 2) * 1.04f) {
-                drawCircle(
-                    color = Color(0xF54A6FA5),
-                    radius = size.width / 1.65f
-                )
-            }
-            // Draw the second circle
-            translate(left = size.width / 4, top = -(size.height / 2)) {
-                drawCircle(
-                    color = Color(0xFF4A6FA5),
-                    radius = size.width / 1.65f
-                )
-            }
-        }
-    }
-}
+import com.example.colearnhub.modelLayer.Material
+import com.example.colearnhub.ui.utils.Circles
+import com.example.colearnhub.ui.utils.DateTimeUtils
+import com.example.colearnhub.ui.utils.Nav
+import com.example.colearnhub.ui.utils.SBar
+import com.example.colearnhub.ui.utils.ScreenContent
+import com.example.colearnhub.ui.utils.SearchBar
+import com.example.colearnhub.ui.utils.animation
+import com.example.colearnhub.ui.utils.btnHeight
+import com.example.colearnhub.ui.utils.dynamicPadding
+import com.example.colearnhub.ui.utils.dynamicWidth
+import com.example.colearnhub.ui.utils.txtSize
+import com.example.colearnhub.ui.utils.verticalSpacing
+import com.example.colearnhub.viewModelLayer.AuthViewModelFactory
+import com.example.colearnhub.viewModelLayer.MaterialViewModel
+import com.example.colearnhub.viewmodel.AuthViewModel
 
 @Composable
-fun Group34() {
-    Column(
-        modifier = Modifier
-            .padding(26.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Image(
-            painter = painterResource(id = R.drawable.cubewhite),
-            contentDescription = "Logo",
-            modifier = Modifier.size(40.dp)
-        )
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 5.dp),
-            horizontalArrangement = Arrangement.Center
-        ) {
-            Box {
-                Text(
-                    text = "COLEARNHUB",
-                    fontSize = 10.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.White,
-                    style = androidx.compose.ui.text.TextStyle(
-                        drawStyle = Stroke(width = 2f)
-                    )
-                )
-            }
-        }
-        Spacer(Modifier.height(27.dp))
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(Color.White, RoundedCornerShape(10))
-                .padding(horizontal = 16.dp, vertical = 8.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(Icons.Default.Search, contentDescription = "Search")
-            Spacer(Modifier.width(8.dp))
-            Text(
-                "Search",
-                color = Color.Gray,
-                modifier = Modifier.weight(1f),
-                style = MaterialTheme.typography.bodyMedium
-            )
-            Icon(Icons.Default.FilterList, contentDescription = "Filter")
-        }
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 8.dp),
-            horizontalArrangement = Arrangement.Center
-        ) {
-            Text(
-                "Share your knowledge",
-                color = Color.White,
-                fontWeight = FontWeight.Bold
-            )
-        }
-    }
-}
+fun Indice(
+    materialViewModel: MaterialViewModel = viewModel()
+) {
+    // Obter contexto para passar ao factory
+    val context = LocalContext.current.applicationContext
 
-@Composable
-fun Indice(){
+    // Criar AuthViewModel via factory passando o context
+    val authViewModel: AuthViewModel = viewModel(
+        factory = AuthViewModelFactory(context)
+    )
+
+    val currentUser by authViewModel.currentUser.collectAsState()
+    val currentUserId = currentUser?.id
+
     var selectedTab by remember { mutableIntStateOf(0) }
-    val tabs = listOf("All", "Created")
+    val label1 = stringResource(id = R.string.All)
+    val label2 = stringResource(id = R.string.Created)
+    val tabs = listOf(label1, label2)
+    val verticalSpacing = verticalSpacing()
+    val btnHeight = btnHeight()
+    val txtSize = txtSize()
 
-    // Content area
+    // Estados do ViewModel
+    val materials by materialViewModel.materials.collectAsState()
+    val userMaterials by materialViewModel.userMaterials.collectAsState()
+    val isLoading by materialViewModel.isLoading.collectAsState()
+
+    LaunchedEffect(selectedTab, currentUserId) {
+        Log.d("IndiceScreen", "selectedTab: $selectedTab, currentUserId: $currentUserId")
+
+        if (selectedTab == 1) {
+            if (currentUserId != null && currentUserId.isNotEmpty()) {
+                Log.d("IndiceScreen", "Chamando loadMaterialsByAuthor com userId: $currentUserId")
+                materialViewModel.loadMaterialsByAuthor(currentUserId)
+            } else {
+                Log.e("IndiceScreen", "currentUserId é null ou vazio!")
+            }
+        }
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(20.dp)
     ) {
-        Spacer(Modifier.height(245.dp))
+        Spacer(modifier = Modifier.height(verticalSpacing))
+
+        // Botão Share - posicionado no topo quando há dados
+        val currentMaterials = if (selectedTab == 0) materials else userMaterials
+        if (currentMaterials.isNotEmpty() && !isLoading) {
+            ShareButton()
+            Spacer(modifier = Modifier.height(16.dp))
+        }
+
+        // Tabs
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -165,10 +140,13 @@ fun Indice(){
                     modifier = Modifier.weight(1f)
                 ) {
                     Button(
-                        onClick = { selectedTab = index },
+                        onClick = {
+                            Log.d("IndiceScreen", "Tab clicada: $index")
+                            selectedTab = index
+                        },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(35.dp),
+                            .height(btnHeight),
                         shape = RoundedCornerShape(8.dp),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = if (selectedTab == index) Color(0xC9E9F2FF) else Color.Transparent,
@@ -178,13 +156,12 @@ fun Indice(){
                     ) {
                         Text(
                             text = title,
-                            fontSize = 16.sp,
+                            fontSize = txtSize,
                             fontWeight = FontWeight.Bold,
                             color = Color(0xFF395174)
                         )
                     }
 
-                    // Bottom stroke for selected tab
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -196,79 +173,146 @@ fun Indice(){
                 }
             }
         }
+        Spacer(modifier = Modifier.height(verticalSpacing - 30.dp))
+
+        Log.d("IndiceScreen", "Tab: $selectedTab, Materials count: ${if (selectedTab == 0) materials.size else userMaterials.size}")
+
+        when (selectedTab) {
+            0 -> ContentArea(
+                materials = materials,
+                isLoading = isLoading,
+                materialViewModel = materialViewModel
+            )
+            1 -> ContentArea(
+                materials = userMaterials,
+                isLoading = isLoading,
+                materialViewModel = materialViewModel
+            )
+        }
     }
 }
 
 @Composable
-fun ContentArea(){
+fun ShareButton() {
+    val btnHeight = btnHeight()
+    val txtSize = txtSize()
+
+    Button(
+        onClick = { },
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(btnHeight)
+            .border(
+                width = 1.5.dp,
+                color = Color(0xFF395174),
+                shape = RoundedCornerShape(10.dp)
+            ),
+        shape = RoundedCornerShape(10.dp),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = Color.White,
+            contentColor = Color(0xFF395174)
+        ),
+        elevation = ButtonDefaults.buttonElevation(defaultElevation = 2.dp)
+    ) {
+        Text(
+            text = stringResource(R.string.Share),
+            fontSize = txtSize,
+            fontWeight = FontWeight.Bold
+        )
+    }
+}
+
+@Composable
+fun ContentArea(
+    materials: List<Material>,
+    isLoading: Boolean,
+    materialViewModel: MaterialViewModel
+) {
+    val padding = dynamicPadding()
+    val animationSize = animation()
+    val titleFontSize = txtSize()
+    val verticalSpacing = verticalSpacing()
+    val btnHeight = verticalSpacing() + 10.dp
+
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(horizontal = 16.dp)
+            .padding(horizontal = padding)
     ) {
-
-        Spacer(modifier = Modifier.height(350.dp))
-
-        Column(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
+        if (isLoading) {
             Box(
-                modifier = Modifier
-                    .size(120.dp),
+                modifier = Modifier.fillMaxWidth(),
                 contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(
+                    color = Color(0xFF395174),
+                    modifier = Modifier.padding(16.dp)
+                )
+            }
+        } else if (materials.isEmpty()) {
+            // Tela vazia - igual ao original
+            Spacer(modifier = Modifier.height(verticalSpacing))
+
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.animation))
 
                 LottieAnimation(
                     composition = composition,
-                    modifier = Modifier.size(500.dp),
+                    modifier = Modifier.size(animationSize),
                     iterations = LottieConstants.IterateForever
                 )
-            }
 
-            Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(verticalSpacing - 16.dp))
 
-            Text(
-                text = "No material was found ...",
-                fontSize = 16.sp,
-                color = Color.Black,
-            )
-
-            Text(
-                text = "Be the first to share your knowledge !",
-                fontSize = 14.sp,
-                color = Color.Black,
-                modifier = Modifier.padding(top = 4.dp),
-                textAlign = TextAlign.Center
-            )
-
-            Spacer(modifier = Modifier.height(40.dp))
-
-            Button(
-                onClick = { },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(50.dp)
-                    .padding(horizontal = 20.dp)
-                    .border(
-                        width = 1.5.dp,
-                        color = Color(0xFF395174),
-                        shape = RoundedCornerShape(10.dp)
-                    ),
-                shape = RoundedCornerShape(10.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.White,
-                    contentColor = Color(0xFF395174)
-                ),
-                elevation = ButtonDefaults.buttonElevation(defaultElevation = 2.dp)
-            ) {
                 Text(
-                    text = "Share",
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold
+                    text = stringResource(R.string.not_found),
+                    fontSize = titleFontSize,
+                    color = Color.Black,
                 )
+
+                Text(
+                    text = stringResource(R.string.be_the_first),
+                    fontSize = (titleFontSize.value - 2).sp,
+                    color = Color.Black,
+                    modifier = Modifier.padding(top = 4.dp),
+                    textAlign = TextAlign.Center
+                )
+
+                Spacer(modifier = Modifier.height(verticalSpacing))
+
+                Button(
+                    onClick = { },
+                    modifier = Modifier
+                        .width(dynamicWidth(maxWidth = 300.dp))
+                        .height(btnHeight)
+                        .border(
+                            width = 1.5.dp,
+                            color = Color(0xFF395174),
+                            shape = RoundedCornerShape(10.dp)
+                        ),
+                    shape = RoundedCornerShape(10.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.White,
+                        contentColor = Color(0xFF395174)
+                    ),
+                    elevation = ButtonDefaults.buttonElevation(defaultElevation = 2.dp)
+                ) {
+                    Text(
+                        text = stringResource(R.string.Share),
+                        fontSize = titleFontSize,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
             }
+        } else {
+            // Lista de materiais
+            MaterialsList(
+                materials = materials,
+                materialViewModel = materialViewModel
+            )
         }
 
         Spacer(modifier = Modifier.weight(1f))
@@ -276,90 +320,246 @@ fun ContentArea(){
 }
 
 @Composable
-fun Nav() {
-    var selectedItem by remember { mutableIntStateOf(0) }
+fun MaterialsList(
+    materials: List<Material>,
+    materialViewModel: MaterialViewModel
+) {
+    val highlights = materials.take(2)
+    val others = materials.drop(2)
 
-    val bottomNavItems = listOf(
-        BottomNavItem("Home", drawableRes = R.drawable.cube),
-        BottomNavItem("Sessions", icon = Icons.Default.Schedule),
-        BottomNavItem("Share", icon = Icons.Default.Add),
-        BottomNavItem("Groups", icon = Icons.Default.Group),
-        BottomNavItem("Profile", icon = Icons.Default.Person)
-    )
-
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.BottomCenter
+    LazyColumn(
+        verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        NavigationBar(
-            containerColor = Color.White,
-            modifier = Modifier.height(80.dp)
-                .drawBehind {
-                    val strokeWidth = 1.5.dp.toPx()
-                    drawLine(
-                        color = Color(0xFF395174),
-                        start = Offset(0f, 0f),
-                        end = Offset(size.width, 0f),
-                        strokeWidth = strokeWidth
-                    )
-                }
-        ) {
-            bottomNavItems.forEachIndexed { index, item ->
-                NavigationBarItem(
-                    selected = selectedItem == index,
-                    onClick = { selectedItem = index },
-                    icon = {
-                        if (index == 2) {
-                            Box(
-                                modifier = Modifier
-                                    .size(24.dp)
-                                    .background(
-                                        color = Color(0xFFFFFFFF),
-                                        shape = RoundedCornerShape(10.dp)
-                                    )
-                                    .border(
-                                        width = 1.5.dp,
-                                        color = if (selectedItem == index) Color(0xFF395174) else Color.Gray,
-                                        shape = RoundedCornerShape(10.dp)
-                                    ),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Icon(
-                                    imageVector = item.icon!!,
-                                    contentDescription = item.label,
-                                    tint = if (selectedItem == index) Color(0xFF395174) else Color.Gray,
-                                    modifier = Modifier.size(24.dp)
-                                )
-                            }
-                        } else {
-                            if (item.drawableRes != null) {
-                                Image(
-                                    painter = painterResource(id = item.drawableRes),
-                                    contentDescription = item.label,
-                                    colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(
-                                        if (selectedItem == index) Color(0xFF395174) else Color.Gray
-                                    ),
-                                    modifier = Modifier.size(24.dp)
-                                )
-                            } else {
-                                Icon(
-                                    imageVector = item.icon!!,
-                                    contentDescription = item.label,
-                                    tint = if (selectedItem == index) Color(0xFF395174) else Color.Gray
-                                )
-                            }
-                        }
-                    },
-                    label = {
-                        Text(
-                            text = item.label,
-                            fontSize = 12.sp,
-                            color = if (selectedItem == index) Color(0xFF395174) else Color.Gray
-                        )
-                    }
+        // Seção Highlights
+        if (highlights.isNotEmpty()) {
+            item {
+                Text(
+                    text = "Highlights",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF395174),
+                    modifier = Modifier.padding(vertical = 8.dp)
+                )
+            }
+
+            items(highlights) { material ->
+                MaterialCard(
+                    material = material,
+                    materialViewModel = materialViewModel,
+                    isHighlight = true
                 )
             }
         }
+
+        // Seção Others
+        if (others.isNotEmpty()) {
+            item {
+                Text(
+                    text = "Others",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF395174),
+                    modifier = Modifier.padding(vertical = 8.dp)
+                )
+            }
+
+            items(others) { material ->
+                MaterialCard(
+                    material = material,
+                    materialViewModel = materialViewModel,
+                    isHighlight = false
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun MaterialCard(
+    material: Material,
+    materialViewModel: MaterialViewModel,
+    isHighlight: Boolean
+) {
+    val authorName = materialViewModel.getUserName(material.author_id)
+    val tagName = materialViewModel.getTagName(material.tag_id)
+    val (languageName, languageFlag) = materialViewModel.getLanguageInfo(material.language)
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { /* Navegar para detalhes */ },
+        colors = CardDefaults.cardColors(
+            containerColor = Color.White
+        ),
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = 2.dp
+        ),
+        shape = RoundedCornerShape(8.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp)
+        ) {
+            // Linha superior: Título e informações adicionais
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.Top
+            ) {
+                Column(
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text(
+                        text = material.title,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.Black,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+
+                    // Tags do tipo do material
+                    Row(
+                        modifier = Modifier.padding(top = 4.dp),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        // Tag baseada na tag do material
+                        if (tagName.isNotEmpty()) {
+                            MaterialTypeTag(
+                                text = tagName,
+                                backgroundColor = Color(0xFF4A90E2)
+                            )
+                        }
+
+                        // Tag do formato do arquivo (se tiver file_url)
+                        material.file_url?.let { fileUrl ->
+                            val extension = fileUrl.substringAfterLast(".", "")
+                            if (extension.isNotEmpty()) {
+                                MaterialTypeTag(
+                                    text = extension.uppercase(),
+                                    backgroundColor = Color(0xFF6B7280)
+                                )
+                            }
+                        }
+                    }
+                }
+
+                // Tempo
+                Text(
+                    text = DateTimeUtils.formatTimeAgo(material.created_at),
+                    fontSize = 12.sp,
+                    color = Color.Gray
+                )
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Linha inferior: Estatísticas, idioma e autor
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Downloads (valores fictícios por enquanto)
+                StatIcon(Icons.Default.Download, "203")
+                Spacer(modifier = Modifier.width(12.dp))
+
+                // Rating (valores fictícios por enquanto)
+                StatIcon(Icons.Default.Star, "5.0", Color(0xFFFFA500))
+                Spacer(modifier = Modifier.width(12.dp))
+
+                // Idioma com bandeira
+                LanguageTag(
+                    language = languageName,
+                    flagCode = languageFlag
+                )
+
+                Spacer(modifier = Modifier.weight(1f))
+
+                // Autor
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Person,
+                        contentDescription = "Author",
+                        tint = Color.Gray,
+                        modifier = Modifier.size(14.dp)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = authorName.ifEmpty { "Utilizador" },
+                        fontSize = 12.sp,
+                        color = Color.Gray
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun MaterialTypeTag(
+    text: String,
+    backgroundColor: Color
+) {
+    Box(
+        modifier = Modifier
+            .background(
+                color = backgroundColor,
+                shape = RoundedCornerShape(4.dp)
+            )
+            .padding(horizontal = 6.dp, vertical = 2.dp)
+    ) {
+        Text(
+            text = text,
+            fontSize = 10.sp,
+            color = Color.White,
+            fontWeight = FontWeight.Medium
+        )
+    }
+}
+
+@Composable
+fun LanguageTag(
+    language: String,
+    flagCode: String
+) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = flagCode,
+            fontSize = 12.sp
+        )
+        Spacer(modifier = Modifier.width(4.dp))
+        Text(
+            text = language,
+            fontSize = 12.sp,
+            color = Color.Gray
+        )
+    }
+}
+
+@Composable
+fun StatIcon(
+    icon: ImageVector,
+    value: String,
+    tint: Color = Color.Gray
+) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = tint,
+            modifier = Modifier.size(14.dp)
+        )
+        Spacer(modifier = Modifier.width(4.dp))
+        Text(
+            text = value,
+            fontSize = 12.sp,
+            color = Color.Gray
+        )
     }
 }
 
@@ -369,13 +569,42 @@ data class BottomNavItem(
     val drawableRes: Int? = null
 )
 
-@Preview(showBackground = true)
 @Composable
-fun MainScreen() {
-    Group46()
-    Group34()
-    Indice()
-    ContentArea()
-    Nav()
-}
+fun MainScreen(navController: NavController, initialSelectedItem: Int = 0) {
+    var selectedItem by remember { mutableIntStateOf(initialSelectedItem) }
 
+    Box(
+        modifier = Modifier.fillMaxSize()
+            .background(Color.White)
+    ) {
+        if(selectedItem == 0 || selectedItem == 1 || selectedItem == 3 || selectedItem == 4) {
+            Circles()
+        }
+
+        Column(
+            modifier = Modifier.fillMaxSize()
+        ) {
+            if(selectedItem == 0){
+                SearchBar()
+            }
+            if(selectedItem == 1) {
+                SBar(title = stringResource(R.string.study_session))
+            }
+            if(selectedItem == 3) {
+                SBar(title = stringResource(R.string.Groups))
+            }
+            ScreenContent(selectedItem, navController)
+        }
+
+        if (selectedItem == 0 || selectedItem == 1 || selectedItem == 2 || selectedItem == 3 || selectedItem == 4) {
+            Nav(
+                selectedItem = selectedItem,
+                onItemSelected = { newIndex ->
+                    selectedItem = newIndex
+                },
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+            )
+        }
+    }
+}

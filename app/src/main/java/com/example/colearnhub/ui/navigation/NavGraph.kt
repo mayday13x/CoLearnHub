@@ -1,41 +1,40 @@
 package com.example.colearnhub.ui.navigation
 
 import android.os.Build
+import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavGraphBuilder
+import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.example.colearnhub.data.SignupData
-import com.example.colearnhub.ui.screen.authTest.SignUpScreen
-import com.example.colearnhub.ui.screen.login.LoginScreen
-import com.example.colearnhub.ui.screen.signup.SignupStep1Screen
-import com.example.colearnhub.ui.screen.signup.SignupStep2Screen
+import com.example.colearnhub.ui.screen.others.SettingsScreen
+import com.example.colearnhub.viewmodel.AuthViewModel
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun NavGraph(startDestination: String = "login") {
+fun NavGraph() {
     val navController = rememberNavController()
-    val signupData = remember { SignupData() }
+    val context = LocalContext.current
+    val authViewModel: AuthViewModel = viewModel { AuthViewModel(context) }
+
+    Log.d("NavGraph", "isUserLoggedIn: ${authViewModel.isUserLoggedIn()}")
+
+    val startDestination = if (authViewModel.isUserLoggedIn()) "MainScreen" else "login"
+
     NavHost(navController = navController, startDestination = startDestination) {
-        composable("login") {
-            LoginScreen(navController)
-        }
-        composable("signup") {
-            SignUpScreen(navController = navController)
-        }
-        composable("signup_step1") {
-            SignupStep1Screen(
-                navController = navController,
-                signupData = signupData
-            )
-        }
-        composable("signup_step2") {
-            SignupStep2Screen(
-                navController = navController,
-                signupData = signupData
-            )
-        }
+        authRoutes(navController, authViewModel)
+        mainRoutes(navController)
+        testRoutes(navController)
+        otherRoutes(navController)
+    }
+}
+
+fun NavGraphBuilder.otherRoutes(navController: NavHostController) {
+    composable("settings") {
+        SettingsScreen(navController = navController)
     }
 }

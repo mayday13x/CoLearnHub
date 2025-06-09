@@ -1,5 +1,6 @@
 <resources>
     <string name="app_name">CoLearnHub</string>
+    <string name="app_name2">COLEARNHUB</string>
     <string name="logo" />
     <string name="email_hint">Email</string>
     <string name="password_hint">Palavra-passe</string>
@@ -36,4 +37,108 @@
     <string name="december">Dezembro</string>
     <string name="portugal">Portugal</string>
     <string name="unitedstates">Estados Unidos</string>
+
+    <!-- Validation Error Messages -->
+    <string name="email_required">Email é obrigatório</string>
+    <string name="email_invalid">Por favor, introduza um email válido</string>
+    <string name="password_required">Palavra-passe é obrigatória</string>
+    <string name="password_min_length">A palavra-passe deve ter pelo menos 6 caracteres</string>
+    <string name="name_required">Nome é obrigatório</string>
+    <string name="username_required">Nome de utilizador é obrigatório</string>
+    <string name="confirm_password_required">Confirmar palavra-passe é obrigatório</string>
+    <string name="passwords_not_match">As palavras-passe não coincidem</string>
+    <string name="birthdate_required">Data de nascimento é obrigatória</string>
+    <string name="invalid_date">Data inválida</string>
+    <string name="age_restriction">Deve ter pelo menos 13 anos</string>
+
+    <!-- Content Descriptions -->
+    <string name="colearnhub_logo">Logótipo CoLearnHub</string>
+
+    <!-- Success Messages -->
+    <string name="signup_success">Conta criada com sucesso</string>
+    <string name="login_success">Login realizado com sucesso</string>
+
+    <!-- Username Validation -->
+    <string name="username_min_length">Nome de utilizador deve ter pelo menos 3 caracteres</string>
+    <string name="username_max_length">Nome de utilizador não pode ter mais de 20 caracteres</string>
+    <string name="username_invalid_chars">Nome de utilizador só pode conter letras, números e underscore</string>
+    <string name="username_already_exists">Este nome de utilizador já está em uso</string>
+
+    <!-- Password Validation -->
+    <string name="password_max_length">Palavra-passe não pode ter mais de 50 caracteres</string>
+    <string name="password_weak">Palavra-passe muito fraca</string>
+
+    <!-- Name Validation -->
+    <string name="name_min_length">Nome deve ter pelo menos 2 caracteres</string>
+    <string name="name_max_length">Nome não pode ter mais de 50 caracteres</string>
+    <string name="name_invalid_chars">Nome só pode conter letras e espaços</string>
+
+    <!-- Email Validation -->
+    <string name="email_already_exists">Este email já está registado</string>
+    <string name="email_max_length">Email não pode ter mais de 100 caracteres</string>
+
+    <!-- Date Validation -->
+    <string name="select_day">Selecione o dia</string>
+    <string name="select_month">Selecione o mês</string>
+    <string name="select_year">Selecione o ano</string>
+    <string name="future_date_error">A data não pode ser no futuro</string>
+    <string name="invalid_day_for_month">Dia inválido para o mês selecionado</string>
+
+    <!-- Generic Error Messages -->
+    <string name="network_error">Erro de rede. Verifique a sua ligação à internet</string>
+    <string name="server_error">Erro do servidor. Tente novamente mais tarde</string>
+    <string name="unknown_error">Ocorreu um erro inesperado</string>
+
+    <string name="error_getting_user_id">Erro ao obter ID do utilizador</string>
+    <string name="error_checking_email">Erro ao verificar email</string>
+    <string name="error_checking_username">Erro ao verificar nome de utilizador</string>
+
+    <string name="edit_profile_btn">Editar Perfil</string>
+    <string name="course_label">Curso</string>
+    <string name="curricular_year_label">Ano Curricular</string>
+    <string name="member_since_label">Membro Desde</string>
+    <string name="school_label">Escola/Instituição</string>
+    <string name="contributions_label">Contribuições</string>
+    <string name="evaluations_label">Avaliação Média</string>
+    <string name="Home">Início</string>
+    <string name="Sessions">Sessões</string>
+    <string name="Share">Partilhar</string>
+    <string name="Groups">Grupos</string>
+    <string name="Profile">Perfil</string>
+    <string name="Created">Partilhado</string>
+    <string name="Created2">Part.</string>
+    <string name="All">Todos</string>
+    <string name="Search">Procurando por...</string>
+    <string name="Knowledge">Partilha o teu conhecimento</string>
+    <string name="Knowledge2">Cria sessões e convida os teus amigos</string>
+    <string name="not_found">Nenhum material encontrado...</string>
+    <string name="not_found2">Nenhuma sessão encontrada...</string>
+    <string name="be_the_first">Sê o primeiro a partilhar o teu conhecimento!</string>
+    <string name="New_Session">Nova Sessão</string>"
+    <string name="Joined">Aderiu</string>
+    <string name="Title_label">Título</string>
+    <string name="file_uploaded">Documento Carregado</string>
+    <string name="unknown_file">Documento Desconhecido</string>
+    <string name="change_file">Alterar Documento</string>
+    <string name="upload_file">Carregar Dcoumento</string>
+    <string name="ingles">Inglês</string>
+    <string name="portugues">Português</string>
+    <string name="language">Idioma do Conteúdo</string>
+    <string name="language2">Idioma</string>
+    <string name="description">Descrição</string>
+    <string name="area">Área</string>
+    <string name="priv">Privado</string>
+    <string name="study_session">Sessões de Estudo</string>
+    <string name="Invites">Convites</string>
+    <string name="no_group">Não está num grupo ainda!</string>
+    <string name="invitation">Aceita um convite ou cria um novo grupo.</string>
+    <string name="new_group">Novo Grupo</string>
+    <string name="settings">Definições</string>
+    <string name="change_password">Alterar Palavra-passe</string>
+    <string name="change_email">Alterar Email</string>
+    <string name="Provide_Feedback">Fornecer Feedback</string>"
+    <string name="about">Sobre a Aplicação</string>
+    <string name="Delete_Account">Apagar Conta</string>
+    <string name="Logout">Sair</string>
+
 </resources>

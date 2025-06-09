@@ -19,16 +19,6 @@
         android:theme="@style/Theme.CoLearnHub"
         tools:targetApi="31">
         <activity
-            android:name=".ui.screen.authTest.SupabaseTestAuthScreen"
-            android:exported="false" />
-        <activity
-            android:name=".ui.screen.signup.SignupStep2Screen"
-            android:exported="false" />
-        <activity
-            android:name=".ui.screen.signup.SignupStep1Screen"
-            android:exported="false" />
-
-        <activity
             android:name=".ui.screen.home.HomeScreen"
             android:label="Home" />
         <activity

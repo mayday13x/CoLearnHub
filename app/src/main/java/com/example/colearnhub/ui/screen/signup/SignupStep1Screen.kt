@@ -32,8 +32,9 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -46,43 +47,27 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.colearnhub.R
-import com.example.colearnhub.data.SignupData
-import com.example.colearnhub.repository.AuthRepository
-import kotlinx.coroutines.launch
-import java.time.LocalDate
+import com.example.colearnhub.viewmodel.SignupViewModel
 
 @RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SignupStep1Screen(
     navController: NavController,
-    signupData: SignupData
+    viewModel: SignupViewModel = viewModel()
 ) {
-    // Estados dos campos
-    var name by remember { mutableStateOf(signupData.name) }
-    var email by remember { mutableStateOf(signupData.email) }
-    var day by remember { mutableIntStateOf(signupData.birthDate?.dayOfMonth ?: 0) }
-    var month by remember { mutableIntStateOf(signupData.birthDate?.monthValue ?: 0) }
-    var year by remember { mutableIntStateOf(signupData.birthDate?.year ?: 0) }
-    var country by remember { mutableIntStateOf(signupData.country) }
+    val uiState by viewModel.uiState.collectAsState()
+    val scope = rememberCoroutineScope()
+    val snackbarHostState = remember { SnackbarHostState() }
 
     // Estados para dropdowns
     var expandedDay by remember { mutableStateOf(false) }
     var expandedMonth by remember { mutableStateOf(false) }
     var expandedYear by remember { mutableStateOf(false) }
     var expandedCountry by remember { mutableStateOf(false) }
-
-    // Estados de validação e loading
-    var nameError by remember { mutableStateOf<String?>(null) }
-    var emailError by remember { mutableStateOf<String?>(null) }
-    var dateError by remember { mutableStateOf<String?>(null) }
-    var isLoading by remember { mutableStateOf(false) }
-
-    val authRepository = remember { AuthRepository() }
-    val scope = rememberCoroutineScope()
-    val snackbarHostState = remember { SnackbarHostState() }
 
     // Dados para dropdowns
     val days = (1..31).toList()
@@ -100,74 +85,26 @@ fun SignupStep1Screen(
         stringResource(R.string.november),
         stringResource(R.string.december)
     )
-    val years = (1950..2010).toList().reversed() // Ajustado para idades mais realistas
+    val years = (1950..2010).toList().reversed()
 
     val countries = listOf(
         "🇵🇹 ${stringResource(R.string.portugal)}" to 1,
         "🇺🇸 ${stringResource(R.string.unitedstates)}" to 2
     )
 
-    fun validateInputs(): Boolean {
-        var hasError = false
-
-        // Validar nome
-        when {
-            name.isBlank() -> {
-                nameError = "Nome é obrigatório"
-                hasError = true
+    // Handle navigation and snackbar messages
+    LaunchedEffect(uiState.snackbarMessage) {
+        uiState.snackbarMessage?.let { message ->
+            if (message == "step1_success") {
+                navController.navigate("signup_step2")
+            } else {
+                snackbarHostState.showSnackbar(
+                    message = message,
+                    duration = SnackbarDuration.Long
+                )
             }
-            name.length < 2 -> {
-                nameError = "Nome deve ter pelo menos 2 caracteres"
-                hasError = true
-            }
-            else -> nameError = null
+            viewModel.clearSnackbarMessage()
         }
-
-        // Validar email
-        when {
-            email.isBlank() -> {
-                emailError = "Email é obrigatório"
-                hasError = true
-            }
-            !android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches() -> {
-                emailError = "Email inválido"
-                hasError = true
-            }
-            else -> emailError = null
-        }
-
-        // Validar data de nascimento
-        when {
-            day == 0 || month == 0 || year == 0 -> {
-                dateError = "Data de nascimento é obrigatória"
-                hasError = true
-            }
-            else -> {
-                try {
-                    val birthDate = LocalDate.of(year, month, day)
-                    val now = LocalDate.now()
-                    val age = now.year - birthDate.year -
-                            if (now.dayOfYear < birthDate.dayOfYear) 1 else 0
-
-                    when {
-                        age < 13 -> {
-                            dateError = "Deve ter pelo menos 13 anos"
-                            hasError = true
-                        }
-                        age > 100 -> {
-                            dateError = "Data inválida"
-                            hasError = true
-                        }
-                        else -> dateError = null
-                    }
-                } catch (e: Exception) {
-                    dateError = "Data inválida"
-                    hasError = true
-                }
-            }
-        }
-
-        return !hasError
     }
 
     Scaffold(
@@ -210,17 +147,14 @@ fun SignupStep1Screen(
             // Campo Nome
             Column {
                 OutlinedTextField(
-                    value = name,
-                    onValueChange = {
-                        name = it.trim()
-                        nameError = null
-                    },
+                    value = uiState.name,
+                    onValueChange = viewModel::updateName,
                     label = { Text(stringResource(R.string.name), fontSize = 14.sp) },
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp),
                     singleLine = true,
-                    isError = nameError != null,
+                    isError = uiState.nameError != null,
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = Color(0xFF395174),
                         unfocusedBorderColor = Color.Gray.copy(alpha = 0.5f),
@@ -229,7 +163,7 @@ fun SignupStep1Screen(
                     textStyle = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp)
                 )
 
-                nameError?.let { error ->
+                uiState.nameError?.let { error ->
                     Text(
                         text = error,
                         color = Color.Red,
@@ -244,17 +178,14 @@ fun SignupStep1Screen(
             // Campo Email
             Column {
                 OutlinedTextField(
-                    value = email,
-                    onValueChange = {
-                        email = it.trim().lowercase()
-                        emailError = null
-                    },
+                    value = uiState.email,
+                    onValueChange = viewModel::updateEmail,
                     label = { Text(stringResource(R.string.email), fontSize = 14.sp) },
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp),
                     singleLine = true,
-                    isError = emailError != null,
+                    isError = uiState.emailError != null,
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = Color(0xFF395174),
                         unfocusedBorderColor = Color.Gray.copy(alpha = 0.5f),
@@ -263,7 +194,7 @@ fun SignupStep1Screen(
                     textStyle = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp)
                 )
 
-                emailError?.let { error ->
+                uiState.emailError?.let { error ->
                     Text(
                         text = error,
                         color = Color.Red,
@@ -302,7 +233,7 @@ fun SignupStep1Screen(
                                     .menuAnchor()
                                     .fillMaxWidth(),
                                 readOnly = true,
-                                value = if (day == 0) stringResource(R.string.day) else day.toString(),
+                                value = if (uiState.day == 0) stringResource(R.string.day) else uiState.day.toString(),
                                 onValueChange = {},
                                 trailingIcon = {
                                     ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedDay)
@@ -321,9 +252,8 @@ fun SignupStep1Screen(
                                     DropdownMenuItem(
                                         text = { Text(text = item.toString(), fontSize = 12.sp) },
                                         onClick = {
-                                            day = item
+                                            viewModel.updateDay(item)
                                             expandedDay = false
-                                            dateError = null
                                         }
                                     )
                                 }
@@ -342,7 +272,7 @@ fun SignupStep1Screen(
                                     .menuAnchor()
                                     .fillMaxWidth(),
                                 readOnly = true,
-                                value = if (month == 0) stringResource(R.string.month) else months[month - 1],
+                                value = if (uiState.month == 0) stringResource(R.string.month) else months[uiState.month - 1],
                                 onValueChange = {},
                                 trailingIcon = {
                                     ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedMonth)
@@ -361,9 +291,8 @@ fun SignupStep1Screen(
                                     DropdownMenuItem(
                                         text = { Text(text = item, fontSize = 12.sp) },
                                         onClick = {
-                                            month = index + 1
+                                            viewModel.updateMonth(index + 1)
                                             expandedMonth = false
-                                            dateError = null
                                         }
                                     )
                                 }
@@ -382,7 +311,7 @@ fun SignupStep1Screen(
                                     .menuAnchor()
                                     .fillMaxWidth(),
                                 readOnly = true,
-                                value = if (year == 0) stringResource(R.string.year) else year.toString(),
+                                value = if (uiState.year == 0) stringResource(R.string.year) else uiState.year.toString(),
                                 onValueChange = {},
                                 trailingIcon = {
                                     ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedYear)
@@ -401,9 +330,8 @@ fun SignupStep1Screen(
                                     DropdownMenuItem(
                                         text = { Text(text = item.toString(), fontSize = 12.sp) },
                                         onClick = {
-                                            year = item
+                                            viewModel.updateYear(item)
                                             expandedYear = false
-                                            dateError = null
                                         }
                                     )
                                 }
@@ -412,7 +340,7 @@ fun SignupStep1Screen(
                     }
                 }
 
-                dateError?.let { error ->
+                uiState.dateError?.let { error ->
                     Text(
                         text = error,
                         color = Color.Red,
@@ -448,7 +376,7 @@ fun SignupStep1Screen(
                             .menuAnchor()
                             .fillMaxWidth(),
                         readOnly = true,
-                        value = countries.find { it.second == country }?.first ?: countries[0].first,
+                        value = countries.find { it.second == uiState.country }?.first ?: countries[0].first,
                         onValueChange = {},
                         trailingIcon = {
                             ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedCountry)
@@ -467,7 +395,7 @@ fun SignupStep1Screen(
                             DropdownMenuItem(
                                 text = { Text(text = countryName, fontSize = 14.sp) },
                                 onClick = {
-                                    country = countryId
+                                    viewModel.updateCountry(countryId)
                                     expandedCountry = false
                                 }
                             )
@@ -480,50 +408,19 @@ fun SignupStep1Screen(
 
             // Botão Próximo
             Button(
-                onClick = {
-                    if (validateInputs()) {
-                        isLoading = true
-                        scope.launch {
-                            try {
-                                // Verificar se email já existe
-                                val emailExists = authRepository.checkEmailExists(email)
-                                if (emailExists) {
-                                    emailError = "Este email já está registado"
-                                } else {
-                                    // Salvar dados no objeto compartilhado
-                                    signupData.apply {
-                                        this.name = name
-                                        this.email = email
-                                        this.birthDate = LocalDate.of(year, month, day)
-                                        this.country = country
-                                    }
-
-                                    // Navegar para o próximo step
-                                    navController.navigate("signup_step2")
-                                }
-                            } catch (e: Exception) {
-                                snackbarHostState.showSnackbar(
-                                    message = "Erro ao verificar email: ${e.message}",
-                                    duration = SnackbarDuration.Long
-                                )
-                            } finally {
-                                isLoading = false
-                            }
-                        }
-                    }
-                },
+                onClick = { viewModel.proceedToStep2() },
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp)
                     .height(50.dp),
-                enabled = !isLoading,
+                enabled = !uiState.isLoading,
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color(0xFF395174),
                     contentColor = Color.White
                 ),
                 shape = RoundedCornerShape(8.dp)
             ) {
-                if (isLoading) {
+                if (uiState.isLoading) {
                     CircularProgressIndicator(
                         color = Color.White,
                         modifier = Modifier.size(24.dp),
