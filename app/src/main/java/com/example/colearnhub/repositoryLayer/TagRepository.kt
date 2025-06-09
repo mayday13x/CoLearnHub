@@ -10,7 +10,7 @@ import kotlinx.coroutines.withContext
 class TagRepository {
 
     /**
-     * Busca uma tag por ID
+     * Get tag by ID
      */
     suspend fun getTagById(tagId: Long): TagData? = withContext(Dispatchers.IO) {
         return@withContext try {
@@ -39,7 +39,7 @@ class TagRepository {
     }
 
     /**
-     * Busca todas as tags
+     * Get all tags
      */
     suspend fun getAllTags(): List<TagData> = withContext(Dispatchers.IO) {
         return@withContext try {

@@ -1,18 +1,18 @@
 package com.example.colearnhub.repositoryLayer
 
 import android.util.Log
-import com.example.colearnhub.modelLayer.SupabaseClient
-import com.example.colearnhub.modelLayer.CreateMaterialRequest
 import com.example.colearnhub.modelLayer.Material
+import com.example.colearnhub.modelLayer.MaterialTag
+import com.example.colearnhub.modelLayer.TagData
+import com.example.colearnhub.modelLayer.SupabaseClient
 import io.github.jan.supabase.postgrest.from
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import kotlinx.serialization.Serializable
 
-class MaterialRepository {
+class MaterialsRepository {
 
     /**
-     * Cria um novo material com defaults explícitos
+     * Cria um novo material
      */
     suspend fun createMaterial(
         title: String,
@@ -20,8 +20,8 @@ class MaterialRepository {
         fileUrl: String? = null,
         visibility: Boolean = true,
         language: Long? = null,
-        author_id: String? = null, // String agora
-        tagId: Long? = null
+        author_id: String? = null,
+        tagIds: List<Long>? = null
     ): Material? = withContext(Dispatchers.IO) {
         return@withContext try {
             Log.d("MaterialRepository", "=== A criar material ===")
@@ -29,43 +29,55 @@ class MaterialRepository {
             Log.d("MaterialRepository", "Author ID: $author_id")
             Log.d("MaterialRepository", "Visibility: $visibility")
             Log.d("MaterialRepository", "Language ID: $language")
+            Log.d("MaterialRepository", "Tag IDs: $tagIds")
 
-            val materialRequest = CreateMaterialRequest(
-                title = title,
-                description = description,
-                file_url = fileUrl,
-                visibility = visibility,
-                language = language,
-                author_id = author_id,
-                tag_id = tagId,
-            )
-
-            Log.d("MaterialRepository", "Request criado: $materialRequest")
+            // Criar o material primeiro
+            val materialData = mapOf(
+                "title" to title,
+                "description" to description,
+                "file_url" to fileUrl,
+                "visibility" to visibility,
+                "language" to language,
+                "author_id" to author_id
+            ).filterValues { it != null }
 
             val result = SupabaseClient.client
                 .from("Materials")
-                .insert(materialRequest) {
+                .insert(materialData) {
                     select()
                 }
                 .decodeSingle<Material>()
 
-            Log.d("MaterialRepository", "MATERIAL CRIADO:")
-            Log.d("MaterialRepository", "  - ID: ${result.id}")
-            Log.d("MaterialRepository", "  - Title: '${result.title}'")
-            Log.d("MaterialRepository", "  - Author: ${result.author_id}")
-            Log.d("MaterialRepository", "  - Visibility: ${result.visibility}")
-            Log.d("MaterialRepository", "  - Language: ${result.language}")
+            // Se temos tags, criar as relações na tabela Material_Tag
+            if (tagIds != null && tagIds.isNotEmpty()) {
+                tagIds.forEach { tagId ->
+                    try {
+                        SupabaseClient.client
+                            .from("Material_Tag")
+                            .insert(mapOf(
+                                "material_id" to result.id,
+                                "tag_id" to tagId
+                            ))
+                        Log.d("MaterialRepository", "Tag $tagId associada ao material ${result.id}")
+                    } catch (e: Exception) {
+                        Log.e("MaterialRepository", "Erro ao associar tag $tagId: ${e.message}")
+                    }
+                }
+            }
 
-            result
+            Log.d("MaterialRepository", "Material criado com sucesso: ID ${result.id}")
+
+            // Retornar o material com as tags carregadas
+            getMaterialByIdWithTags(result.id)
         } catch (e: Exception) {
-            Log.e("MaterialRepository", "ERRO ao criar material: ${e.message}")
-            Log.e("MaterialRepository", "Detalhes do erro:", e)
+            Log.e("MaterialRepository", "Erro ao criar material: ${e.message}")
+            e.printStackTrace()
             null
         }
     }
 
     /**
-     * Get com filtros corretos
+     * Busca um material por ID (versão simples)
      */
     suspend fun getMaterialById(materialId: Long): Material? = withContext(Dispatchers.IO) {
         return@withContext try {
@@ -82,6 +94,7 @@ class MaterialRepository {
 
             if (result != null) {
                 Log.d("MaterialRepository", "Material encontrado:")
+                Log.d("MaterialRepository", "  - Title: ${result.title}")
                 Log.d("MaterialRepository", "  - Visibility: ${result.visibility}")
                 Log.d("MaterialRepository", "  - Author: ${result.author_id}")
                 Log.d("MaterialRepository", "  - Language: ${result.language}")
@@ -97,11 +110,26 @@ class MaterialRepository {
     }
 
     /**
+     * Busca um material por ID com suas tags
+     */
+    suspend fun getMaterialByIdWithTags(materialId: Long): Material? = withContext(Dispatchers.IO) {
+        return@withContext try {
+            val material = getMaterialById(materialId) ?: return@withContext null
+            val tags = getTagsByMaterialId(materialId)
+
+            material.copy(tags = tags)
+        } catch (e: Exception) {
+            Log.e("MaterialRepository", "Erro ao buscar material com tags: ${e.message}")
+            null
+        }
+    }
+
+    /**
      * Busca materiais públicos (visibility = true)
      */
     suspend fun getPublicMaterials(): List<Material> = withContext(Dispatchers.IO) {
         return@withContext try {
-            val result = SupabaseClient.client
+            val materials = SupabaseClient.client
                 .from("Materials")
                 .select {
                     filter {
@@ -110,8 +138,13 @@ class MaterialRepository {
                 }
                 .decodeList<Material>()
 
-            Log.d("MaterialRepository", "Encontrados ${result.size} materiais públicos")
-            result
+            Log.d("MaterialRepository", "Encontrados ${materials.size} materiais públicos")
+
+            // Carregar tags para cada material
+            materials.map { material ->
+                val tags = getTagsByMaterialId(material.id)
+                material.copy(tags = tags)
+            }
         } catch (e: Exception) {
             Log.e("MaterialRepository", "Erro ao buscar materiais públicos: ${e.message}")
             emptyList()
@@ -121,49 +154,58 @@ class MaterialRepository {
     /**
      * Pesquisa materiais por título
      */
-    suspend fun searchMaterialsByTitle(searchQuery: String): List<Material> = withContext(Dispatchers.IO) {
+    suspend fun searchMaterialsByTitle(query: String): List<Material> = withContext(Dispatchers.IO) {
         return@withContext try {
-            SupabaseClient.client
+            Log.d("MaterialsRepository", "searchMaterialsByTitle: query = $query")
+            val materials = SupabaseClient.client
                 .from("Materials")
                 .select {
                     filter {
-                        ilike("title", "%$searchQuery%")
-                        eq("visibility", true)
+                        ilike("title", "%$query%")
                     }
                 }
                 .decodeList<Material>()
+
+            Log.d("MaterialsRepository", "searchMaterialsByTitle: response size = ${materials.size}")
+
+            // Carregar tags para cada material
+            materials.map { material ->
+                val tags = getTagsByMaterialId(material.id)
+                material.copy(tags = tags)
+            }
         } catch (e: Exception) {
-            Log.e("MaterialRepository", "Erro na pesquisa: ${e.message}")
+            Log.e("MaterialsRepository", "Erro ao pesquisar materiais: ${e.message}")
             emptyList()
         }
     }
 
     /**
-     * Update com tipos corretos
+     * Atualiza um material
      */
     suspend fun updateMaterial(
         materialId: Long,
         title: String? = null,
         description: String? = null,
-        visibility: Boolean? = null
+        visibility: Boolean? = null,
+        language: Long? = null
     ): Material? = withContext(Dispatchers.IO) {
         return@withContext try {
-            @Serializable
-            data class MaterialUpdate(
-                val title: String? = null,
-                val description: String? = null,
-                val visibility: Boolean? = null
-            )
+            Log.d("MaterialRepository", "Atualizando material ID: $materialId")
 
-            val updateObject = MaterialUpdate(
-                title = title,
-                description = description,
-                visibility = visibility
-            )
+            val updateData = mutableMapOf<String, Any?>()
+            title?.let { updateData["title"] = it }
+            description?.let { updateData["description"] = it }
+            visibility?.let { updateData["visibility"] = it }
+            language?.let { updateData["language"] = it }
+
+            if (updateData.isEmpty()) {
+                Log.w("MaterialRepository", "Nenhum campo para atualizar")
+                return@withContext getMaterialByIdWithTags(materialId)
+            }
 
             val result = SupabaseClient.client
                 .from("Materials")
-                .update(updateObject) {
+                .update(updateData) {
                     filter {
                         eq("id", materialId)
                     }
@@ -172,7 +214,9 @@ class MaterialRepository {
                 .decodeSingle<Material>()
 
             Log.d("MaterialRepository", "Material atualizado: ${result.id}")
-            result
+
+            // Retornar o material com tags
+            getMaterialByIdWithTags(result.id)
         } catch (e: Exception) {
             Log.e("MaterialRepository", "Erro ao atualizar: ${e.message}")
             null
@@ -180,13 +224,12 @@ class MaterialRepository {
     }
 
     /**
-     * Obtém materiais por autor (String agora)
+     * Obtém materiais por autor
      */
     suspend fun getMaterialsByAuthor(authorId: String): List<Material> = withContext(Dispatchers.IO) {
         return@withContext try {
-            Log.d("MaterialRepository", "Buscando materiais do autor: $authorId")
-
-            val result = SupabaseClient.client
+            Log.d("MaterialsRepository", "getMaterialsByAuthor: authorId = $authorId")
+            val materials = SupabaseClient.client
                 .from("Materials")
                 .select {
                     filter {
@@ -195,10 +238,63 @@ class MaterialRepository {
                 }
                 .decodeList<Material>()
 
-            Log.d("MaterialRepository", "Encontrados ${result.size} materiais do autor $authorId")
-            result
+            Log.d("MaterialsRepository", "getMaterialsByAuthor: response size = ${materials.size}")
+
+            // Carregar tags para cada material
+            materials.map { material ->
+                val tags = getTagsByMaterialId(material.id)
+                material.copy(tags = tags)
+            }
         } catch (e: Exception) {
-            Log.e("MaterialRepository", "Erro ao buscar por autor: ${e.message}")
+            Log.e("MaterialsRepository", "Erro ao obter materiais por autor: ${e.message}")
+            emptyList()
+        }
+    }
+
+    /**
+     * Busca materiais por tag
+     */
+    suspend fun getMaterialsByTag(tagId: Long): List<Material> = withContext(Dispatchers.IO) {
+        return@withContext try {
+            Log.d("MaterialRepository", "Buscando materiais com tag ID: $tagId")
+
+            // Primeiro buscar os IDs dos materiais na tabela Material_Tag
+            val materialTagResults = SupabaseClient.client
+                .from("Material_Tag")
+                .select() {
+                    filter {
+                        eq("tag_id", tagId)
+                    }
+                }
+                .decodeList<MaterialTag>()
+
+            val materialIds = materialTagResults.map { it.material_id }
+
+            if (materialIds.isEmpty()) {
+                Log.d("MaterialRepository", "Nenhum material encontrado com a tag $tagId")
+                return@withContext emptyList()
+            }
+
+            // Depois buscar os materiais propriamente ditos
+            val materials = SupabaseClient.client
+                .from("Materials")
+                .select {
+                    filter {
+                        isIn("id", materialIds)
+                        eq("visibility", true) // Apenas materiais públicos
+                    }
+                }
+                .decodeList<Material>()
+
+            Log.d("MaterialRepository", "Encontrados ${materials.size} materiais com a tag $tagId")
+
+            // Carregar tags para cada material
+            materials.map { material ->
+                val tags = getTagsByMaterialId(material.id)
+                material.copy(tags = tags)
+            }
+        } catch (e: Exception) {
+            Log.e("MaterialRepository", "Erro ao buscar por tag: ${e.message}")
             emptyList()
         }
     }
@@ -208,6 +304,19 @@ class MaterialRepository {
      */
     suspend fun deleteMaterial(materialId: Long): Boolean = withContext(Dispatchers.IO) {
         return@withContext try {
+            Log.d("MaterialRepository", "Eliminando material ID: $materialId")
+
+            // Primeiro, eliminar as relações com tags na tabela Material_Tag
+            SupabaseClient.client
+                .from("Material_Tag")
+                .delete {
+                    filter {
+                        eq("material_id", materialId)
+                    }
+                }
+            Log.d("MaterialRepository", "Relações de tags eliminadas")
+
+            // Depois, eliminar o material
             SupabaseClient.client
                 .from("Materials")
                 .delete {
@@ -215,9 +324,119 @@ class MaterialRepository {
                         eq("id", materialId)
                     }
                 }
+            Log.d("MaterialRepository", "Material eliminado com sucesso")
+
             true
         } catch (e: Exception) {
-            Log.e("MaterialRepository", "Erro ao eliminar: ${e.message}")
+            Log.e("MaterialRepository", "Erro ao eliminar material: ${e.message}")
+            false
+        }
+    }
+
+    /**
+     * Busca materiais por idioma
+     */
+    suspend fun getMaterialsByLanguage(languageId: Long): List<Material> = withContext(Dispatchers.IO) {
+        return@withContext try {
+            Log.d("MaterialRepository", "Buscando materiais no idioma ID: $languageId")
+
+            val materials = SupabaseClient.client
+                .from("Materials")
+                .select {
+                    filter {
+                        eq("language", languageId)
+                        eq("visibility", true)
+                    }
+                }
+                .decodeList<Material>()
+
+            Log.d("MaterialRepository", "Encontrados ${materials.size} materiais no idioma $languageId")
+
+            // Carregar tags para cada material
+            materials.map { material ->
+                val tags = getTagsByMaterialId(material.id)
+                material.copy(tags = tags)
+            }
+        } catch (e: Exception) {
+            Log.e("MaterialRepository", "Erro ao buscar por idioma: ${e.message}")
+            emptyList()
+        }
+    }
+
+    /**
+     * Busca as tags de um material específico
+     */
+    private suspend fun getTagsByMaterialId(materialId: Long): List<TagData> {
+        return try {
+            // Buscar os registros da tabela Material_Tag
+            val materialTagResults = SupabaseClient.client
+                .from("Material_Tag")
+                .select() {
+                    filter {
+                        eq("material_id", materialId)
+                    }
+                }
+                .decodeList<MaterialTag>()
+
+            val tagIds = materialTagResults.map { it.tag_id }
+
+            if (tagIds.isEmpty()) {
+                return emptyList()
+            }
+
+            // Buscar as tags propriamente ditas
+            SupabaseClient.client
+                .from("Tags")
+                .select {
+                    filter {
+                        isIn("id", tagIds)
+                    }
+                }
+                .decodeList<TagData>()
+        } catch (e: Exception) {
+            Log.e("MaterialRepository", "Erro ao buscar tags do material $materialId: ${e.message}")
+            emptyList()
+        }
+    }
+
+    /**
+     * Adiciona uma tag a um material
+     */
+    suspend fun addTagToMaterial(materialId: Long, tagId: Long): Boolean = withContext(Dispatchers.IO) {
+        return@withContext try {
+            SupabaseClient.client
+                .from("Material_Tag")
+                .insert(mapOf(
+                    "material_id" to materialId,
+                    "tag_id" to tagId
+                ))
+
+            Log.d("MaterialRepository", "Tag $tagId adicionada ao material $materialId")
+            true
+        } catch (e: Exception) {
+            Log.e("MaterialRepository", "Erro ao adicionar tag: ${e.message}")
+            false
+        }
+    }
+
+    /**
+     * Remove uma tag de um material
+     */
+    suspend fun removeTagFromMaterial(materialId: Long, tagId: Long): Boolean = withContext(Dispatchers.IO) {
+        return@withContext try {
+            SupabaseClient.client
+                .from("Material_Tag")
+                .delete {
+                    filter {
+                        eq("material_id", materialId)
+                        eq("tag_id", tagId)
+                    }
+                }
+
+            Log.d("MaterialRepository", "Tag $tagId removida do material $materialId")
+            true
+        } catch (e: Exception) {
+            Log.e("MaterialRepository", "Erro ao remover tag: ${e.message}")
             false
         }
     }

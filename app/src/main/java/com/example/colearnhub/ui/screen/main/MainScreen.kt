@@ -101,6 +101,12 @@ fun Indice(
     val userMaterials by materialViewModel.userMaterials.collectAsState()
     val isLoading by materialViewModel.isLoading.collectAsState()
 
+    // Carregar materiais públicos na inicialização
+    LaunchedEffect(Unit) {
+        Log.d("IndiceScreen", "Carregando materiais públicos")
+        materialViewModel.loadPublicMaterials()
+    }
+
     LaunchedEffect(selectedTab, currentUserId) {
         Log.d("IndiceScreen", "selectedTab: $selectedTab, currentUserId: $currentUserId")
 
@@ -381,7 +387,6 @@ fun MaterialCard(
     isHighlight: Boolean
 ) {
     val authorName = materialViewModel.getUserName(material.author_id)
-    val tagName = materialViewModel.getTagName(material.tag_id)
     val (languageName, languageFlag) = materialViewModel.getLanguageInfo(material.language)
 
     Card(
@@ -417,15 +422,15 @@ fun MaterialCard(
                         overflow = TextOverflow.Ellipsis
                     )
 
-                    // Tags do tipo do material
+                    // Tags do material (agora usa a lista de tags do novo sistema)
                     Row(
                         modifier = Modifier.padding(top = 4.dp),
                         horizontalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
-                        // Tag baseada na tag do material
-                        if (tagName.isNotEmpty()) {
+                        // Mostrar as tags do material (limitado a 3 para não ocupar muito espaço)
+                        material.tags?.take(3)?.forEach { tag ->
                             MaterialTypeTag(
-                                text = tagName,
+                                text = tag.description,
                                 backgroundColor = Color(0xFF4A90E2)
                             )
                         }
@@ -439,6 +444,20 @@ fun MaterialCard(
                                     backgroundColor = Color(0xFF6B7280)
                                 )
                             }
+                        }
+                    }
+
+                    // Mostrar descrição se disponível
+                    material.description?.let { description ->
+                        if (description.isNotEmpty()) {
+                            Text(
+                                text = description,
+                                fontSize = 12.sp,
+                                color = Color.Gray,
+                                maxLines = 2,
+                                overflow = TextOverflow.Ellipsis,
+                                modifier = Modifier.padding(top = 4.dp)
+                            )
                         }
                     }
                 }
@@ -466,11 +485,22 @@ fun MaterialCard(
                 StatIcon(Icons.Default.Star, "5.0", Color(0xFFFFA500))
                 Spacer(modifier = Modifier.width(12.dp))
 
-                // Idioma com bandeira
-                LanguageTag(
-                    language = languageName,
-                    flagCode = languageFlag
-                )
+                // Idioma com bandeira (se disponível)
+                if (languageName.isNotEmpty()) {
+                    LanguageTag(
+                        language = languageName,
+                        flagCode = languageFlag
+                    )
+                    Spacer(modifier = Modifier.width(12.dp))
+                }
+
+                // Indicador de visibilidade
+                if (!material.visibility!!) {
+                    MaterialTypeTag(
+                        text = "PRIVADO",
+                        backgroundColor = Color(0xFFFF6B6B)
+                    )
+                }
 
                 Spacer(modifier = Modifier.weight(1f))
 
@@ -488,7 +518,9 @@ fun MaterialCard(
                     Text(
                         text = authorName.ifEmpty { "Utilizador" },
                         fontSize = 12.sp,
-                        color = Color.Gray
+                        color = Color.Gray,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
             }

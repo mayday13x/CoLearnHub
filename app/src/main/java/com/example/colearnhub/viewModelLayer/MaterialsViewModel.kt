@@ -5,12 +5,12 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.colearnhub.modelLayer.LanguageData
 import com.example.colearnhub.modelLayer.Material
-import com.example.colearnhub.repositoryLayer.MaterialRepository
 import com.example.colearnhub.repositoryLayer.UserRepository
 import com.example.colearnhub.repositoryLayer.TagRepository
 import com.example.colearnhub.repositoryLayer.LanguageRepository
 import com.example.colearnhub.repositoryLayer.User
 import com.example.colearnhub.modelLayer.TagData
+import com.example.colearnhub.repositoryLayer.MaterialsRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -18,7 +18,7 @@ import kotlinx.coroutines.launch
 
 class MaterialViewModel : ViewModel() {
 
-    private val materialRepository = MaterialRepository()
+    private val materialRepository = MaterialsRepository()
     private val userRepository = UserRepository()
     private val tagRepository = TagRepository()
     private val languageRepository = LanguageRepository()
@@ -66,7 +66,7 @@ class MaterialViewModel : ViewModel() {
         visibility: Boolean = true,
         language: Long? = null,
         author_id: String? = null,
-        tagId: Long? = null
+        tagIds: List<Long>? = null
     ) {
         viewModelScope.launch {
             _isLoading.value = true
@@ -79,7 +79,7 @@ class MaterialViewModel : ViewModel() {
                 visibility = visibility,
                 language = language,
                 author_id = author_id,
-                tagId = tagId
+                tagIds = tagIds
             )
 
             if (result != null) {
@@ -102,7 +102,7 @@ class MaterialViewModel : ViewModel() {
             _isLoading.value = true
             _errorMessage.value = null
 
-            val result = materialRepository.getMaterialById(materialId)
+            val result = materialRepository.getMaterialByIdWithTags(materialId)
 
             if (result != null) {
                 _selectedMaterial.value = result
@@ -110,13 +110,13 @@ class MaterialViewModel : ViewModel() {
                 result.author_id?.let { author_id ->
                     loadUserInfo(author_id)
                 }
-                // Carregar tag se necessário
-                result.tag_id?.let { tagId ->
-                    loadTagInfo(tagId)
-                }
                 // Carregar language se necessário
                 result.language?.let { languageId ->
                     loadLanguageInfo(languageId)
+                }
+                // Carregar tags
+                result.tags?.forEach { tag ->
+                    loadTagInfo(tag.id)
                 }
             } else {
                 _errorMessage.value = "Material não encontrado"
@@ -147,7 +147,7 @@ class MaterialViewModel : ViewModel() {
     }
 
     /**
-     * Carrega materiais por autor (String agora)
+     * Carrega materiais por autor
      */
     fun loadMaterialsByAuthor(author_id: String) {
         viewModelScope.launch {
@@ -165,7 +165,6 @@ class MaterialViewModel : ViewModel() {
 
             _isLoading.value = false
         }
-
     }
 
     /**
@@ -195,13 +194,20 @@ class MaterialViewModel : ViewModel() {
         materialId: Long,
         title: String? = null,
         description: String? = null,
-        visibility: Boolean? = null
+        visibility: Boolean? = null,
+        language: Long? = null
     ) {
         viewModelScope.launch {
             _isLoading.value = true
             _errorMessage.value = null
 
-            val result = materialRepository.updateMaterial(materialId, title, description, visibility)
+            val result = materialRepository.updateMaterial(
+                materialId = materialId,
+                title = title,
+                description = description,
+                visibility = visibility,
+                language = language
+            )
 
             if (result != null) {
                 _selectedMaterial.value = result
@@ -241,7 +247,6 @@ class MaterialViewModel : ViewModel() {
     /**
      * Carrega informações dos autores dos materiais
      */
-
     private suspend fun loadAuthorsInfo(materials: List<Material>) {
         val authorIds = materials.mapNotNull { it.author_id }.distinct()
         val currentCache = _usersCache.value.toMutableMap()
@@ -263,7 +268,7 @@ class MaterialViewModel : ViewModel() {
      * Carrega informações das tags dos materiais
      */
     private suspend fun loadTagsInfo(materials: List<Material>) {
-        val tagIds = materials.mapNotNull { it.tag_id }.distinct()
+        val tagIds = materials.flatMap { it.tags!! }.map { it.id }.distinct()
         val currentCache = _tagsCache.value.toMutableMap()
 
         tagIds.forEach { tagId ->
@@ -362,15 +367,6 @@ class MaterialViewModel : ViewModel() {
     }
 
     /**
-     * Obtém a cor da tag pelo ID
-     */
-    fun getTagColor(tagId: Long?): String? {
-        return tagId?.let {
-            _tagsCache.value[it]?.color
-        }
-    }
-
-    /**
      * Obtém informações da language (nome e bandeira) pelo ID
      */
     fun getLanguageInfo(languageId: Long?): Pair<String, String> {
@@ -383,6 +379,7 @@ class MaterialViewModel : ViewModel() {
             languageRepository.getLanguageDisplayInfo(null)
         }
     }
+
     /**
      * Obtém apenas o nome da language pelo ID
      */
