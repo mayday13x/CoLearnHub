@@ -1,6 +1,7 @@
 package com.example.colearnhub.viewmodel
 
 import android.content.Context
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.colearnhub.repositoryLayer.AuthRepository
@@ -108,6 +109,7 @@ class AuthViewModel(private val context: Context) : ViewModel() {
         viewModelScope.launch {
             try {
                 authRepository.signOut()
+                Log.d("AuthViewModel", "Logged out successfully")
                 _currentUser.value = null
 
                 // Limpar dados guardados
