@@ -5,11 +5,13 @@ import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.TimeUnit
 import android.util.Log
+import java.time.LocalDateTime
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 
 object DateTimeUtils {
 
     private fun truncateToMillis(dateString: String): String {
-
         Log.d("DateTimeUtils", "Raw Date: $dateString")
 
         val parts = dateString.split(".")
@@ -30,32 +32,35 @@ object DateTimeUtils {
         if (dateString.isNullOrEmpty()) return "Desconhecido"
 
         val parsedDateString = truncateToMillis(dateString)
-
+        Log.d("DateTimeUtils", "Parsed Date String: $parsedDateString")
 
         val date: Date? = try {
-            // Tentar com milissegundos
-            val formatMilliseconds = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS", Locale.getDefault())
-            Log.d("DateTimeUtils", "Tentando parse com milissegundos...")
-            val result = formatMilliseconds.parse(parsedDateString)
-            Log.d("DateTimeUtils", "Sucesso com milissegundos: $result")
+            // Primeiro tentar o formato do Supabase (yyyy-MM-dd HH:mm:ss.SSS)
+            val formatSupabase = SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS", Locale.getDefault())
+            formatSupabase.timeZone = TimeZone.getTimeZone("UTC") // Supabase armazena em UTC
+            Log.d("DateTimeUtils", "Tentando parse com formato Supabase...")
+            val result = formatSupabase.parse(parsedDateString)
+            Log.d("DateTimeUtils", "Sucesso com formato Supabase: $result")
             result
         } catch (e1: ParseException) {
-            Log.d("DateTimeUtils", "Falhou com milissegundos: ${e1.message}")
+            Log.d("DateTimeUtils", "Falhou com formato Supabase: ${e1.message}")
             try {
-                // Tentar sem milissegundos
-                val formatSeconds = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault())
-                Log.d("DateTimeUtils", "Tentando parse sem milissegundos...")
-                val result = formatSeconds.parse(parsedDateString)
-                Log.d("DateTimeUtils", "Sucesso sem milissegundos: $result")
+                // Tentar formato ISO
+                val formatISO = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS", Locale.getDefault())
+                formatISO.timeZone = TimeZone.getTimeZone("UTC")
+                Log.d("DateTimeUtils", "Tentando parse com formato ISO...")
+                val result = formatISO.parse(parsedDateString)
+                Log.d("DateTimeUtils", "Sucesso com formato ISO: $result")
                 result
             } catch (e2: ParseException) {
-                Log.d("DateTimeUtils", "Falhou sem milissegundos: ${e2.message}")
+                Log.d("DateTimeUtils", "Falhou com formato ISO: ${e2.message}")
                 try {
-                    // Tentar só com data
-                    val formatDateOnly = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-                    Log.d("DateTimeUtils", "Tentando parse só com data...")
-                    val result = formatDateOnly.parse(parsedDateString)
-                    Log.d("DateTimeUtils", "Sucesso só com data: $result")
+                    // Tentar formato sem milissegundos
+                    val formatNoMillis = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
+                    formatNoMillis.timeZone = TimeZone.getTimeZone("UTC")
+                    Log.d("DateTimeUtils", "Tentando parse sem milissegundos...")
+                    val result = formatNoMillis.parse(parsedDateString)
+                    Log.d("DateTimeUtils", "Sucesso sem milissegundos: $result")
                     result
                 } catch (e3: ParseException) {
                     Log.e("DateTimeUtils", "Falhou em todos os formatos: ${e3.message}")
@@ -69,14 +74,20 @@ object DateTimeUtils {
             return "Data inválida"
         }
 
+        // Converter para o fuso horário local
+        val localDate = Date(date.time + TimeZone.getDefault().getOffset(date.time))
         val now = Date()
-        val diffInMillis = now.time - date.time
+        val diffInMillis = now.time - localDate.time
         val minutes = TimeUnit.MILLISECONDS.toMinutes(diffInMillis)
         val hours = TimeUnit.MILLISECONDS.toHours(diffInMillis)
         val days = TimeUnit.MILLISECONDS.toDays(diffInMillis)
 
+        Log.d("DateTimeUtils", "Diferença em minutos: $minutes")
+        Log.d("DateTimeUtils", "Diferença em horas: $hours")
+        Log.d("DateTimeUtils", "Diferença em dias: $days")
+
         return when {
-            minutes < 1 -> "Agora mesmo"
+            minutes < 5 -> "Agora mesmo"
             minutes < 60 -> "à $minutes min"
             hours < 24 -> "à ${hours}h"
             days == 1L -> "Ontem"

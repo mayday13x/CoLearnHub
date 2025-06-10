@@ -1,5 +1,7 @@
 package com.example.colearnhub.ui.screen.main
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
@@ -26,44 +28,59 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.colearnhub.R
+import com.example.colearnhub.modelLayer.Comments
+import com.example.colearnhub.modelLayer.Material
+import com.example.colearnhub.repositoryLayer.CommentsRepository
+import com.example.colearnhub.repositoryLayer.MaterialsRepository
+import com.example.colearnhub.repositoryLayer.UserRepository
+import kotlinx.coroutines.launch
+import java.time.Duration
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
+import java.time.format.DateTimeFormatterBuilder
+import java.util.*
 
-data class Comment(
-    val id: String,
-    val authorName: String,
-    val content: String,
-    val timeAgo: String,
-    val likes: Int,
-    val isAuthor: Boolean = false
-)
-
+@RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MaterialDetailsScreen(
     navController: NavController,
     materialId: String = "1" // Default para teste
 ) {
-    // Dados estáticos para demonstração
-    val material = remember {
-        MaterialDetail(
-            title = "Notes - Linear Algebra",
-            author = "michelangelo",
-            language = "English",
-            rating = 5.0f,
-            description = "Study notes for the Linear Algebra exam next week. These notes are provided by João's resolution of esquema. 📚 ✨",
-            tags = listOf("Notes", "ISEP")
-        )
-    }
-
-    val comments = remember {
-        listOf(
-            Comment("1", "michelangelo", "", "4 hours ago", 0, true),
-            Comment("2", "michelangelo", "", "4 hours ago", 0, true),
-            Comment("3", "June", "Very helpful content ! Thank you for sharing", "1 hour ago", 7),
-            Comment("4", "michelangelo", "Thank you!", "1 hour ago", 0, true)
-        )
-    }
-
+    val materialsRepository = remember { MaterialsRepository() }
+    val commentsRepository = remember { CommentsRepository() }
+    val userRepository = remember { UserRepository() }
+    val scope = rememberCoroutineScope()
+    
+    var material by remember { mutableStateOf<Material?>(null) }
+    var comments by remember { mutableStateOf<List<Comments>>(emptyList()) }
     var commentText by remember { mutableStateOf("") }
+    var isLoading by remember { mutableStateOf(true) }
+    var error by remember { mutableStateOf<String?>(null) }
+    var authorName by remember { mutableStateOf<String?>(null) }
+    var replyingTo by remember { mutableStateOf<Comments?>(null) }
+
+    // Load material, comments and author data
+    LaunchedEffect(materialId) {
+        try {
+            isLoading = true
+            material = materialsRepository.getMaterialByIdWithTags(materialId.toLong().toString())
+            
+            // Fetch author name
+            material?.author_id?.let { authorId ->
+                userRepository.getUserById(authorId)?.let { user ->
+                    authorName = user.name
+                }
+            }
+            
+            comments = commentsRepository.getCommentsForMaterial(materialId)
+            error = null
+        } catch (e: Exception) {
+            error = e.message
+        } finally {
+            isLoading = false
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -80,7 +97,13 @@ fun MaterialDetailsScreen(
                 )
             },
             navigationIcon = {
-                IconButton(onClick = { navController.popBackStack() }) {
+                IconButton(onClick = { 
+                    if (replyingTo != null) {
+                        replyingTo = null
+                    } else {
+                        navController.navigateUp()
+                    }
+                }) {
                     Icon(
                         imageVector = Icons.Default.ArrowBack,
                         contentDescription = "Back",
@@ -93,49 +116,282 @@ fun MaterialDetailsScreen(
             )
         )
 
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            // Material Info
-            item {
-                MaterialInfoSection(material = material)
+        if (isLoading) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator()
             }
-
-            // Action Buttons
-            item {
-                ActionButtonsSection()
-            }
-
-            // Tags
-            item {
-                TagsSection(tags = material.tags)
-            }
-
-            // Comments Header
-            item {
-                CommentsHeader(commentCount = comments.size)
-            }
-
-            // Comment Input
-            item {
-                CommentInputSection(
-                    commentText = commentText,
-                    onCommentChange = { commentText = it },
-                    onSendComment = {
-                        // Handle send comment
-                        commentText = ""
-                    }
+        } else if (error != null) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "Error: $error",
+                    color = Color.Red
                 )
             }
+        } else {
+            material?.let { material ->
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    // Material Info
+                    item {
+                        MaterialInfoSection(
+                            material = material,
+                            authorName = authorName
+                        )
+                    }
 
-            // Comments List
-            items(comments) { comment ->
-                CommentItem(comment = comment)
+                    // Action Buttons
+                    item {
+                        ActionButtonsSection(
+                            fileUrl = material.file_url,
+                            onDownload = {
+                                // TODO: Implement download functionality
+                            }
+                        )
+                    }
+
+                    // Tags
+                    item {
+                        TagsSection(tags = material.tags?.map { it.description } ?: emptyList())
+                    }
+
+                    // Comments Header
+                    item {
+                        CommentsHeader(
+                            commentCount = comments.size,
+                            replyingTo = replyingTo,
+                            onCancelReply = { replyingTo = null }
+                        )
+                    }
+
+                    // Comment Input
+                    item {
+                        CommentInputSection(
+                            commentText = commentText,
+                            onCommentChange = { commentText = it },
+                            onSendComment = {
+                                scope.launch {
+                                    try {
+                                        commentsRepository.createComment(
+                                            userId = "current_user_id", // TODO: Get from auth
+                                            materialId = materialId,
+                                            content = commentText,
+                                            responseTo = replyingTo?.id
+                                        )
+                                        // Refresh comments
+                                        comments = commentsRepository.getCommentsForMaterial(materialId)
+                                        commentText = ""
+                                        replyingTo = null
+                                    } catch (e: Exception) {
+                                        error = e.message
+                                    }
+                                }
+                            }
+                        )
+                    }
+
+                    // Comments List
+                    items(comments) { comment ->
+                        CommentItem(
+                            comment = comment,
+                            onReply = { replyingTo = it },
+                            onDelete = { commentId ->
+                                scope.launch {
+                                    try {
+                                        commentsRepository.deleteComment(commentId)
+                                        // Refresh comments
+                                        comments = commentsRepository.getCommentsForMaterial(materialId)
+                                    } catch (e: Exception) {
+                                        error = e.message
+                                    }
+                                }
+                            }
+                        )
+                    }
+                }
             }
         }
+    }
+}
+
+@Composable
+fun CommentsHeader(
+    commentCount: Int,
+    replyingTo: Comments?,
+    onCancelReply: () -> Unit
+) {
+    Column {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "Comments | 📝 $commentCount",
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.Black
+            )
+
+            Text(
+                text = "Sort by ⚡",
+                fontSize = 14.sp,
+                color = Color.Gray
+            )
+        }
+
+        // Show replying to message if applicable
+        replyingTo?.let {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Replying to: ${it.user_id}",
+                    fontSize = 14.sp,
+                    color = Color.Gray
+                )
+                TextButton(
+                    onClick = onCancelReply,
+                    modifier = Modifier.padding(start = 8.dp)
+                ) {
+                    Text(
+                        text = "Cancel",
+                        color = Color.Red,
+                        fontSize = 14.sp
+                    )
+                }
+            }
+        }
+    }
+}
+
+@RequiresApi(Build.VERSION_CODES.O)
+@Composable
+fun CommentItem(
+    comment: Comments,
+    onReply: (Comments) -> Unit,
+    onDelete: (Int) -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            // Avatar
+            Box(
+                modifier = Modifier
+                    .size(32.dp)
+                    .background(Color(0xFF395174), CircleShape)
+            )
+
+            Column(modifier = Modifier.weight(1f)) {
+                // Author and time
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = comment.user_id ?: "Unknown",
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.Black
+                    )
+                    Text(
+                        text = formatTimeAgo(comment.created_at),
+                        fontSize = 12.sp,
+                        color = Color.Gray
+                    )
+                }
+
+                // Comment content
+                if (!comment.content.isNullOrEmpty()) {
+                    Text(
+                        text = comment.content,
+                        fontSize = 14.sp,
+                        color = Color.Black,
+                        modifier = Modifier.padding(top = 4.dp),
+                        lineHeight = 18.sp
+                    )
+                }
+
+                // Actions
+                Row(
+                    modifier = Modifier.padding(top = 8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    TextButton(
+                        onClick = { onReply(comment) }
+                    ) {
+                        Text(
+                            text = "Reply",
+                            fontSize = 12.sp,
+                            color = Color.Gray
+                        )
+                    }
+
+                    TextButton(
+                        onClick = { comment.id?.let { onDelete(it) } }
+                    ) {
+                        Text(
+                            text = "Delete",
+                            fontSize = 12.sp,
+                            color = Color.Red
+                        )
+                    }
+                }
+
+                // Responses
+                if (comment.responses.isNotEmpty()) {
+                    Column(
+                        modifier = Modifier
+                            .padding(start = 16.dp, top = 8.dp)
+                    ) {
+                        comment.responses.forEach { response ->
+                            CommentItem(
+                                comment = response,
+                                onReply = onReply,
+                                onDelete = onDelete
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@RequiresApi(Build.VERSION_CODES.O)
+private fun formatTimeAgo(createdAt: String?): String {
+    if (createdAt == null) return "Unknown time"
+    
+    val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+    val commentTime = LocalDateTime.parse(createdAt, formatter)
+    val now = LocalDateTime.now()
+    val duration = Duration.between(commentTime, now)
+    
+    return when {
+        duration.toMinutes() < 1 -> "Just now"
+        duration.toHours() < 1 -> "${duration.toMinutes()} minutes ago"
+        duration.toDays() < 1 -> "${duration.toHours()} hours ago"
+        duration.toDays() < 7 -> "${duration.toDays()} days ago"
+        else -> createdAt
     }
 }
 
@@ -148,8 +404,23 @@ data class MaterialDetail(
     val tags: List<String>
 )
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun MaterialInfoSection(material: MaterialDetail) {
+fun MaterialInfoSection(
+    material: Material,
+    authorName: String?
+) {
+    val dateFormatter = DateTimeFormatterBuilder()
+        .appendPattern("dd/MM/yyyy HH:mm")
+        .toFormatter(Locale.getDefault())
+
+    // Language mapping
+    val languageInfo = when (material.language) {
+        1L -> Pair("🇵🇹", "Portuguese")
+        2L -> Pair("🇬🇧", "English")
+        else -> Pair("🌐", "Unknown")
+    }
+
     Column(
         modifier = Modifier.fillMaxWidth()
     ) {
@@ -193,7 +464,7 @@ fun MaterialInfoSection(material: MaterialDetail) {
                     )
                     Spacer(modifier = Modifier.width(6.dp))
                     Text(
-                        text = material.author,
+                        text = authorName ?: "Unknown",
                         fontSize = 14.sp,
                         color = Color.Black
                     )
@@ -212,12 +483,12 @@ fun MaterialInfoSection(material: MaterialDetail) {
                     modifier = Modifier.padding(top = 2.dp)
                 ) {
                     Text(
-                        text = "🇬🇧", // English flag
+                        text = languageInfo.first,
                         fontSize = 16.sp
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        text = material.language,
+                        text = languageInfo.second,
                         fontSize = 14.sp,
                         color = Color.Black
                     )
@@ -228,63 +499,52 @@ fun MaterialInfoSection(material: MaterialDetail) {
         Spacer(modifier = Modifier.height(16.dp))
 
         // Description
-        Text(
-            text = "Description",
-            fontSize = 12.sp,
-            color = Color.Gray,
-            fontWeight = FontWeight.Medium
-        )
-        Text(
-            text = material.description,
-            fontSize = 14.sp,
-            color = Color.Black,
-            modifier = Modifier.padding(top = 2.dp),
-            lineHeight = 20.sp
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Rating
-        Row(
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            repeat(5) {
-                Icon(
-                    imageVector = Icons.Default.Star,
-                    contentDescription = null,
-                    tint = Color(0xFFFFA500),
-                    modifier = Modifier.size(20.dp)
-                )
-            }
-            Spacer(modifier = Modifier.width(8.dp))
+        if (!material.description.isNullOrEmpty()) {
             Text(
-                text = material.rating.toString(),
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.Black
+                text = "Description",
+                fontSize = 12.sp,
+                color = Color.Gray,
+                fontWeight = FontWeight.Medium
+            )
+            Text(
+                text = material.description,
+                fontSize = 14.sp,
+                color = Color.Black,
+                modifier = Modifier.padding(top = 2.dp),
+                lineHeight = 20.sp
             )
         }
 
-        Text(
-            text = "Average Rating",
-            fontSize = 12.sp,
-            color = Color.Gray,
-            modifier = Modifier.padding(top = 2.dp)
-        )
+        Spacer(modifier = Modifier.height(16.dp))
 
-        Spacer(modifier = Modifier.height(8.dp))
-
-        Text(
-            text = "Rate Now",
-            fontSize = 14.sp,
-            color = Color(0xFF395174),
-            fontWeight = FontWeight.Medium
-        )
+        // Created At
+        if (!material.created_at.isNullOrEmpty()) {
+            Text(
+                text = "Created",
+                fontSize = 12.sp,
+                color = Color.Gray,
+                fontWeight = FontWeight.Medium
+            )
+            Text(
+                text = try {
+                    LocalDateTime.parse(material.created_at, DateTimeFormatter.ISO_DATE_TIME)
+                        .format(dateFormatter)
+                } catch (e: Exception) {
+                    material.created_at
+                },
+                fontSize = 14.sp,
+                color = Color.Black,
+                modifier = Modifier.padding(top = 2.dp)
+            )
+        }
     }
 }
 
 @Composable
-fun ActionButtonsSection() {
+fun ActionButtonsSection(
+    fileUrl: String?,
+    onDownload: () -> Unit
+) {
     Column(
         modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -314,29 +574,31 @@ fun ActionButtonsSection() {
         }
 
         // Download Button
-        Button(
-            onClick = { },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(48.dp),
-            shape = RoundedCornerShape(8.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = Color(0xFF395174)
-            )
-        ) {
-            Icon(
-                imageVector = Icons.Default.Download,
-                contentDescription = null,
-                tint = Color.White,
-                modifier = Modifier.size(20.dp)
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(
-                text = "Download",
-                fontSize = 14.sp,
-                fontWeight = FontWeight.Medium,
-                color = Color.White
-            )
+        if (!fileUrl.isNullOrEmpty()) {
+            Button(
+                onClick = onDownload,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(48.dp),
+                shape = RoundedCornerShape(8.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFF395174)
+                )
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Download,
+                    contentDescription = null,
+                    tint = Color.White,
+                    modifier = Modifier.size(20.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "Download",
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = Color.White
+                )
+            }
         }
     }
 }
@@ -354,47 +616,35 @@ fun TagsSection(tags: List<String>) {
             modifier = Modifier.padding(bottom = 8.dp)
         )
 
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            tags.forEach { tag ->
-                Surface(
-                    shape = RoundedCornerShape(16.dp),
-                    color = Color(0xFF4A90E2),
-                    modifier = Modifier.padding(vertical = 2.dp)
-                ) {
-                    Text(
-                        text = tag,
-                        color = Color.White,
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Medium,
-                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
-                    )
+        if (tags.isNotEmpty()) {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                modifier = Modifier.wrapContentHeight()
+            ) {
+                tags.forEach { tag ->
+                    Surface(
+                        shape = RoundedCornerShape(16.dp),
+                        color = Color(0xFF4A90E2),
+                        modifier = Modifier.padding(vertical = 2.dp)
+                    ) {
+                        Text(
+                            text = tag,
+                            color = Color.White,
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Medium,
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
+                        )
+                    }
                 }
             }
+        } else {
+            Text(
+                text = "No tags available",
+                fontSize = 14.sp,
+                color = Color.Gray,
+                modifier = Modifier.padding(top = 4.dp)
+            )
         }
-    }
-}
-
-@Composable
-fun CommentsHeader(commentCount: Int) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(
-            text = "Comments | 📝 $commentCount",
-            fontSize = 16.sp,
-            fontWeight = FontWeight.Bold,
-            color = Color.Black
-        )
-
-        Text(
-            text = "Sort by ⚡",
-            fontSize = 14.sp,
-            color = Color.Gray
-        )
     }
 }
 
@@ -462,89 +712,6 @@ fun CommentInputSection(
                         color = Color.White
                     )
                 }
-            }
-        }
-    }
-}
-
-@Composable
-fun CommentItem(comment: Comment) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 8.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        // Avatar
-        Box(
-            modifier = Modifier
-                .size(32.dp)
-                .background(
-                    if (comment.isAuthor) Color(0xFF395174) else Color(0xFF50C878),
-                    CircleShape
-                )
-        )
-
-        Column(modifier = Modifier.weight(1f)) {
-            // Author and time
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Text(
-                    text = comment.authorName,
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.Black
-                )
-                Text(
-                    text = comment.timeAgo,
-                    fontSize = 12.sp,
-                    color = Color.Gray
-                )
-            }
-
-            // Comment content (if not empty)
-            if (comment.content.isNotEmpty()) {
-                Text(
-                    text = comment.content,
-                    fontSize = 14.sp,
-                    color = Color.Black,
-                    modifier = Modifier.padding(top = 4.dp),
-                    lineHeight = 18.sp
-                )
-            }
-
-            // Actions
-            Row(
-                modifier = Modifier.padding(top = 8.dp),
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                Text(
-                    text = "Reply",
-                    fontSize = 12.sp,
-                    color = Color.Gray
-                )
-
-                if (comment.likes > 0) {
-                    Text(
-                        text = "👍 ${comment.likes}",
-                        fontSize = 12.sp,
-                        color = Color.Gray
-                    )
-                } else {
-                    Text(
-                        text = "👍",
-                        fontSize = 12.sp,
-                        color = Color.Gray
-                    )
-                }
-
-                Text(
-                    text = "👎",
-                    fontSize = 12.sp,
-                    color = Color.Gray
-                )
             }
         }
     }
