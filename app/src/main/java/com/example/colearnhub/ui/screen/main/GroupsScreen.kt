@@ -100,6 +100,32 @@ fun ContentArea3() {
             modifier = Modifier.fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            Button(
+                onClick = { },
+                modifier = Modifier
+                    .width(dynamicWidth(maxWidth = 300.dp))
+                    .height(btnHeight)
+                    .border(
+                        width = 1.5.dp,
+                        color = Color(0xFF395174),
+                        shape = RoundedCornerShape(10.dp)
+                    ),
+                shape = RoundedCornerShape(10.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color.White,
+                    contentColor = Color(0xFF395174)
+                ),
+                elevation = ButtonDefaults.buttonElevation(defaultElevation = 2.dp)
+            ) {
+                Text(
+                    text = stringResource(R.string.new_group),
+                    fontSize = titleFontSize,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+
+            Spacer(modifier = Modifier.height(verticalSpacing))
+
             val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.animation))
 
             LottieAnimation(
@@ -125,30 +151,6 @@ fun ContentArea3() {
             )
 
             Spacer(modifier = Modifier.height(verticalSpacing))
-
-            Button(
-                onClick = { },
-                modifier = Modifier
-                    .width(dynamicWidth(maxWidth = 300.dp))
-                    .height(btnHeight)
-                    .border(
-                        width = 1.5.dp,
-                        color = Color(0xFF395174),
-                        shape = RoundedCornerShape(10.dp)
-                    ),
-                shape = RoundedCornerShape(10.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.White,
-                    contentColor = Color(0xFF395174)
-                ),
-                elevation = ButtonDefaults.buttonElevation(defaultElevation = 2.dp)
-            ) {
-                Text(
-                    text = stringResource(R.string.new_group),
-                    fontSize = titleFontSize,
-                    fontWeight = FontWeight.Bold
-                )
-            }
         }
         Spacer(modifier = Modifier.weight(1f))
     }

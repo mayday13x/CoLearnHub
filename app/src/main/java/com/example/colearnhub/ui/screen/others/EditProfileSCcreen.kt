@@ -2,6 +2,7 @@
 
 package com.example.colearnhub.ui.screen.others
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -127,27 +128,12 @@ fun UnsavedChangesDialog(
 @Composable
 fun TopEditProfileBar(
     onBack: () -> Unit,
-    hasUnsavedChanges: Boolean
+    hasUnsavedChanges: Boolean,
+    onShowDialog: () -> Unit // Nova função para mostrar o diálogo
 ) {
-    var showUnsavedDialog by remember { mutableStateOf(false) }
     val txtSize = (txtSize().value + 4).sp
     val barSize = spacer3()
     val logoSize = logoSize() - 13.dp
-
-    // Dialog para alterações não guardadas
-    UnsavedChangesDialog(
-        showDialog = showUnsavedDialog,
-        onDismiss = { showUnsavedDialog = false },
-        onConfirm = {
-            // Aqui você implementaria a lógica para salvar
-            showUnsavedDialog = false
-            onBack()
-        },
-        onDiscard = {
-            showUnsavedDialog = false
-            onBack()
-        }
-    )
 
     Box(
         modifier = Modifier
@@ -172,7 +158,7 @@ fun TopEditProfileBar(
             IconButton(
                 onClick = {
                     if (hasUnsavedChanges) {
-                        showUnsavedDialog = true
+                        onShowDialog()
                     } else {
                         onBack()
                     }
@@ -456,8 +442,12 @@ fun EditDate(
     var yearExpanded by remember { mutableStateOf(false) }
 
     val days = (1..31).map { it.toString() }
-    val months = listOf("January", "February", "March", "April", "May", "June",
-        "July", "August", "September", "October", "November", "December")
+    val months = listOf(
+        stringResource(R.string.january), stringResource(R.string.february), stringResource(R.string.march),
+        stringResource(R.string.april), stringResource(R.string.may), stringResource(R.string.june),
+        stringResource(R.string.july), stringResource(R.string.august), stringResource(R.string.september),
+        stringResource(R.string.october), stringResource(R.string.november), stringResource(R.string.december)
+    )
     val years = (1950..2010).map { it.toString() }
 
     val titleFontSize = (txtSize().value + 1).sp
@@ -843,8 +833,32 @@ fun IndiceEditProfile(onBack: () -> Unit){
         selectedBirthYear = originalBirthYear
     }
 
+    // Estado para controlar o diálogo de alterações não salvas
+    var showUnsavedDialog by remember { mutableStateOf(false) }
+
+    // Interceptar o botão de voltar do sistema
+    BackHandler(enabled = hasChanges) {
+        showUnsavedDialog = true
+    }
+
+    // Diálogo para alterações não guardadas
+    UnsavedChangesDialog(
+        showDialog = showUnsavedDialog,
+        onDismiss = { showUnsavedDialog = false },
+        onConfirm = {
+            // Aqui você implementaria a lógica para salvar
+            showUnsavedDialog = false
+            onBack()
+        },
+        onDiscard = {
+            showUnsavedDialog = false
+            onBack()
+        }
+    )
+
     Column{
-        TopEditProfileBar(onBack = onBack, hasUnsavedChanges = hasChanges)
+        // CORREÇÃO: Passar hasChanges em vez de false
+        TopEditProfileBar(onBack = onBack, hasUnsavedChanges = hasChanges, onShowDialog = { showUnsavedDialog = true })
         IdentityWithEdit(modifier = Modifier.offset(y = 30.dp))
         EditName(name) { name = it }
         EditUsername(username) { username = it }
