@@ -284,7 +284,8 @@ fun ProfileDetailsSection() {
         Spacer(modifier = Modifier.height(spacer))
 
         Row {
-            Column(modifier = Modifier.weight(1f)) {
+            Column(modifier = Modifier.weight(1f)
+                .offset(x = -(20).dp)) {
                 Text(
                     text = stringResource(R.string.birthdate),
                     fontSize = titleFontSize,
@@ -313,7 +314,8 @@ fun ProfileDetailRow(
     val titleFontSize = txtSize()
 
     Row {
-        Column(modifier = Modifier.weight(1f)) {
+        Column(modifier = Modifier.weight(1f)
+            .offset(x = -(20).dp)) {
             Text(
                 text = label1,
                 fontSize = titleFontSize,
@@ -328,7 +330,8 @@ fun ProfileDetailRow(
             )
         }
 
-        Column(modifier = Modifier.weight(1f)) {
+        Column(modifier = Modifier.weight(1f)
+            .offset(x = 20.dp)) {
             Text(
                 text = label2,
                 fontSize = titleFontSize,
@@ -346,7 +349,7 @@ fun ProfileDetailRow(
 }
 
 @Composable
-fun EditProfileBtn(){
+fun EditProfileBtn(onSettingsClick: () -> Unit){
     val btnHeight = verticalSpacing() + 10.dp
     val titleFontSize = txtSize()
 
@@ -356,7 +359,7 @@ fun EditProfileBtn(){
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Button(
-            onClick = { },
+            onClick = onSettingsClick,
             modifier = Modifier
                 .width(dynamicWidth(maxWidth = 300.dp))
                 .height(btnHeight)
@@ -393,7 +396,9 @@ fun Indice5(navController: NavController? = null){
         .offset(x = 10.dp))
     StatsCardGroup()
     ProfileDetailsSection()
-    EditProfileBtn()
+    EditProfileBtn(onSettingsClick = {
+        navController?.navigate("editprofile")
+    })
 }
 
 @Composable

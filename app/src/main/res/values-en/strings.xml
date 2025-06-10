@@ -141,5 +141,7 @@
     <string name="about">About the App</string>
     <string name="Delete_Account">Delete Account</string>
     <string name="Logout">Logout</string>
+    <string name="save">Save</string>
+    <string name="clean">Clean</string>
 
 </resources>

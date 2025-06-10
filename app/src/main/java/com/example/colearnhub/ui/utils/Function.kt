@@ -43,6 +43,7 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.drawscope.translate
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -391,4 +392,11 @@ fun getFileIcon(fileName: String?) = when {
             fileName?.endsWith(".jpeg", ignoreCase = true) == true ||
             fileName?.endsWith(".png", ignoreCase = true) == true -> Icons.Default.Image
     else -> Icons.Default.Description
+}
+
+@Composable
+fun dynamicWidth(fraction: Float): Dp {
+    val configuration = LocalConfiguration.current
+    val screenWidth = configuration.screenWidthDp
+    return (screenWidth * fraction).dp
 }

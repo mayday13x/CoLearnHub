@@ -10,6 +10,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.colearnhub.ui.screen.others.EditProfileScreen
 import com.example.colearnhub.ui.screen.others.SettingsScreen
 import com.example.colearnhub.viewmodel.AuthViewModel
 
@@ -33,5 +34,8 @@ fun NavGraph() {
 fun NavGraphBuilder.otherRoutes(navController: NavHostController) {
     composable("settings") {
         SettingsScreen(navController = navController)
+    }
+    composable("editprofile"){
+        EditProfileScreen(navController = navController)
     }
 }

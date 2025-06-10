@@ -153,7 +153,6 @@ fun ScrollableOutlinedTextField(
 
 @Composable
 fun Title(title: String, onTitleChange: (String) -> Unit) {
-    val spacer = spacer2()
     val textFieldHeight = textFieldHeight()
     val paddingValue = logoSize() + 10.dp
     val titleFontSize = (txtSize().value + 1).sp
@@ -164,7 +163,6 @@ fun Title(title: String, onTitleChange: (String) -> Unit) {
             .padding(horizontal = paddingValue)
             .padding(top = paddingValue)
             .padding(bottom = 8.dp),
-        verticalArrangement = Arrangement.spacedBy(spacer)
     ) {
         Text(
             text = stringResource(R.string.Title_label),
