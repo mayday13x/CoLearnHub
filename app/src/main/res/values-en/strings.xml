@@ -141,5 +141,11 @@
     <string name="about">About the App</string>
     <string name="Delete_Account">Delete Account</string>
     <string name="Logout">Logout</string>
+    <string name="save">Save</string>
+    <string name="clean">Clean</string>
+    <string name="unsaved_changes_title">Leave without Saving</string>
+    <string name="unsaved_changes_message">Are you sure you want to leave without saving the changes?</string>
+    <string name="discard">Discard</string>
+    <string name="cancel">Cancel</string>
 
 </resources>

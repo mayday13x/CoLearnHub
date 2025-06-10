@@ -71,7 +71,7 @@ fun LoginScreen(
     LaunchedEffect(authState.isAuthenticated) {
         if (authState.isAuthenticated && authState.successMessage != null) {
             //rota temporária enquanto não temos a home
-            navController.navigate("signup") {
+            navController.navigate("MainScreen") {
                 popUpTo("login") { inclusive = true }
             }
         }
@@ -213,6 +213,11 @@ fun LoginScreen(
 
         Spacer(modifier = Modifier.height(8.dp))
 
+        val emailRequiredError = stringResource(R.string.email_required)
+        val emailInvalidError = stringResource(R.string.email_invalid)
+        val passwordRequiredError = stringResource(R.string.password_required)
+        val passwordMinLengthError = stringResource(R.string.password_min_length)
+
         // Login Button
         Button(
             onClick = {
@@ -220,19 +225,19 @@ fun LoginScreen(
 
                 // Validação de email
                 if (email.isBlank()) {
-                    emailError = "stringResource(R.string.email_required)"
+                    emailError = emailRequiredError
                     hasError = true
                 } else if (!authViewModel.isValidEmail(email)) {
-                    emailError = "stringResource(R.string.email_invalid)"
+                    emailError = emailInvalidError
                     hasError = true
                 }
 
                 // Validação de password
                 if (password.isBlank()) {
-                    passwordError = "stringResource(R.string.password_required)"
+                    passwordError = passwordRequiredError
                     hasError = true
                 } else if (!authViewModel.isValidPassword(password)) {
-                    passwordError = "stringResource(R.string.password_min_length)"
+                    passwordError = passwordMinLengthError
                     hasError = true
                 }
 

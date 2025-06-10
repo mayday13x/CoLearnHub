@@ -5,6 +5,5 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class TagData(
     val id: Long,
-    val description: String,
-    val color: String? = null
+    val description: String
 )

@@ -11,7 +11,8 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.example.colearnhub.ui.screen.others.SettingsScreen
+import com.example.colearnhub.ui.screen.others.EditProfileScreen
+import com.example.colearnhub.ui.screen.settings.SettingsScreen
 import com.example.colearnhub.viewmodel.AuthViewModel
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -28,13 +29,7 @@ fun NavGraph() {
     NavHost(navController = navController, startDestination = startDestination) {
         authRoutes(navController, authViewModel)
         mainRoutes(navController)
-        testRoutes(navController)
-        otherRoutes(navController)
-    }
-}
-
-fun NavGraphBuilder.otherRoutes(navController: NavHostController) {
-    composable("settings") {
-        SettingsScreen(navController = navController)
+        settingsRoutes(navController, authViewModel)
+        profileRoutes(navController)
     }
 }

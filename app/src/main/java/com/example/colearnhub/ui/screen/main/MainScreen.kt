@@ -101,6 +101,12 @@ fun Indice(
     val userMaterials by materialViewModel.userMaterials.collectAsState()
     val isLoading by materialViewModel.isLoading.collectAsState()
 
+    // Carregar materiais públicos na inicialização
+    LaunchedEffect(Unit) {
+        Log.d("IndiceScreen", "Carregando materiais públicos")
+        materialViewModel.loadPublicMaterials()
+    }
+
     LaunchedEffect(selectedTab, currentUserId) {
         Log.d("IndiceScreen", "selectedTab: $selectedTab, currentUserId: $currentUserId")
 
@@ -123,10 +129,6 @@ fun Indice(
 
         // Botão Share - posicionado no topo quando há dados
         val currentMaterials = if (selectedTab == 0) materials else userMaterials
-        if (currentMaterials.isNotEmpty() && !isLoading) {
-            ShareButton()
-            Spacer(modifier = Modifier.height(16.dp))
-        }
 
         // Tabs
         Row(
@@ -238,6 +240,7 @@ fun ContentArea(
         modifier = Modifier
             .fillMaxSize()
             .padding(horizontal = padding)
+            .padding(bottom = 100.dp)
     ) {
         if (isLoading) {
             Box(
@@ -381,23 +384,38 @@ fun MaterialCard(
     isHighlight: Boolean
 ) {
     val authorName = materialViewModel.getUserName(material.author_id)
-    val tagName = materialViewModel.getTagName(material.tag_id)
     val (languageName, languageFlag) = materialViewModel.getLanguageInfo(material.language)
+
+    // Lista de cores para as tags
+    val tagColors = listOf(
+        Color(0xFF4A90E2), // Azul
+        Color(0xFF50C878), // Verde
+        Color(0xFFFFA500), // Laranja
+        Color(0xFFE91E63), // Rosa
+        Color(0xFF9C27B0), // Roxo
+        Color(0xFF00BCD4), // Ciano
+        Color(0xFFFF6B6B), // Vermelho
+        Color(0xFF795548)  // Marrom
+    )
 
     Card(
         modifier = Modifier
             .fillMaxWidth()
+            .padding(vertical = 8.dp)
             .clickable { /* Navegar para detalhes */ },
         colors = CardDefaults.cardColors(
             containerColor = Color.White
         ),
         elevation = CardDefaults.cardElevation(
-            defaultElevation = 2.dp
+            defaultElevation = 4.dp
         ),
         shape = RoundedCornerShape(8.dp)
-    ) {
+    ){
         Column(
-            modifier = Modifier.padding(16.dp)
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+
         ) {
             // Linha superior: Título e informações adicionais
             Row(
@@ -417,16 +435,16 @@ fun MaterialCard(
                         overflow = TextOverflow.Ellipsis
                     )
 
-                    // Tags do tipo do material
+                    // Tags do material com cores diferentes
                     Row(
                         modifier = Modifier.padding(top = 4.dp),
                         horizontalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
-                        // Tag baseada na tag do material
-                        if (tagName.isNotEmpty()) {
+                        // Mostrar as tags do material (limitado a 3 para não ocupar muito espaço)
+                        material.tags?.take(3)?.forEachIndexed { index, tag ->
                             MaterialTypeTag(
-                                text = tagName,
-                                backgroundColor = Color(0xFF4A90E2)
+                                text = tag.description,
+                                backgroundColor = tagColors[index % tagColors.size]
                             )
                         }
 
@@ -439,6 +457,20 @@ fun MaterialCard(
                                     backgroundColor = Color(0xFF6B7280)
                                 )
                             }
+                        }
+                    }
+
+                    // Mostrar descrição se disponível
+                    material.description?.let { description ->
+                        if (description.isNotEmpty()) {
+                            Text(
+                                text = description,
+                                fontSize = 12.sp,
+                                color = Color.Gray,
+                                maxLines = 2,
+                                overflow = TextOverflow.Ellipsis,
+                                modifier = Modifier.padding(top = 4.dp)
+                            )
                         }
                     }
                 }
@@ -466,11 +498,22 @@ fun MaterialCard(
                 StatIcon(Icons.Default.Star, "5.0", Color(0xFFFFA500))
                 Spacer(modifier = Modifier.width(12.dp))
 
-                // Idioma com bandeira
-                LanguageTag(
-                    language = languageName,
-                    flagCode = languageFlag
-                )
+                // Idioma com bandeira (se disponível)
+                if (languageName.isNotEmpty()) {
+                    LanguageTag(
+                        language = languageName,
+                        flagCode = languageFlag
+                    )
+                    Spacer(modifier = Modifier.width(12.dp))
+                }
+
+                // Indicador de visibilidade
+                if (!material.visibility!!) {
+                    MaterialTypeTag(
+                        text = "PRIVADO",
+                        backgroundColor = Color(0xFFFF6B6B)
+                    )
+                }
 
                 Spacer(modifier = Modifier.weight(1f))
 
@@ -488,7 +531,9 @@ fun MaterialCard(
                     Text(
                         text = authorName.ifEmpty { "Utilizador" },
                         fontSize = 12.sp,
-                        color = Color.Gray
+                        color = Color.Gray,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
             }

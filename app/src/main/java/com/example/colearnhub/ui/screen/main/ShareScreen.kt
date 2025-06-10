@@ -41,6 +41,7 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -58,6 +59,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -77,6 +79,24 @@ import com.example.colearnhub.ui.utils.sbutton
 import com.example.colearnhub.ui.utils.spacer2
 import com.example.colearnhub.ui.utils.textFieldHeight
 import com.example.colearnhub.ui.utils.txtSize
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Surface
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import io.github.jan.supabase.storage.storage
+import kotlinx.coroutines.launch
+import androidx.compose.runtime.rememberCoroutineScope
+import android.util.Log
+import androidx.compose.foundation.clickable
+import com.example.colearnhub.modelLayer.SupabaseClient
+import com.example.colearnhub.repositoryLayer.AuthRepository
+import com.example.colearnhub.repositoryLayer.MaterialsRepository
+import com.example.colearnhub.repositoryLayer.TagRepository
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 
 @Composable
 fun TopBar() {
@@ -153,7 +173,6 @@ fun ScrollableOutlinedTextField(
 
 @Composable
 fun Title(title: String, onTitleChange: (String) -> Unit) {
-    val spacer = spacer2()
     val textFieldHeight = textFieldHeight()
     val paddingValue = logoSize() + 10.dp
     val titleFontSize = (txtSize().value + 1).sp
@@ -164,7 +183,6 @@ fun Title(title: String, onTitleChange: (String) -> Unit) {
             .padding(horizontal = paddingValue)
             .padding(top = paddingValue)
             .padding(bottom = 8.dp),
-        verticalArrangement = Arrangement.spacedBy(spacer)
     ) {
         Text(
             text = stringResource(R.string.Title_label),
@@ -183,15 +201,235 @@ fun Title(title: String, onTitleChange: (String) -> Unit) {
 }
 
 @Composable
-fun Upload(selectedFileUri: Uri?, onFileSelected: (Uri?) -> Unit) {
+fun TagSelectionDialog(
+    showDialog: Boolean,
+    onDismiss: () -> Unit,
+    onTagsSelected: (List<String>) -> Unit
+) {
+    var selectedTags by remember { mutableStateOf(listOf<String>()) }
+    var tags by remember { mutableStateOf(listOf<String>()) }
+    var isLoading by remember { mutableStateOf(true) }
+    var error by remember { mutableStateOf<String?>(null) }
+    val coroutineScope = rememberCoroutineScope()
+
+    // Carregar tags quando o diálogo é aberto
+    LaunchedEffect(showDialog) {
+        if (showDialog) {
+            isLoading = true
+            error = null
+            try {
+                val tagRepository = TagRepository()
+                val result = tagRepository.getAllTags()
+                tags = result.map { it.description }
+            } catch (e: Exception) {
+                error = "Erro ao carregar tags: ${e.message}"
+                Log.e("TagSelectionDialog", "Error loading tags", e)
+            } finally {
+                isLoading = false
+            }
+        }
+    }
+
+    if (showDialog) {
+        AlertDialog(
+            onDismissRequest = onDismiss,
+            title = {
+                Text(
+                    text = "Selecione as áreas",
+                    color = Color(0xFF395174),
+                    fontSize = 18.sp
+                )
+            },
+            text = {
+                Surface(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(300.dp)
+                ) {
+                    if (isLoading) {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator(
+                                color = Color(0xFF395174),
+                                modifier = Modifier.size(40.dp)
+                            )
+                        }
+                    } else if (error != null) {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = error ?: "Erro desconhecido",
+                                color = Color.Red,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.padding(16.dp)
+                            )
+                        }
+                    } else {
+                        LazyColumn {
+                            items(tags) { tag ->
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clickable {
+                                            selectedTags = if (selectedTags.contains(tag)) {
+                                                selectedTags - tag
+                                            } else {
+                                                selectedTags + tag
+                                            }
+                                        }
+                                        .padding(vertical = 8.dp, horizontal = 16.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Checkbox(
+                                        checked = selectedTags.contains(tag),
+                                        onCheckedChange = { checked ->
+                                            selectedTags = if (checked) {
+                                                selectedTags + tag
+                                            } else {
+                                                selectedTags - tag
+                                            }
+                                        }
+                                    )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text(
+                                        text = tag,
+                                        fontSize = 16.sp,
+                                        color = Color(0xFF395174)
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        onTagsSelected(selectedTags)
+                        onDismiss()
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFF395174)
+                    )
+                ) {
+                    Text("Confirmar")
+                }
+            },
+            dismissButton = {
+                Button(
+                    onClick = onDismiss,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.Gray
+                    )
+                ) {
+                    Text("Cancelar")
+                }
+            }
+        )
+    }
+}
+
+@Composable
+fun Area(
+    selectedTags: List<String>,
+    onTagsSelected: (List<String>) -> Unit
+) {
+    var showDialog by remember { mutableStateOf(false) }
+    val paddingValue = logoSize() + 10.dp
+    val paddingValue2 = logoSize() - 20.dp
+    val titleFontSize = (txtSize().value + 1).sp
+
+    Column {
+        Text(
+            text = stringResource(R.string.area),
+            fontSize = titleFontSize,
+            fontWeight = FontWeight.Medium,
+            color = Color(0xFF395174),
+            modifier = Modifier.padding(bottom = 8.dp)
+                .padding(horizontal = paddingValue)
+                .padding(top = paddingValue2)
+        )
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = paddingValue),
+            horizontalArrangement = Arrangement.Start
+        ) {
+            Button(
+                onClick = { showDialog = true },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFFFFFFFF)
+                ),
+                shape = RoundedCornerShape(8.dp),
+                contentPadding = PaddingValues(0.dp),
+                modifier = Modifier
+                    .border(1.dp, Color(0xFF395174), RoundedCornerShape(8.dp))
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Add,
+                    contentDescription = "Add area",
+                    tint = Color(0xFF395174),
+                    modifier = Modifier.size(24.dp)
+                )
+            }
+
+            // Mostrar tags selecionadas
+            Row(
+                modifier = Modifier
+                    .padding(start = 8.dp)
+                    .weight(1f),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                selectedTags.forEach { tag ->
+                    Box(
+                        modifier = Modifier
+                            .background(
+                                color = Color(0xFF395174),
+                                shape = RoundedCornerShape(4.dp)
+                            )
+                            .padding(horizontal = 8.dp, vertical = 4.dp)
+                    ) {
+                        Text(
+                            text = tag,
+                            color = Color.White,
+                            fontSize = 12.sp
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    TagSelectionDialog(
+        showDialog = showDialog,
+        onDismiss = { showDialog = false },
+        onTagsSelected = onTagsSelected
+    )
+}
+
+@Composable
+fun Upload(
+    selectedFileUri: Uri?,
+    onFileSelected: (Uri?) -> Unit,
+    onFileUploaded: (String?) -> Unit // Nova callback para quando o upload terminar
+) {
     var selectedFileName by remember { mutableStateOf<String?>(null) }
+    var isUploading by remember { mutableStateOf(false) }
+    var uploadError by remember { mutableStateOf<String?>(null) }
+    var uploadedFileUrl by remember { mutableStateOf<String?>(null) }
     val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
 
     val documentPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
         uri?.let {
-            onFileSelected(it)  // Atualiza o estado externo
+            onFileSelected(it)
             val cursor = context.contentResolver.query(it, null, null, null, null)
             cursor?.use { c ->
                 if (c.moveToFirst()) {
@@ -202,7 +440,54 @@ fun Upload(selectedFileUri: Uri?, onFileSelected: (Uri?) -> Unit) {
                 }
             }
             if (selectedFileName == null) {
-                selectedFileName = "document.${getFileExtension(it.toString())}"
+                selectedFileName = "document_${System.currentTimeMillis()}.${getFileExtension(it.toString())}"
+            }
+
+            // Upload para o Supabase
+            coroutineScope.launch {
+                isUploading = true
+                uploadError = null
+                try {
+                    val fileBytes = context.contentResolver.openInputStream(it)?.readBytes()
+                    fileBytes?.let { bytes ->
+                        val fileName = selectedFileName ?: "document_${System.currentTimeMillis()}.${getFileExtension(it.toString())}"
+                        val path = fileName
+
+                        try {
+                            val bucket = SupabaseClient.client.storage["materials"]
+
+                            bucket.upload(path, bytes) {
+                                upsert = true
+                            }
+
+                            val publicUrl = bucket.publicUrl(path)
+                            uploadedFileUrl = publicUrl
+                            onFileUploaded(publicUrl) // Notificar que o upload terminou
+                            Log.d("Upload", "File uploaded successfully. URL: $publicUrl")
+
+                        } catch (e: Exception) {
+                            Log.e("Upload", "Storage error", e)
+                            uploadError = when {
+                                e.message?.contains("row-level security policy") == true ->
+                                    "Erro de permissão. Verifique se você está autenticado."
+                                e.message?.contains("bucket") == true ->
+                                    "Erro no bucket de armazenamento. Verifique as configurações."
+                                else -> "Erro no upload: ${e.message}"
+                            }
+                            onFileUploaded(null)
+                        }
+                    } ?: run {
+                        uploadError = "Erro ao ler o arquivo"
+                        onFileUploaded(null)
+                        Log.e("Upload", "Failed to read file bytes")
+                    }
+                } catch (e: Exception) {
+                    uploadError = "Erro no upload: ${e.message}"
+                    onFileUploaded(null)
+                    Log.e("Upload", "Error uploading file", e)
+                } finally {
+                    isUploading = false
+                }
             }
         }
     }
@@ -247,41 +532,80 @@ fun Upload(selectedFileUri: Uri?, onFileSelected: (Uri?) -> Unit) {
                         color = Color(0xFF333333),
                         modifier = Modifier.weight(1f)
                     )
-                    IconButton(onClick = {
-                        onFileSelected(null)
-                        selectedFileName = null
-                    }) {
-                        Icon(
-                            imageVector = Icons.Default.Close,
-                            contentDescription = "Remove file",
-                            tint = Color(0xFF999999),
-                            modifier = Modifier.size(24.dp)
+
+                    if (isUploading) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(20.dp),
+                            color = Color(0xFF395174),
+                            strokeWidth = 2.dp
                         )
+                    } else {
+                        IconButton(onClick = {
+                            onFileSelected(null)
+                            selectedFileName = null
+                            uploadError = null
+                            uploadedFileUrl = null
+                            onFileUploaded(null)
+                        }) {
+                            Icon(
+                                imageVector = Icons.Default.Close,
+                                contentDescription = "Remove file",
+                                tint = Color(0xFF999999),
+                                modifier = Modifier.size(24.dp)
+                            )
+                        }
                     }
                 }
+            }
+
+            uploadError?.let { error ->
+                Text(
+                    text = error,
+                    color = Color.Red,
+                    fontSize = 12.sp,
+                    modifier = Modifier.padding(horizontal = 32.dp, vertical = 4.dp)
+                )
             }
         }
 
         Button(
             onClick = { documentPickerLauncher.launch("*/*") },
+            enabled = !isUploading,
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 32.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF395174)),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Color(0xFF395174),
+                disabledContainerColor = Color(0xFFB0B0B0)
+            ),
             shape = RoundedCornerShape(8.dp)
         ) {
-            Icon(Icons.Default.Upload, contentDescription = "Upload", tint = Color.White, modifier = Modifier.size(18.dp))
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(if (selectedFileUri != null) stringResource(R.string.change_file) else stringResource(R.string.upload_file)
-                    ,color = Color.White,)
+            if (isUploading) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(18.dp),
+                    color = Color.White,
+                    strokeWidth = 2.dp
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Uploading...", color = Color.White)
+            } else {
+                Icon(Icons.Default.Upload, contentDescription = "Upload", tint = Color.White, modifier = Modifier.size(18.dp))
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    if (selectedFileUri != null) stringResource(R.string.change_file) else stringResource(R.string.upload_file),
+                    color = Color.White
+                )
+            }
         }
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun Language() {
-    var selectedLanguage by remember { mutableStateOf("Inglês") }
+fun Language(
+    selectedLanguage: String,
+    onLanguageSelected: (String) -> Unit
+) {
     var isDropdownExpanded by remember { mutableStateOf(false) }
     val languages = listOf(stringResource(R.string.ingles), stringResource(R.string.portugues))
     val titleFontSize = (txtSize().value + 1).sp
@@ -289,8 +613,8 @@ fun Language() {
 
     fun getFlagEmoji(language: String): String {
         return when (language) {
-            "Inglês" -> "\uD83C\uDDFA\uD83C\uDDF8"  // 🇺🇸
-            "Português" -> "\uD83C\uDDF5\uD83C\uDDF9"  // 🇵🇹
+            "Inglês" -> "\uD83C\uDDFA\uD83C\uDDF8"
+            "Português" -> "\uD83C\uDDF5\uD83C\uDDF9"
             else -> ""
         }
     }
@@ -357,7 +681,7 @@ fun Language() {
                             }
                         },
                         onClick = {
-                            selectedLanguage = language
+                            onLanguageSelected(language)
                             isDropdownExpanded = false
                         },
                     )
@@ -368,9 +692,10 @@ fun Language() {
 }
 
 @Composable
-fun Description() {
-    var title by remember { mutableStateOf("") }
-
+fun Description(
+    description: String,
+    onDescriptionChange: (String) -> Unit
+) {
     val spacer = spacer2()
     val textFieldHeight = textFieldHeight() + 60.dp
     val paddingValue = logoSize() + 10.dp
@@ -395,8 +720,8 @@ fun Description() {
             )
 
             ScrollableOutlinedTextField(
-                text = title,
-                onTextChange = { title = it },
+                text = description,
+                onTextChange = onDescriptionChange,
                 height = textFieldHeight
             )
         }
@@ -404,52 +729,10 @@ fun Description() {
 }
 
 @Composable
-fun Area(){
-    val paddingValue = logoSize() + 10.dp
-    val paddingValue2 = logoSize() - 20.dp
-    val titleFontSize = (txtSize().value + 1).sp
-    Column {
-        Text(
-            text = stringResource(R.string.area),
-            fontSize = titleFontSize,
-            fontWeight = FontWeight.Medium,
-            color = Color(0xFF395174),
-            modifier = Modifier.padding(bottom = 8.dp)
-                .padding(horizontal = paddingValue)
-                .padding(top = paddingValue2)
-        )
-
-        Row(
-            modifier = Modifier.fillMaxWidth()
-                .padding(horizontal = paddingValue),
-            horizontalArrangement = Arrangement.Start
-        ) {
-            Button(
-                onClick = {
-                    // TODO: Implement tag selection functionality
-                },
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFFFFFFFF)
-                ),
-                shape = RoundedCornerShape(8.dp),
-                contentPadding = PaddingValues(0.dp),
-                modifier = Modifier
-                    .border(1.dp, Color(0xFF395174), RoundedCornerShape(8.dp))
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Add,
-                    contentDescription = "Add area",
-                    tint = Color(0xFF395174),
-                    modifier = Modifier.size(24.dp)
-                )
-            }
-        }
-    }
-}
-
-@Composable
-fun Private(){
-    var isPrivate by remember { mutableStateOf(false) }
+fun Private(
+    isPrivate: Boolean,
+    onPrivateChange: (Boolean) -> Unit
+){
     val titleFontSize = (txtSize().value + 1).sp
     val paddingValue = logoSize() + 10.dp
     val paddingValue2 = logoSize() - 20.dp
@@ -469,7 +752,7 @@ fun Private(){
 
         Switch(
             checked = isPrivate,
-            onCheckedChange = { isPrivate = it },
+            onCheckedChange = onPrivateChange,
             colors = SwitchDefaults.colors(
                 checkedThumbColor = Color.White,
                 checkedTrackColor = Color(0xFF5A6B7D),
@@ -482,7 +765,11 @@ fun Private(){
 }
 
 @Composable
-fun ShareBtn(enabled: Boolean) {
+fun ShareBtn(
+    enabled: Boolean,
+    isCreating: Boolean,
+    onClick: () -> Unit
+) {
     val paddingValue = logoSize() + 10.dp
     val paddingValue2 = logoSize() - 20.dp
     val shareButtonSize = sbutton() - 8.dp
@@ -494,24 +781,38 @@ fun ShareBtn(enabled: Boolean) {
             .padding(vertical = paddingValue2)
     ) {
         Button(
-            onClick = { /* ação de partilhar */ },
-            enabled = enabled, // usar o parâmetro passado
+            onClick = onClick,
+            enabled = enabled && !isCreating,
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(bottom = paddingValue2),
             colors = ButtonDefaults.buttonColors(
                 containerColor = Color(0xFF395174),
-                disabledContainerColor = Color(0xFFB0B0B0), // cor quando desativado (ex: cinzento claro)
+                disabledContainerColor = Color(0xFFB0B0B0),
                 contentColor = Color.White,
                 disabledContentColor = Color.White.copy(alpha = 0.6f)
             ),
             shape = RoundedCornerShape(8.dp)
         ) {
-            Text(
-                text = stringResource(R.string.Share),
-                fontSize = 16.sp,
-                modifier = Modifier.padding(vertical = shareButtonSize)
-            )
+            if (isCreating) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(16.dp),
+                    color = Color.White,
+                    strokeWidth = 2.dp
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "Criando...",
+                    fontSize = 16.sp,
+                    modifier = Modifier.padding(vertical = shareButtonSize)
+                )
+            } else {
+                Text(
+                    text = stringResource(R.string.Share),
+                    fontSize = 16.sp,
+                    modifier = Modifier.padding(vertical = shareButtonSize)
+                )
+            }
         }
     }
 }
@@ -519,8 +820,82 @@ fun ShareBtn(enabled: Boolean) {
 @Composable
 fun Indice4(){
     var title by remember { mutableStateOf("") }
+    var description by remember { mutableStateOf("") }
     var selectedFileUri by remember { mutableStateOf<Uri?>(null) }
-    val isShareEnabled = title.isNotBlank() && selectedFileUri != null
+    var uploadedFileUrl by remember { mutableStateOf<String?>(null) }
+    var selectedTags by remember { mutableStateOf(listOf<String>()) }
+    var selectedLanguage by remember { mutableStateOf("Inglês") }
+    var isPrivate by remember { mutableStateOf(false) }
+    var isCreatingMaterial by remember { mutableStateOf(false) }
+    var createError by remember { mutableStateOf<String?>(null) }
+    var createSuccess by remember { mutableStateOf(false) }
+
+    val coroutineScope = rememberCoroutineScope()
+
+    // Condição para habilitar o botão de compartilhar
+    val isShareEnabled = title.isNotBlank() && uploadedFileUrl != null
+
+    // Função para converter idioma para ID
+    fun getLanguageId(language: String): Long {
+        return when (language) {
+            "Inglês" -> 1L
+            "Português" -> 2L
+            else -> 1L
+        }
+    }
+
+    // Função para converter tags em IDs (assumindo que você tem uma função para isso)
+    fun getTagIds(tagNames: List<String>): List<Long> {
+        // Aqui você precisaria implementar a conversão dos nomes das tags para IDs
+        // Por enquanto, retorno uma lista vazia
+        return emptyList()
+    }
+
+    // Função para criar o material
+    fun createMaterial() {
+        coroutineScope.launch {
+            isCreatingMaterial = true
+            createError = null
+
+            try {
+                val materialsRepository = MaterialsRepository()
+                val authRepository = AuthRepository()
+                val tagIds = getTagIds(selectedTags)
+                val currentUser = authRepository.getCurrentUser()
+
+                val material = materialsRepository.createMaterial(
+                    title = title,
+                    description = description.ifBlank { null },
+                    file_url = uploadedFileUrl,
+                    visibility = !isPrivate, // visibility é o oposto de private
+                    language = getLanguageId(selectedLanguage),
+                    author_id = currentUser?.id,
+                    tagIds = tagIds.ifEmpty { null }
+                )
+
+                if (material != null) {
+                    createSuccess = true
+                    Log.d("ShareScreen", "Material criado com sucesso: ${material.id}")
+
+                    // Resetar o formulário após sucesso
+                    title = ""
+                    description = ""
+                    selectedFileUri = null
+                    uploadedFileUrl = null
+                    selectedTags = emptyList()
+                    selectedLanguage = "Inglês"
+                    isPrivate = false
+                } else {
+                    createError = "Erro ao criar material"
+                }
+            } catch (e: Exception) {
+                createError = "Erro: ${e.message}"
+                Log.e("ShareScreen", "Erro ao criar material", e)
+            } finally {
+                isCreatingMaterial = false
+            }
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -529,59 +904,63 @@ fun Indice4(){
             .padding(bottom = 80.dp)
     ) {
         TopBar()
-        Title(title) { title = it }               // <-- Passa o estado e callback
-        Upload(selectedFileUri) { selectedFileUri = it }  // <-- idem
-        Language()
-        Description()
-        Area()
-        Private()
-        ShareBtn(isShareEnabled)                  // <-- Passa o estado booleano
-    }
-}
 
-@Composable
-fun ShareScreen(navController: NavController) {
-    var selectedItem by remember { mutableIntStateOf(2) }
+        Title(title) { title = it }
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color.White)
-    ) {
-        if (selectedItem == 0 || selectedItem == 1 || selectedItem == 3 || selectedItem == 4) {
-            Circles()
+        Upload(
+            selectedFileUri = selectedFileUri,
+            onFileSelected = { selectedFileUri = it },
+            onFileUploaded = { url -> uploadedFileUrl = url }
+        )
+
+        Language(
+            selectedLanguage = selectedLanguage,
+            onLanguageSelected = { selectedLanguage = it }
+        )
+
+        Description(
+            description = description,
+            onDescriptionChange = { description = it }
+        )
+
+        Area(
+            selectedTags = selectedTags,
+            onTagsSelected = { selectedTags = it }
+        )
+
+        Private(
+            isPrivate = isPrivate,
+            onPrivateChange = { isPrivate = it }
+        )
+
+        ShareBtn(
+            enabled = isShareEnabled,
+            isCreating = isCreatingMaterial,
+            onClick = { createMaterial() }
+        )
+
+        // Mostrar mensagens de erro ou sucesso
+        createError?.let { error ->
+            Text(
+                text = error,
+                color = Color.Red,
+                fontSize = 14.sp,
+                modifier = Modifier.padding(horizontal = 32.dp, vertical = 8.dp)
+            )
         }
 
-        Column(
-            modifier = Modifier
-                .padding(bottom = 80.dp)
-        ) {
-            if(selectedItem == 0){
-                SearchBar()
-            }
-            if(selectedItem == 1) {
-                SBar(title = stringResource(R.string.study_session))
-            }
-            if(selectedItem == 3) {
-                SBar(title = stringResource(R.string.Groups))
-            }
-            ScreenContent(selectedItem, navController)
-        }
+        if (createSuccess) {
+            Text(
+                text = "Material criado com sucesso!",
+                color = Color.Green,
+                fontSize = 14.sp,
+                modifier = Modifier.padding(horizontal = 32.dp, vertical = 8.dp)
+            )
 
-        Box(
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .fillMaxWidth()
-        ) {
-            if (selectedItem == 0 || selectedItem == 1 || selectedItem == 2 || selectedItem == 3 || selectedItem == 4) {
-                Nav(
-                    selectedItem = selectedItem,
-                    onItemSelected = { newIndex ->
-                        selectedItem = newIndex
-                    },
-                    modifier = Modifier
-                        .align(Alignment.BottomCenter)
-                )
+            // Limpar mensagem de sucesso após alguns segundos
+            LaunchedEffect(createSuccess) {
+                kotlinx.coroutines.delay(3000)
+                createSuccess = false
             }
         }
     }
