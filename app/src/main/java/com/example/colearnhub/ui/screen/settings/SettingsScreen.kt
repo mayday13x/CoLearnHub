@@ -281,17 +281,23 @@ fun SettingsScreen(
         }
     }
 
-    Column(
-        modifier = Modifier.fillMaxSize()
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.White)
     ) {
-        TopSettingsBar(
-            onBack = {
-                navController.navigate("MainScreen?selectedItem=4") {
-                    popUpTo("settings") { inclusive = true }
+        Column(
+            modifier = Modifier.fillMaxSize()
+        ) {
+            TopSettingsBar(
+                onBack = {
+                    navController.navigate("MainScreen?selectedItem=4") {
+                        popUpTo("settings") { inclusive = true }
+                    }
                 }
-            }
-        )
-        SettingsList(authViewModel = authViewModel)
-        VersionApp()
+            )
+            SettingsList(authViewModel = authViewModel)
+            VersionApp()
+        }
     }
 }
