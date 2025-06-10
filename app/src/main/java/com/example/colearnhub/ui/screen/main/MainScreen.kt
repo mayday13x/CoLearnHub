@@ -129,10 +129,6 @@ fun Indice(
 
         // Botão Share - posicionado no topo quando há dados
         val currentMaterials = if (selectedTab == 0) materials else userMaterials
-        if (currentMaterials.isNotEmpty() && !isLoading) {
-            ShareButton()
-            Spacer(modifier = Modifier.height(16.dp))
-        }
 
         // Tabs
         Row(
@@ -244,6 +240,7 @@ fun ContentArea(
         modifier = Modifier
             .fillMaxSize()
             .padding(horizontal = padding)
+            .padding(bottom = 100.dp)
     ) {
         if (isLoading) {
             Box(
@@ -389,20 +386,36 @@ fun MaterialCard(
     val authorName = materialViewModel.getUserName(material.author_id)
     val (languageName, languageFlag) = materialViewModel.getLanguageInfo(material.language)
 
+    // Lista de cores para as tags
+    val tagColors = listOf(
+        Color(0xFF4A90E2), // Azul
+        Color(0xFF50C878), // Verde
+        Color(0xFFFFA500), // Laranja
+        Color(0xFFE91E63), // Rosa
+        Color(0xFF9C27B0), // Roxo
+        Color(0xFF00BCD4), // Ciano
+        Color(0xFFFF6B6B), // Vermelho
+        Color(0xFF795548)  // Marrom
+    )
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
+            .padding(vertical = 8.dp)
             .clickable { /* Navegar para detalhes */ },
         colors = CardDefaults.cardColors(
             containerColor = Color.White
         ),
         elevation = CardDefaults.cardElevation(
-            defaultElevation = 2.dp
+            defaultElevation = 4.dp
         ),
         shape = RoundedCornerShape(8.dp)
-    ) {
+    ){
         Column(
-            modifier = Modifier.padding(16.dp)
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+
         ) {
             // Linha superior: Título e informações adicionais
             Row(
@@ -422,16 +435,16 @@ fun MaterialCard(
                         overflow = TextOverflow.Ellipsis
                     )
 
-                    // Tags do material (agora usa a lista de tags do novo sistema)
+                    // Tags do material com cores diferentes
                     Row(
                         modifier = Modifier.padding(top = 4.dp),
                         horizontalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
                         // Mostrar as tags do material (limitado a 3 para não ocupar muito espaço)
-                        material.tags?.take(3)?.forEach { tag ->
+                        material.tags?.take(3)?.forEachIndexed { index, tag ->
                             MaterialTypeTag(
                                 text = tag.description,
-                                backgroundColor = Color(0xFF4A90E2)
+                                backgroundColor = tagColors[index % tagColors.size]
                             )
                         }
 
