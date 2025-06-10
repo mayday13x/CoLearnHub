@@ -45,6 +45,7 @@ import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -57,6 +58,8 @@ import com.example.colearnhub.ui.screen.main.Indice2
 import com.example.colearnhub.ui.screen.main.Indice3
 import com.example.colearnhub.ui.screen.main.Indice4
 import com.example.colearnhub.ui.screen.main.Indice5
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 
 @Composable
 fun Circles() {
@@ -122,7 +125,7 @@ fun SearchBar() {
                     fontSize = titleFontSize,
                     fontWeight = FontWeight.Bold,
                     color = Color.White,
-                    style = androidx.compose.ui.text.TextStyle(
+                    style = TextStyle(
                         drawStyle = Stroke(width = 2f)
                     )
                 )
@@ -370,7 +373,10 @@ fun Nav(
 @Composable
 fun ScreenContent(selectedItem: Int, navController: NavController) {
     when (selectedItem) {
-        0 -> Indice()
+        0 -> Indice(
+            navController = navController,
+            materialViewModel = viewModel()
+        )
         1 -> Indice2()
         2 -> Indice4()
         3 -> Indice3()

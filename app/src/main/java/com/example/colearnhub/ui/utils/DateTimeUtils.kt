@@ -4,64 +4,85 @@ import java.text.ParseException
 import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.TimeUnit
+import android.util.Log
 
 object DateTimeUtils {
-    fun formatTimeAgo(dateString: String?): String {
-        if (dateString.isNullOrEmpty()) return "Desconhecido"
 
-        try {
-            // Formato da base de dados: "2025-06-03 18:42:25.615385"
-            val format = SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS", Locale.getDefault())
-            format.timeZone = TimeZone.getTimeZone("UTC")
+    private fun truncateToMillis(dateString: String): String {
 
-            val truncatedDateString = if (dateString.length > 23) {
-                dateString.substring(0, 23)
+        Log.d("DateTimeUtils", "Raw Date: $dateString")
+
+        val parts = dateString.split(".")
+        return if (parts.size > 1) {
+            val secondsPart = parts[0]
+            val fractionalPart = parts[1]
+            if (fractionalPart.length > 3) {
+                "$secondsPart.${fractionalPart.substring(0, 3)}"
             } else {
                 dateString
             }
+        } else {
+            dateString
+        }
+    }
 
-            val createdAt = format.parse(truncatedDateString)
-            val now = Date()
+    fun formatTimeAgo(dateString: String?): String {
+        if (dateString.isNullOrEmpty()) return "Desconhecido"
 
-            val diffInMillis = now.time - createdAt.time
-            val minutes = TimeUnit.MILLISECONDS.toMinutes(diffInMillis)
-            val hours = TimeUnit.MILLISECONDS.toHours(diffInMillis)
-            val days = TimeUnit.MILLISECONDS.toDays(diffInMillis)
-            val months = days / 30
-            val years = days / 365
+        val parsedDateString = truncateToMillis(dateString)
 
-            return when {
-                minutes < 1 -> "Agora mesmo"
-                hours < 1 -> "Há ${minutes}min"
-                days < 1 -> "Há ${hours}h"
-                days == 1L -> "Há 1 dia"
-                days < 30 -> "Há ${days}d"
-                months == 1L -> "Há 1 mês"
-                months < 12 -> "Há ${months} meses"
-                years == 1L -> "Há 1 ano"
-                else -> "Há ${years} anos"
-            }
-        } catch (e: ParseException) {
-            // Tentar formato alternativo se o primeiro falhar
+
+        val date: Date? = try {
+            // Tentar com milissegundos
+            val formatMilliseconds = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS", Locale.getDefault())
+            Log.d("DateTimeUtils", "Tentando parse com milissegundos...")
+            val result = formatMilliseconds.parse(parsedDateString)
+            Log.d("DateTimeUtils", "Sucesso com milissegundos: $result")
+            result
+        } catch (e1: ParseException) {
+            Log.d("DateTimeUtils", "Falhou com milissegundos: ${e1.message}")
             try {
-                val fallbackFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-                val createdAt = fallbackFormat.parse(dateString)
-                val now = Date()
-                val diffInMillis = now.time - createdAt.time
-                val days = TimeUnit.MILLISECONDS.toDays(diffInMillis)
-                val months = days / 30
-                val years = days / 365
-
-                return when {
-                    days < 30 -> "Há ${days}d"
-                    months < 12 -> "Há ${months} meses"
-                    else -> "Há ${years} anos"
+                // Tentar sem milissegundos
+                val formatSeconds = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault())
+                Log.d("DateTimeUtils", "Tentando parse sem milissegundos...")
+                val result = formatSeconds.parse(parsedDateString)
+                Log.d("DateTimeUtils", "Sucesso sem milissegundos: $result")
+                result
+            } catch (e2: ParseException) {
+                Log.d("DateTimeUtils", "Falhou sem milissegundos: ${e2.message}")
+                try {
+                    // Tentar só com data
+                    val formatDateOnly = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+                    Log.d("DateTimeUtils", "Tentando parse só com data...")
+                    val result = formatDateOnly.parse(parsedDateString)
+                    Log.d("DateTimeUtils", "Sucesso só com data: $result")
+                    result
+                } catch (e3: ParseException) {
+                    Log.e("DateTimeUtils", "Falhou em todos os formatos: ${e3.message}")
+                    null
                 }
-            } catch (ex: Exception) {
-                return "Data inválida"
             }
-        } catch (e: Exception) {
+        }
+
+        if (date == null) {
+            Log.e("DateTimeUtils", "Não foi possível fazer parse da data!")
             return "Data inválida"
+        }
+
+        val now = Date()
+        val diffInMillis = now.time - date.time
+        val minutes = TimeUnit.MILLISECONDS.toMinutes(diffInMillis)
+        val hours = TimeUnit.MILLISECONDS.toHours(diffInMillis)
+        val days = TimeUnit.MILLISECONDS.toDays(diffInMillis)
+
+        return when {
+            minutes < 1 -> "Agora mesmo"
+            minutes < 60 -> "à $minutes min"
+            hours < 24 -> "à ${hours}h"
+            days == 1L -> "Ontem"
+            days < 30 -> "à ${days}d"
+            days < 365 -> "à ${days / 30} meses"
+            else -> "à ${days / 365} anos"
         }
     }
 }

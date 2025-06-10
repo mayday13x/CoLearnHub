@@ -142,4 +142,15 @@
     <string name="Delete_Account">Delete Account</string>
     <string name="Logout">Logout</string>
 
+    <!-- Adicione estas strings ao seu arquivo existente -->
+    <string name="unknown_time">Unknown</string>
+    <string name="just_now">Just now</string>
+    <string name="minutes_ago">%d min ago</string>
+    <string name="hours_ago">%dh ago</string>
+    <string name="yesterday">Yesterday</string>
+    <string name="days_ago">%dd ago</string>
+    <string name="months_ago">%d months ago</string>
+    <string name="years_ago">%d years ago</string>
+    <string name="invalid_date_parsing">Invalid date</string>
+
 </resources>
