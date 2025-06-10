@@ -40,6 +40,7 @@ class UserViewModel : ViewModel() {
     val averageRating: StateFlow<Double> = _averageRating
 
     // Crud do utilizador
+    @RequiresApi(Build.VERSION_CODES.O)
     fun getUserById(userId: String) {
         viewModelScope.launch {
             val user = userRepository.getUserById(userId)
@@ -60,6 +61,7 @@ class UserViewModel : ViewModel() {
         }
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     fun getUserByUsername(username: String) {
         viewModelScope.launch {
             val user = userRepository.getUserByUsername(username)

@@ -1,6 +1,7 @@
 package com.example.colearnhub.repositoryLayer
 
 import android.util.Log
+import com.example.colearnhub.modelLayer.CreateMaterialRequest
 import com.example.colearnhub.modelLayer.Material
 import com.example.colearnhub.modelLayer.MaterialTag
 import com.example.colearnhub.modelLayer.TagData
@@ -17,7 +18,7 @@ class MaterialsRepository {
     suspend fun createMaterial(
         title: String,
         description: String? = null,
-        fileUrl: String? = null,
+        file_url: String? = null,
         visibility: Boolean = true,
         language: Long? = null,
         author_id: String? = null,
@@ -32,14 +33,15 @@ class MaterialsRepository {
             Log.d("MaterialRepository", "Tag IDs: $tagIds")
 
             // Criar o material primeiro
-            val materialData = mapOf(
-                "title" to title,
-                "description" to description,
-                "file_url" to fileUrl,
-                "visibility" to visibility,
-                "language" to language,
-                "author_id" to author_id
-            ).filterValues { it != null }
+            val materialData = CreateMaterialRequest(
+                title = title,
+                description = description,
+                file_url = file_url,
+                visibility = visibility,
+                language = language,
+                author_id = author_id,
+                tag_ids = tagIds
+            )
 
             val result = SupabaseClient.client
                 .from("Materials")

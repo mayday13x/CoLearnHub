@@ -62,7 +62,7 @@ class MaterialViewModel : ViewModel() {
     fun createMaterial(
         title: String,
         description: String? = null,
-        fileUrl: String? = null,
+        file_url: String? = null,
         visibility: Boolean = true,
         language: Long? = null,
         author_id: String? = null,
@@ -75,7 +75,7 @@ class MaterialViewModel : ViewModel() {
             val result = materialRepository.createMaterial(
                 title = title,
                 description = description,
-                fileUrl = fileUrl,
+                file_url = file_url,
                 visibility = visibility,
                 language = language,
                 author_id = author_id,
