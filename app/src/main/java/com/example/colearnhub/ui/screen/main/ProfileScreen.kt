@@ -48,8 +48,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.NavController
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
 import com.example.colearnhub.R
 import com.example.colearnhub.ui.utils.Circles
 import com.example.colearnhub.ui.utils.Nav
@@ -349,7 +349,8 @@ fun ProfileDetailsSection(
             Spacer(modifier = Modifier.height(spacer))
 
             Row {
-                Column(modifier = Modifier.weight(1f)) {
+                Column(modifier = Modifier.weight(1f)
+                    .offset(x = -(20).dp)) {
                     Text(
                         text = stringResource(R.string.birthdate),
                         fontSize = titleFontSize,
@@ -379,7 +380,8 @@ fun ProfileDetailRow(
     val titleFontSize = txtSize()
 
     Row {
-        Column(modifier = Modifier.weight(1f)) {
+        Column(modifier = Modifier.weight(1f)
+            .offset(x = -(20).dp)) {
             Text(
                 text = label1,
                 fontSize = titleFontSize,
@@ -394,7 +396,8 @@ fun ProfileDetailRow(
             )
         }
 
-        Column(modifier = Modifier.weight(1f)) {
+        Column(modifier = Modifier.weight(1f)
+            .offset(x = 20.dp)) {
             Text(
                 text = label2,
                 fontSize = titleFontSize,
@@ -412,7 +415,7 @@ fun ProfileDetailRow(
 }
 
 @Composable
-fun EditProfileBtn(){
+fun EditProfileBtn(onSettingsClick: () -> Unit){
     val btnHeight = verticalSpacing() + 10.dp
     val titleFontSize = txtSize()
 
@@ -421,7 +424,7 @@ fun EditProfileBtn(){
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Button(
-            onClick = { },
+            onClick = onSettingsClick,
             modifier = Modifier
                 .width(dynamicWidth(maxWidth = 300.dp))
                 .height(btnHeight)
@@ -465,7 +468,9 @@ fun Indice5(navController: NavController? = null,
         userViewModel = userViewModel)
     StatsCardGroup(userViewModel = userViewModel)
     ProfileDetailsSection(userViewModel = userViewModel)
-    EditProfileBtn()
+    EditProfileBtn(onSettingsClick = {
+        navController?.navigate("editprofile")
+    })
 }
 
 @Composable

@@ -6,8 +6,13 @@ import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavGraphBuilder
+import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.colearnhub.ui.screen.others.EditProfileScreen
+import com.example.colearnhub.ui.screen.settings.SettingsScreen
 import com.example.colearnhub.viewmodel.AuthViewModel
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -24,7 +29,7 @@ fun NavGraph() {
     NavHost(navController = navController, startDestination = startDestination) {
         authRoutes(navController, authViewModel)
         mainRoutes(navController)
-        testRoutes(navController)
         settingsRoutes(navController, authViewModel)
+        profileRoutes(navController)
     }
 }
