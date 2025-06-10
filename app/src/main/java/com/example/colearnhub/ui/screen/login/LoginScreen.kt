@@ -217,6 +217,11 @@ fun LoginScreen(
         val passwordRequiredError = stringResource(R.string.password_required)
         val passwordMinLengthError = stringResource(R.string.password_min_length)
 
+        val emailRequiredError = stringResource(R.string.email_required)
+        val emailInvalidError = stringResource(R.string.email_invalid)
+        val passwordRequiredError = stringResource(R.string.password_required)
+        val passwordMinLengthError = stringResource(R.string.password_min_length)
+
         // Login Button
         Button(
             onClick = {

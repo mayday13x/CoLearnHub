@@ -24,6 +24,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -132,36 +133,52 @@ fun Identity(
         modifier = modifier
             .fillMaxWidth()
     ) {
-        Box(
-            modifier = Modifier
-                .size(sizeValue + 30.dp)
-                .clip(CircleShape)
-                .border(3.dp, Color.White, CircleShape)
-                .background(Color.White.copy(alpha = 0.2f)),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                imageVector = Icons.Default.Person,
-                contentDescription = "Profile",
-                tint = Color.White,
-                modifier = Modifier.size(sizeValue)
+        if (user == null) {
+            Box(
+                modifier = Modifier
+                    .size(sizeValue + 30.dp)
+                    .clip(CircleShape)
+                    .border(3.dp, Color.White, CircleShape)
+                    .background(Color.White.copy(alpha = 0.2f)),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(40.dp),
+                    color = Color.White
+                )
+            }
+        } else {
+            Box(
+                modifier = Modifier
+                    .size(sizeValue + 30.dp)
+                    .clip(CircleShape)
+                    .border(3.dp, Color.White, CircleShape)
+                    .background(Color.White.copy(alpha = 0.2f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Person,
+                    contentDescription = "Profile",
+                    tint = Color.White,
+                    modifier = Modifier.size(sizeValue)
+                )
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Text(
+                text = user!!.name,
+                fontSize = titleFontSize,
+                fontWeight = FontWeight.Bold,
+                color = Color.White
+            )
+
+            Text(
+                text = "@${user!!.username}",
+                fontSize = (titleFontSize.value - 4).sp,
+                color = Color.White.copy(alpha = 0.8f)
             )
         }
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        Text(
-            text = user?.name ?: "User",
-            fontSize = titleFontSize,
-            fontWeight = FontWeight.Bold,
-            color = Color.White
-        )
-
-        Text(
-            text = "@${user?.username ?: "username"}",
-            fontSize = (titleFontSize.value - 4).sp,
-            color = Color.White.copy(alpha = 0.8f)
-        )
     }
 }
 
@@ -174,6 +191,7 @@ fun StatsCardGroup(
     val titleFontSize = (txtSize().value + 4).sp
     val contributions by userViewModel.userContributions.collectAsState()
     val averageRating by userViewModel.averageRating.collectAsState()
+    val user by userViewModel.user.collectAsState()
 
     Card(
         modifier = Modifier
@@ -186,73 +204,87 @@ fun StatsCardGroup(
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
         shape = RoundedCornerShape(15.dp)
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Column(
-                modifier = Modifier.weight(1f),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Image(
-                        painter = painterResource(id = R.drawable.cube),
-                        contentDescription = "Logo",
-                        modifier = Modifier.size(sizeValue)
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(
-                        text = contributions.toString(),
-                        fontSize = titleFontSize,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.Black
-                    )
-                }
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = stringResource(R.string.contributions_label),
-                    fontSize = (titleFontSize.value - 8).sp,
-                    color = Color.Black,
-                    fontWeight = FontWeight.Medium
-                )
-            }
-
+        if (user == null) {
             Box(
                 modifier = Modifier
-                    .width(1.dp)
-                    .height(padding + 20.dp)
-                    .padding(vertical = 4.dp)
-                    .background(Color.LightGray)
-            )
-
-            Column(
-                modifier = Modifier.weight(1f),
-                horizontalAlignment = Alignment.CenterHorizontally
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                contentAlignment = Alignment.Center
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        imageVector = Icons.Default.Star,
-                        contentDescription = null,
-                        tint = Color(0xFFFFA000),
-                        modifier = Modifier.size(sizeValue)
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
+                CircularProgressIndicator(
+                    modifier = Modifier.size(40.dp),
+                    color = Color(0xFF4A6FA5)
+                )
+            }
+        } else {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(
+                    modifier = Modifier.weight(1f),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Image(
+                            painter = painterResource(id = R.drawable.cube),
+                            contentDescription = "Logo",
+                            modifier = Modifier.size(sizeValue)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = contributions.toString(),
+                            fontSize = titleFontSize,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.Black
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = "4.0",
-                        fontSize = titleFontSize,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.Black
+                        text = stringResource(R.string.contributions_label),
+                        fontSize = (titleFontSize.value - 8).sp,
+                        color = Color.Black,
+                        fontWeight = FontWeight.Medium
                     )
                 }
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = stringResource(R.string.evaluations_label),
-                    fontSize = (titleFontSize.value - 8).sp,
-                    color = Color.Black,
-                    fontWeight = FontWeight.Medium
+
+                Box(
+                    modifier = Modifier
+                        .width(1.dp)
+                        .height(padding + 20.dp)
+                        .padding(vertical = 4.dp)
+                        .background(Color.LightGray)
                 )
+
+                Column(
+                    modifier = Modifier.weight(1f),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Default.Star,
+                            contentDescription = null,
+                            tint = Color(0xFFFFA000),
+                            modifier = Modifier.size(sizeValue)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = String.format("%.1f", averageRating),
+                            fontSize = titleFontSize,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.Black
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = stringResource(R.string.evaluations_label),
+                        fontSize = (titleFontSize.value - 8).sp,
+                        color = Color.Black,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
             }
         }
     }
@@ -276,49 +308,63 @@ fun ProfileDetailsSection(
             .offset(y = (-50).dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        ProfileDetailRow(
-            label1 = stringResource(R.string.member_since_label),
-            value1 = formattedCreatedAt,
-            label2 = stringResource(R.string.school_label),
-            value2 = user?.school ?: "Not defined"
-        )
-
-        Spacer(modifier = Modifier.height(spacer))
-
-        ProfileDetailRow(
-            label1 = stringResource(R.string.email),
-            value1 = user?.email ?: "Not defined",
-            label2 = stringResource(R.string.course_label),
-            value2 = user?.course ?: "Not defined"
-        )
-
-        Spacer(modifier = Modifier.height(spacer))
-
-        ProfileDetailRow(
-            label1 = stringResource(R.string.country),
-            value1 = countryName ?: "Not defined",
-            label2 = stringResource(R.string.curricular_year_label),
-            value2 = user?.curricularYear?.toString() ?: "Not defined"
-        )
-
-        Spacer(modifier = Modifier.height(spacer))
-
-        Row {
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = stringResource(R.string.birthdate),
-                    fontSize = titleFontSize,
-                    color = Color(0xFF4A6FA5),
-                    fontWeight = FontWeight.Medium
-                )
-                Text(
-                    text = user?.birth_date ?: "Not defined",
-                    fontSize = (titleFontSize.value - 2).sp,
-                    color = Color.Black,
-                    fontWeight = FontWeight.Normal
+        if (user == null || countryName == null || formattedCreatedAt == "Not defined") {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(40.dp),
+                    color = Color(0xFF4A6FA5)
                 )
             }
-            Spacer(modifier = Modifier.weight(1f))
+        } else {
+            ProfileDetailRow(
+                label1 = stringResource(R.string.member_since_label),
+                value1 = formattedCreatedAt,
+                label2 = stringResource(R.string.school_label),
+                value2 = user?.school ?: "Not defined"
+            )
+
+            Spacer(modifier = Modifier.height(spacer))
+
+            ProfileDetailRow(
+                label1 = stringResource(R.string.email),
+                value1 = user?.email ?: "Not defined",
+                label2 = stringResource(R.string.course_label),
+                value2 = user?.course ?: "Not defined"
+            )
+
+            Spacer(modifier = Modifier.height(spacer))
+
+            ProfileDetailRow(
+                label1 = stringResource(R.string.country),
+                value1 = countryName ?: "Not defined",
+                label2 = stringResource(R.string.curricular_year_label),
+                value2 = user?.curricularYear?.toString() ?: "Not defined"
+            )
+
+            Spacer(modifier = Modifier.height(spacer))
+
+            Row {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = stringResource(R.string.birthdate),
+                        fontSize = titleFontSize,
+                        color = Color(0xFF4A6FA5),
+                        fontWeight = FontWeight.Medium
+                    )
+                    Text(
+                        text = user?.birth_date ?: "Not defined",
+                        fontSize = (titleFontSize.value - 2).sp,
+                        color = Color.Black,
+                        fontWeight = FontWeight.Normal
+                    )
+                }
+                Spacer(modifier = Modifier.weight(1f))
+            }
         }
     }
 }

@@ -1,6 +1,6 @@
 @file:OptIn(ExperimentalMaterial3Api::class)
 
-package com.example.colearnhub.ui.screen.others
+package com.example.colearnhub.ui.screen.settings
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -32,6 +32,9 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -41,6 +44,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.example.colearnhub.R
 import com.example.colearnhub.ui.utils.logoSize
@@ -49,6 +53,7 @@ import com.example.colearnhub.ui.utils.spacer3
 import com.example.colearnhub.ui.utils.titleFontSize
 import com.example.colearnhub.ui.utils.txtSize
 import com.example.colearnhub.ui.utils.verticalSpacing
+import com.example.colearnhub.viewmodel.AuthViewModel
 
 @Composable
 fun TopSettingsBar(onBack: () -> Unit) {
@@ -136,7 +141,9 @@ fun SettingsItem(
 }
 
 @Composable
-fun SettingsList(){
+fun SettingsList(
+    authViewModel: AuthViewModel = viewModel()
+){
     val padding = logoSize() - 10.dp
     LazyColumn(
         modifier = Modifier
@@ -210,7 +217,7 @@ fun SettingsList(){
                 icon = Icons.Default.Logout,
                 title = stringResource(R.string.Logout),
                 showArrow = false,
-                onClick = { /* Handle logout click */ }
+                onClick = { authViewModel.signOut() }
             )
         }
     }
@@ -258,28 +265,33 @@ fun VersionApp(){
     }
 }
 
-@Composable
-fun IndiceSettings(onBack: () -> Unit) {
-    Column {
-        TopSettingsBar(onBack = onBack)
-        SettingsList()
-        VersionApp()
-    }
-}
 
 @Composable
-fun SettingsScreen(navController: NavHostController) {
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color.White)
+fun SettingsScreen(
+    navController: NavHostController,
+    authViewModel: AuthViewModel = viewModel()
+) {
+    val authState by authViewModel.authState.collectAsState()
+
+    LaunchedEffect(authState.isAuthenticated) {
+        if (!authState.isAuthenticated) {
+            navController.navigate("login") {
+                popUpTo("MainScreen") { inclusive = true }
+            }
+        }
+    }
+
+    Column(
+        modifier = Modifier.fillMaxSize()
     ) {
-        Column {
-            IndiceSettings(onBack = {
+        TopSettingsBar(
+            onBack = {
                 navController.navigate("MainScreen?selectedItem=4") {
                     popUpTo("settings") { inclusive = true }
                 }
-            })
-        }
+            }
+        )
+        SettingsList(authViewModel = authViewModel)
+        VersionApp()
     }
 }
