@@ -25,6 +25,7 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenuItem
@@ -36,6 +37,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -63,10 +65,89 @@ import com.example.colearnhub.ui.utils.textFieldHeight
 import com.example.colearnhub.ui.utils.txtSize
 
 @Composable
-fun TopEditProfileBar(onBack: () -> Unit) {
+fun UnsavedChangesDialog(
+    showDialog: Boolean,
+    onDismiss: () -> Unit,
+    onConfirm: () -> Unit,
+    onDiscard: () -> Unit
+) {
+    if (showDialog) {
+        AlertDialog(
+            onDismissRequest = onDismiss,
+            title = {
+                Text(
+                    text = stringResource(R.string.unsaved_changes_title),
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF395174)
+                )
+            },
+            text = {
+                Text(
+                    text = stringResource(R.string.unsaved_changes_message),
+                    color = Color.Black
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = onConfirm,
+                    colors = ButtonDefaults.textButtonColors(
+                        contentColor = Color(0xFF395174)
+                    )
+                ) {
+                    Text(stringResource(R.string.save))
+                }
+            },
+            dismissButton = {
+                Row {
+                    TextButton(
+                        onClick = onDiscard,
+                        colors = ButtonDefaults.textButtonColors(
+                            contentColor = Color(0xFFFF0000)
+                        )
+                    ) {
+                        Text(stringResource(R.string.discard))
+                    }
+
+                    TextButton(
+                        onClick = onDismiss,
+                        colors = ButtonDefaults.textButtonColors(
+                            contentColor = Color.Gray
+                        )
+                    ) {
+                        Text(stringResource(R.string.cancel))
+                    }
+                }
+            },
+            containerColor = Color.White,
+            shape = RoundedCornerShape(16.dp)
+        )
+    }
+}
+
+@Composable
+fun TopEditProfileBar(
+    onBack: () -> Unit,
+    hasUnsavedChanges: Boolean
+) {
+    var showUnsavedDialog by remember { mutableStateOf(false) }
     val txtSize = (txtSize().value + 4).sp
     val barSize = spacer3()
     val logoSize = logoSize() - 13.dp
+
+    // Dialog para alterações não guardadas
+    UnsavedChangesDialog(
+        showDialog = showUnsavedDialog,
+        onDismiss = { showUnsavedDialog = false },
+        onConfirm = {
+            // Aqui você implementaria a lógica para salvar
+            showUnsavedDialog = false
+            onBack()
+        },
+        onDiscard = {
+            showUnsavedDialog = false
+            onBack()
+        }
+    )
 
     Box(
         modifier = Modifier
@@ -88,7 +169,15 @@ fun TopEditProfileBar(onBack: () -> Unit) {
                 .padding(start = 10.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            IconButton(onClick = onBack) {
+            IconButton(
+                onClick = {
+                    if (hasUnsavedChanges) {
+                        showUnsavedDialog = true
+                    } else {
+                        onBack()
+                    }
+                }
+            ) {
                 Icon(
                     imageVector = Icons.Default.ArrowBack,
                     contentDescription = "Back",
@@ -755,7 +844,7 @@ fun IndiceEditProfile(onBack: () -> Unit){
     }
 
     Column{
-        TopEditProfileBar(onBack = onBack)
+        TopEditProfileBar(onBack = onBack, hasUnsavedChanges = hasChanges)
         IdentityWithEdit(modifier = Modifier.offset(y = 30.dp))
         EditName(name) { name = it }
         EditUsername(username) { username = it }

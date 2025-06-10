@@ -142,5 +142,9 @@
     <string name="Logout">Sair</string>
     <string name="save">Salvar</string>
     <string name="clean">Limpar</string>
+    <string name="unsaved_changes_title">Sair sem Salvar</string>
+    <string name="unsaved_changes_message">Tem certeza que deseja sair sem salvar as alterações?</string>
+    <string name="discard">Descartar</string>
+    <string name="cancel">Cancelar</string>
 
 </resources>
