@@ -86,18 +86,52 @@ fun UnsavedChangesDialog(
     if (showDialog) {
         AlertDialog(
             onDismissRequest = onDismiss,
-            title = { Text(stringResource(R.string.unsaved_changes_title)) },
-            text = { Text(stringResource(R.string.unsaved_changes_message)) },
+            title = {
+                Text(
+                    text = stringResource(R.string.unsaved_changes_title),
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF395174)
+                )
+            },
+            text = {
+                Text(
+                    text = stringResource(R.string.unsaved_changes_message),
+                    color = Color.Black
+                )
+            },
             confirmButton = {
-                TextButton(onClick = onConfirm) {
+                TextButton(
+                    onClick = onConfirm,
+                    colors = ButtonDefaults.textButtonColors(
+                        contentColor = Color(0xFF395174)
+                    )
+                ) {
                     Text(stringResource(R.string.save))
                 }
             },
             dismissButton = {
-                TextButton(onClick = onDiscard) {
-                    Text(stringResource(R.string.discard))
+                Row {
+                    TextButton(
+                        onClick = onDiscard,
+                        colors = ButtonDefaults.textButtonColors(
+                            contentColor = Color(0xFFFF0000)
+                        )
+                    ) {
+                        Text(stringResource(R.string.discard))
+                    }
+
+                    TextButton(
+                        onClick = onDismiss,
+                        colors = ButtonDefaults.textButtonColors(
+                            contentColor = Color.Gray
+                        )
+                    ) {
+                        Text(stringResource(R.string.cancel))
+                    }
                 }
-            }
+            },
+            containerColor = Color.White,
+            shape = RoundedCornerShape(16.dp)
         )
     }
 }
@@ -790,6 +824,7 @@ fun EditProfileScreen(
     userViewModel: UserViewModel = viewModel()
 ) {
     val user by userViewModel.user.collectAsState()
+    var showSuccessDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         userViewModel.loadCurrentUserEditProfile()
@@ -829,11 +864,13 @@ fun EditProfileScreen(
                     user = user!!,
                     onSave = { updatedUser ->
                         userViewModel.updateUser(updatedUser)
+                        showSuccessDialog = true
                     }
                 )
             }
         }
     }
+
 }
 
 @Composable
@@ -842,32 +879,35 @@ fun IndiceEditProfile(
     user: User,
     onSave: (User) -> Unit
 ) {
-    // Valores originais (estado inicial)
-    val originalName = user.name
-    val originalUsername = user.username
-    val originalEmail = user.email ?: ""
-    val originalSchool = user.school ?: ""
-    val originalCourse = user.course ?: ""
-    val originalCountry = user.country
-    val originalDay = user.birth_date.split("-").getOrNull(2) ?: ""
-    val originalMonth = user.birth_date.split("-").getOrNull(1)?.let { 
-        when(it) {
-            "01" -> stringResource(R.string.january)
-            "02" -> stringResource(R.string.february)
-            "03" -> stringResource(R.string.march)
-            "04" -> stringResource(R.string.april)
-            "05" -> stringResource(R.string.may)
-            "06" -> stringResource(R.string.june)
-            "07" -> stringResource(R.string.july)
-            "08" -> stringResource(R.string.august)
-            "09" -> stringResource(R.string.september)
-            "10" -> stringResource(R.string.october)
-            "11" -> stringResource(R.string.november)
-            "12" -> stringResource(R.string.december)
+    // Função auxiliar para converter número do mês para nome
+    fun getMonthName(monthNumber: String): String {
+        return when(monthNumber) {
+            "01" -> "Janeiro"
+            "02" -> "Fevereiro"
+            "03" -> "Março"
+            "04" -> "Abril"
+            "05" -> "Maio"
+            "06" -> "Junho"
+            "07" -> "Julho"
+            "08" -> "Agosto"
+            "09" -> "Setembro"
+            "10" -> "Outubro"
+            "11" -> "Novembro"
+            "12" -> "Dezembro"
             else -> ""
         }
-    } ?: ""
-    val originalBirthYear = user.birth_date.split("-").getOrNull(0) ?: ""
+    }
+
+    // Valores originais (estado inicial)
+    var originalName by remember { mutableStateOf(user.name) }
+    var originalUsername by remember { mutableStateOf(user.username) }
+    var originalEmail by remember { mutableStateOf(user.email ?: "") }
+    var originalSchool by remember { mutableStateOf(user.school ?: "") }
+    var originalCourse by remember { mutableStateOf(user.course ?: "") }
+    var originalCountry by remember { mutableStateOf(user.country) }
+    var originalDay by remember { mutableStateOf(user.birth_date.split("-").getOrNull(2) ?: "") }
+    var originalMonth by remember { mutableStateOf(getMonthName(user.birth_date.split("-").getOrNull(1) ?: "")) }
+    var originalBirthYear by remember { mutableStateOf(user.birth_date.split("-").getOrNull(0) ?: "") }
 
     // Estados atuais
     var name by remember { mutableStateOf(originalName) }
@@ -973,15 +1013,23 @@ fun IndiceEditProfile(
                 // Chamar a função de salvamento
                 onSave(updatedUser)
                 
+                // Atualizar os valores originais com os novos valores
+                originalName = name
+                originalUsername = username
+                originalEmail = email
+                originalSchool = school
+                originalCourse = course
+                originalCountry = country
+                originalDay = selectedDay
+                originalMonth = selectedMonth
+                originalBirthYear = selectedBirthYear
+                
                 // Mostrar Toast de sucesso
                 Toast.makeText(
                     context,
                     context.getString(R.string.profile_updated_successfully),
                     Toast.LENGTH_SHORT
                 ).show()
-                
-                // Voltar para a tela anterior
-                onBack()
             }
         )
         CleanBtn(
