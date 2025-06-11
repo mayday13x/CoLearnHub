@@ -37,7 +37,7 @@ object DateTimeUtils {
         val date: Date? = try {
             // Primeiro tentar o formato do Supabase (yyyy-MM-dd HH:mm:ss.SSS)
             val formatSupabase = SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS", Locale.getDefault())
-            formatSupabase.timeZone = TimeZone.getTimeZone("UTC") // Supabase armazena em UTC
+            formatSupabase.timeZone = TimeZone.getTimeZone("Europe/Lisbon") // UTC+1 (Portugal)
             Log.d("DateTimeUtils", "Tentando parse com formato Supabase...")
             val result = formatSupabase.parse(parsedDateString)
             Log.d("DateTimeUtils", "Sucesso com formato Supabase: $result")
@@ -47,7 +47,7 @@ object DateTimeUtils {
             try {
                 // Tentar formato ISO
                 val formatISO = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS", Locale.getDefault())
-                formatISO.timeZone = TimeZone.getTimeZone("UTC")
+                formatISO.timeZone = TimeZone.getTimeZone("Europe/Lisbon")
                 Log.d("DateTimeUtils", "Tentando parse com formato ISO...")
                 val result = formatISO.parse(parsedDateString)
                 Log.d("DateTimeUtils", "Sucesso com formato ISO: $result")
@@ -57,7 +57,7 @@ object DateTimeUtils {
                 try {
                     // Tentar formato sem milissegundos
                     val formatNoMillis = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
-                    formatNoMillis.timeZone = TimeZone.getTimeZone("UTC")
+                    formatNoMillis.timeZone = TimeZone.getTimeZone("Europe/Lisbon")
                     Log.d("DateTimeUtils", "Tentando parse sem milissegundos...")
                     val result = formatNoMillis.parse(parsedDateString)
                     Log.d("DateTimeUtils", "Sucesso sem milissegundos: $result")
@@ -74,10 +74,9 @@ object DateTimeUtils {
             return "Data inválida"
         }
 
-        // Converter para o fuso horário local
-        val localDate = Date(date.time + TimeZone.getDefault().getOffset(date.time))
+        // Não precisamos mais converter o fuso horário pois já está em UTC+1
         val now = Date()
-        val diffInMillis = now.time - localDate.time
+        val diffInMillis = now.time - date.time
         val minutes = TimeUnit.MILLISECONDS.toMinutes(diffInMillis)
         val hours = TimeUnit.MILLISECONDS.toHours(diffInMillis)
         val days = TimeUnit.MILLISECONDS.toDays(diffInMillis)

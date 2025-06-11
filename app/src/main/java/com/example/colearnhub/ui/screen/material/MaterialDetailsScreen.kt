@@ -1,9 +1,9 @@
 package com.example.colearnhub.ui.screen.main
 
 import android.os.Build
+import androidx.activity.compose.BackHandler
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -13,45 +13,56 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.example.colearnhub.R
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.colearnhub.modelLayer.Comments
 import com.example.colearnhub.modelLayer.Material
 import com.example.colearnhub.repositoryLayer.CommentsRepository
 import com.example.colearnhub.repositoryLayer.MaterialsRepository
 import com.example.colearnhub.repositoryLayer.UserRepository
+import com.example.colearnhub.viewModelLayer.AuthViewModelFactory
+import com.example.colearnhub.viewmodel.AuthViewModel
 import kotlinx.coroutines.launch
 import java.time.Duration
 import java.time.LocalDateTime
+import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeFormatterBuilder
 import java.util.*
+
 
 @RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MaterialDetailsScreen(
     navController: NavController,
-    materialId: String = "1" // Default para teste
+    materialId: String
 ) {
+    // Obter contexto para passar ao factory
+    val context = LocalContext.current.applicationContext
+
+    // Criar AuthViewModel via factory passando o context
+    val authViewModel: AuthViewModel = viewModel(
+        factory = AuthViewModelFactory(context)
+    )
+
+    val currentUser by authViewModel.currentUser.collectAsState()
+    val currentUserId = currentUser?.id
+
     val materialsRepository = remember { MaterialsRepository() }
     val commentsRepository = remember { CommentsRepository() }
     val userRepository = remember { UserRepository() }
     val scope = rememberCoroutineScope()
-    
+
     var material by remember { mutableStateOf<Material?>(null) }
     var comments by remember { mutableStateOf<List<Comments>>(emptyList()) }
     var commentText by remember { mutableStateOf("") }
@@ -59,21 +70,46 @@ fun MaterialDetailsScreen(
     var error by remember { mutableStateOf<String?>(null) }
     var authorName by remember { mutableStateOf<String?>(null) }
     var replyingTo by remember { mutableStateOf<Comments?>(null) }
+    var userNames by remember { mutableStateOf<Map<String, String>>(emptyMap()) }
+
+    // Handle back navigation
+    BackHandler {
+        if (replyingTo != null) {
+            replyingTo = null
+        } else {
+            navController.popBackStack()
+        }
+    }
 
     // Load material, comments and author data
     LaunchedEffect(materialId) {
         try {
             isLoading = true
-            material = materialsRepository.getMaterialByIdWithTags(materialId.toLong().toString())
-            
+            material = materialsRepository.getMaterialByIdWithTags(materialId)
+
             // Fetch author name
             material?.author_id?.let { authorId ->
                 userRepository.getUserById(authorId)?.let { user ->
                     authorName = user.name
                 }
             }
-            
+
+            // Fetch comments
             comments = commentsRepository.getCommentsForMaterial(materialId)
+
+            // Fetch user names for all comments
+            val userIds = comments.flatMap { comment ->
+                listOf(comment.user_id) + comment.responses.map { it.user_id }
+            }.filterNotNull().distinct()
+
+            val names = mutableMapOf<String, String>()
+            userIds.forEach { userId ->
+                userRepository.getUserById(userId)?.let { user ->
+                    names[userId] = user.name
+                }
+            }
+            userNames = names
+
             error = null
         } catch (e: Exception) {
             error = e.message
@@ -91,17 +127,16 @@ fun MaterialDetailsScreen(
         TopAppBar(
             title = {
                 Text(
-                    text = "Material Details",
+                    text = material?.title ?: "Material Details",
                     color = Color.White,
                     fontWeight = FontWeight.Bold
                 )
             },
             navigationIcon = {
-                IconButton(onClick = { 
-                    if (replyingTo != null) {
+                IconButton(onClick = {
+                    scope.launch {
                         replyingTo = null
-                    } else {
-                        navController.navigateUp()
+                        navController.popBackStack("MainScreen", false)
                     }
                 }) {
                     Icon(
@@ -169,41 +204,68 @@ fun MaterialDetailsScreen(
                         CommentsHeader(
                             commentCount = comments.size,
                             replyingTo = replyingTo,
-                            onCancelReply = { replyingTo = null }
+                            onCancelReply = { replyingTo = null },
+                            userName = replyingTo?.user_id?.let { userNames[it] }
                         )
                     }
 
-                    // Comment Input
-                    item {
-                        CommentInputSection(
-                            commentText = commentText,
-                            onCommentChange = { commentText = it },
-                            onSendComment = {
-                                scope.launch {
-                                    try {
-                                        commentsRepository.createComment(
-                                            userId = "current_user_id", // TODO: Get from auth
-                                            materialId = materialId,
-                                            content = commentText,
-                                            responseTo = replyingTo?.id
-                                        )
-                                        // Refresh comments
-                                        comments = commentsRepository.getCommentsForMaterial(materialId)
-                                        commentText = ""
-                                        replyingTo = null
-                                    } catch (e: Exception) {
-                                        error = e.message
+                    // Comment Input - só mostra se o usuário estiver logado
+                    if (currentUserId != null) {
+                        item {
+                            CommentInputSection(
+                                commentText = commentText,
+                                onCommentChange = { commentText = it },
+                                onSendComment = {
+                                    scope.launch {
+                                        try {
+                                            commentsRepository.createComment(
+                                                userId = currentUserId,
+                                                materialId = materialId,
+                                                content = commentText,
+                                                responseTo = replyingTo?.id
+                                            )
+                                            // Refresh comments
+                                            comments = commentsRepository.getCommentsForMaterial(materialId)
+                                            commentText = ""
+                                            replyingTo = null
+                                        } catch (e: Exception) {
+                                            error = e.message
+                                        }
                                     }
-                                }
+                                },
+                                replyingTo = replyingTo
+                            )
+                        }
+                    } else {
+                        // Mostrar mensagem para fazer login se não estiver autenticado
+                        item {
+                            Card(
+                                modifier = Modifier.fillMaxWidth(),
+                                colors = CardDefaults.cardColors(
+                                    containerColor = Color(0xFFF5F5F5)
+                                )
+                            ) {
+                                Text(
+                                    text = "Faça login para comentar",
+                                    modifier = Modifier.padding(16.dp),
+                                    color = Color.Gray,
+                                    fontSize = 14.sp
+                                )
                             }
-                        )
+                        }
                     }
 
                     // Comments List
                     items(comments) { comment ->
                         CommentItem(
                             comment = comment,
-                            onReply = { replyingTo = it },
+                            userName = userNames[comment.user_id],
+                            onReply = {
+                                // Só permite resposta se estiver logado
+                                if (currentUserId != null) {
+                                    replyingTo = it
+                                }
+                            },
                             onDelete = { commentId ->
                                 scope.launch {
                                     try {
@@ -214,7 +276,8 @@ fun MaterialDetailsScreen(
                                         error = e.message
                                     }
                                 }
-                            }
+                            },
+                            canInteract = currentUserId != null
                         )
                     }
                 }
@@ -227,7 +290,8 @@ fun MaterialDetailsScreen(
 fun CommentsHeader(
     commentCount: Int,
     replyingTo: Comments?,
-    onCancelReply: () -> Unit
+    onCancelReply: () -> Unit,
+    userName: String? = null
 ) {
     Column {
         Row(
@@ -258,7 +322,7 @@ fun CommentsHeader(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Replying to: ${it.user_id}",
+                    text = "Replying to: ${userName ?: "Unknown User"}",
                     fontSize = 14.sp,
                     color = Color.Gray
                 )
@@ -281,8 +345,10 @@ fun CommentsHeader(
 @Composable
 fun CommentItem(
     comment: Comments,
+    userName: String?,
     onReply: (Comments) -> Unit,
-    onDelete: (Int) -> Unit
+    onDelete: (Int) -> Unit,
+    canInteract: Boolean = true
 ) {
     Column(
         modifier = Modifier
@@ -308,7 +374,7 @@ fun CommentItem(
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text(
-                        text = comment.user_id ?: "Unknown",
+                        text = userName ?: "Unknown User",
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color.Black
@@ -331,29 +397,31 @@ fun CommentItem(
                     )
                 }
 
-                // Actions
-                Row(
-                    modifier = Modifier.padding(top = 8.dp),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    TextButton(
-                        onClick = { onReply(comment) }
+                // Actions - só mostra se o usuário pode interagir
+                if (canInteract) {
+                    Row(
+                        modifier = Modifier.padding(top = 8.dp),
+                        horizontalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
-                        Text(
-                            text = "Reply",
-                            fontSize = 12.sp,
-                            color = Color.Gray
-                        )
-                    }
+                        TextButton(
+                            onClick = { onReply(comment) }
+                        ) {
+                            Text(
+                                text = "Reply",
+                                fontSize = 12.sp,
+                                color = Color.Gray
+                            )
+                        }
 
-                    TextButton(
-                        onClick = { comment.id?.let { onDelete(it) } }
-                    ) {
-                        Text(
-                            text = "Delete",
-                            fontSize = 12.sp,
-                            color = Color.Red
-                        )
+                        TextButton(
+                            onClick = { comment.id?.let { onDelete(it) } }
+                        ) {
+                            Text(
+                                text = "Delete",
+                                fontSize = 12.sp,
+                                color = Color.Red
+                            )
+                        }
                     }
                 }
 
@@ -366,8 +434,10 @@ fun CommentItem(
                         comment.responses.forEach { response ->
                             CommentItem(
                                 comment = response,
+                                userName = userName,
                                 onReply = onReply,
-                                onDelete = onDelete
+                                onDelete = onDelete,
+                                canInteract = canInteract
                             )
                         }
                     }
@@ -380,18 +450,24 @@ fun CommentItem(
 @RequiresApi(Build.VERSION_CODES.O)
 private fun formatTimeAgo(createdAt: String?): String {
     if (createdAt == null) return "Unknown time"
-    
-    val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
-    val commentTime = LocalDateTime.parse(createdAt, formatter)
-    val now = LocalDateTime.now()
-    val duration = Duration.between(commentTime, now)
-    
-    return when {
-        duration.toMinutes() < 1 -> "Just now"
-        duration.toHours() < 1 -> "${duration.toMinutes()} minutes ago"
-        duration.toDays() < 1 -> "${duration.toHours()} hours ago"
-        duration.toDays() < 7 -> "${duration.toDays()} days ago"
-        else -> createdAt
+
+    try {
+        val formatter = DateTimeFormatter.ISO_DATE_TIME
+        val commentTime = LocalDateTime.parse(createdAt, formatter)
+        val now = LocalDateTime.now(ZoneId.of("Europe/Lisbon"))
+        val duration = Duration.between(commentTime, now)
+
+        return when {
+            duration.toMinutes() < 5 -> "Agora mesmo"
+            duration.toHours() < 1 -> "à ${duration.toMinutes()} min"
+            duration.toDays() < 1 -> "à ${duration.toHours()}h"
+            duration.toDays() == 1L -> "Ontem"
+            duration.toDays() < 30 -> "à ${duration.toDays()}d"
+            duration.toDays() < 365 -> "à ${duration.toDays() / 30} meses"
+            else -> "à ${duration.toDays() / 365} anos"
+        }
+    } catch (e: Exception) {
+        return createdAt // Return the original string if parsing fails
     }
 }
 
@@ -652,7 +728,8 @@ fun TagsSection(tags: List<String>) {
 fun CommentInputSection(
     commentText: String,
     onCommentChange: (String) -> Unit,
-    onSendComment: () -> Unit
+    onSendComment: () -> Unit,
+    replyingTo: Comments? = null
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -673,7 +750,7 @@ fun CommentInputSection(
                 onValueChange = onCommentChange,
                 placeholder = {
                     Text(
-                        text = "Leave a comment",
+                        text = if (replyingTo != null) "Write a reply..." else "Leave a comment",
                         fontSize = 14.sp,
                         color = Color.Gray
                     )
@@ -693,11 +770,13 @@ fun CommentInputSection(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)
             ) {
-                TextButton(onClick = { onCommentChange("") }) {
-                    Text(
-                        text = "Close",
-                        color = Color.Gray
-                    )
+                if (replyingTo != null) {
+                    TextButton(onClick = { onCommentChange("") }) {
+                        Text(
+                            text = "Cancel",
+                            color = Color.Gray
+                        )
+                    }
                 }
 
                 Button(
@@ -705,10 +784,11 @@ fun CommentInputSection(
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color(0xFF395174)
                     ),
-                    shape = RoundedCornerShape(6.dp)
+                    shape = RoundedCornerShape(6.dp),
+                    enabled = commentText.isNotBlank()
                 ) {
                     Text(
-                        text = "Comment",
+                        text = if (replyingTo != null) "Reply" else "Comment",
                         color = Color.White
                     )
                 }

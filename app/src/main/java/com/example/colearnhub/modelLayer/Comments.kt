@@ -8,7 +8,7 @@ data class Comments(
     @Contextual
     val id: Int? = null,
     val user_id: String? = null,
-    val material_id: String? = null,
+    val material_id: Int? = null,
     val content: String? = null,
     val created_at: String? = null,
     val response: Int? = null,
