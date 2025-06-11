@@ -4,28 +4,12 @@ import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
 import com.example.colearnhub.modelLayer.SupabaseClient
+import com.example.colearnhub.modelLayer.User
 import io.github.jan.supabase.postgrest.from
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
 import java.time.format.DateTimeFormatter
-
-@Serializable
-data class User(
-    val id: String,
-    val name: String,
-    val username: String,
-    val country: Int, // 1 = Portugal, 2 = Estados Unidos
-    val profile_picture: String? = null,
-    val birth_date: String,
-    val role: Long? = null,
-    val email: String? = null,
-    val school: String? = null,
-    val course: String? = null,
-    val curricularYear: Int? = null,
-    val created_at: String? = null
-)
-
 
 @Serializable
 data class UserUsername(val username: String)
@@ -151,8 +135,14 @@ class UserRepository {
         }
     }
 
-
-
-
+    suspend fun updateUser(user: User) {
+        SupabaseClient.client
+            .from("Users")
+            .update(user) {
+                filter {
+                    eq("id", user.id)
+                }
+            }
+    }
 
 }

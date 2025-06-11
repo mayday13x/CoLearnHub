@@ -8,7 +8,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.colearnhub.repositoryLayer.AuthRepository
 import com.example.colearnhub.repositoryLayer.CountryRepository
 import com.example.colearnhub.repositoryLayer.RatingRepository
-import com.example.colearnhub.repositoryLayer.User
+import com.example.colearnhub.modelLayer.User
 import com.example.colearnhub.repositoryLayer.UserRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -41,13 +41,29 @@ class UserViewModel : ViewModel() {
 
     // Crud do utilizador
     @RequiresApi(Build.VERSION_CODES.O)
-    fun getUserById(userId: String) {
+    fun loadCurrentUser() {
+        val currentUser = authRepository.getCurrentUser()
+        if (currentUser != null) {
+            loadUserById(currentUser.id)
+        }
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    fun loadCurrentUserEditProfile() {
+        val currentUser = authRepository.getCurrentUser()
+        if (currentUser != null) {
+            loadUserByIdEditProfile(currentUser.id)
+        }
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    fun loadUserById(userId: String) {
         viewModelScope.launch {
             val user = userRepository.getUserById(userId)
             _user.value = user
             // Get country name when user is loaded
             user?.country?.let { countryId ->
-                getCountryName(countryId)
+                loadCountryName(countryId)
             }
             // Format created_at date
             user?.created_at?.let { dateStr ->
@@ -55,20 +71,36 @@ class UserViewModel : ViewModel() {
             }
             // Get user contributions and average rating
             user?.id?.let { id ->
-                getUserContributions(id)
-                getAverageRatingForUserMaterials(id)
+                loadUserContributions(id)
+                loadAverageRatingForUserMaterials(id)
             }
         }
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
-    fun getUserByUsername(username: String) {
+    fun loadUserByIdEditProfile(userId: String) {
+        viewModelScope.launch {
+            val user = userRepository.getUserById(userId)
+            _user.value = user
+            // Get country name when user is loaded
+            user?.country?.let { countryId ->
+                loadCountryName(countryId)
+            }
+            // Format created_at date
+            user?.created_at?.let { dateStr ->
+                formatCreatedAtDate(dateStr)
+            }
+        }
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    fun loadUserByUsername(username: String) {
         viewModelScope.launch {
             val user = userRepository.getUserByUsername(username)
             _user.value = user
             // Get country name when user is loaded
             user?.country?.let { countryId ->
-                getCountryName(countryId)
+                loadCountryName(countryId)
             }
             // Format created_at date
             user?.created_at?.let { dateStr ->
@@ -76,21 +108,13 @@ class UserViewModel : ViewModel() {
             }
             // Get user contributions and average rating
             user?.id?.let { id ->
-                getUserContributions(id)
-                getAverageRatingForUserMaterials(id)
+                loadUserContributions(id)
+                loadAverageRatingForUserMaterials(id)
             }
         }
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
-    fun getCurrentUser() {
-        val currentUser = authRepository.getCurrentUser()
-        if (currentUser != null) {
-            getUserById(currentUser.id)
-        }
-    }
-
-    private fun getCountryName(countryId: Int) {
+    private fun loadCountryName(countryId: Int) {
         viewModelScope.launch {
             val country = countryRepository.getCountryById(countryId)
             _countryName.value = country?.country ?: "Not defined"
@@ -107,14 +131,14 @@ class UserViewModel : ViewModel() {
         }
     }
 
-    private fun getUserContributions(userId: String) {
+    private fun loadUserContributions(userId: String) {
         viewModelScope.launch {
             val contributions = ratingRepository.getUserContributions(userId)
             _userContributions.value = contributions
         }
     }
 
-    private fun getAverageRatingForUserMaterials(userId: String) {
+    private fun loadAverageRatingForUserMaterials(userId: String) {
         viewModelScope.launch {
             val average = ratingRepository.getAverageRatingForUserMaterials(userId)
             _averageRating.value = average
