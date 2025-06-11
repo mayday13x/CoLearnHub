@@ -145,6 +145,19 @@ class UserViewModel : ViewModel() {
         }
     }
 
+    fun updateUser(user: User) {
+        viewModelScope.launch {
+            try {
+                userRepository.updateUser(user)
+                _user.value = user
+                // Reload country name
+                loadCountryName(user.country)
+            } catch (e: Exception) {
+                Log.e("UserViewModel", "Error updating user: ${e.message}")
+            }
+        }
+    }
+
     //fun getUserCountry
 
    //TODO:

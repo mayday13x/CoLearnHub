@@ -146,5 +146,6 @@
     <string name="unsaved_changes_message">Tem certeza que deseja sair sem salvar as alterações?</string>
     <string name="discard">Descartar</string>
     <string name="cancel">Cancelar</string>
+    <string name="profile_updated_successfully">Perfil atualizado com sucesso</string>
 
 </resources>

@@ -38,6 +38,7 @@ import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
@@ -72,6 +73,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.runtime.collectAsState
 import com.example.colearnhub.modelLayer.User
 import com.example.colearnhub.viewmodel.UserViewModel
+import android.widget.Toast
+import androidx.compose.ui.platform.LocalContext
 
 @Composable
 fun UnsavedChangesDialog(
@@ -83,52 +86,18 @@ fun UnsavedChangesDialog(
     if (showDialog) {
         AlertDialog(
             onDismissRequest = onDismiss,
-            title = {
-                Text(
-                    text = stringResource(R.string.unsaved_changes_title),
-                    fontWeight = FontWeight.Bold,
-                    color = Color(0xFF395174)
-                )
-            },
-            text = {
-                Text(
-                    text = stringResource(R.string.unsaved_changes_message),
-                    color = Color.Black
-                )
-            },
+            title = { Text(stringResource(R.string.unsaved_changes_title)) },
+            text = { Text(stringResource(R.string.unsaved_changes_message)) },
             confirmButton = {
-                TextButton(
-                    onClick = onConfirm,
-                    colors = ButtonDefaults.textButtonColors(
-                        contentColor = Color(0xFF395174)
-                    )
-                ) {
+                TextButton(onClick = onConfirm) {
                     Text(stringResource(R.string.save))
                 }
             },
             dismissButton = {
-                Row {
-                    TextButton(
-                        onClick = onDiscard,
-                        colors = ButtonDefaults.textButtonColors(
-                            contentColor = Color(0xFFFF0000)
-                        )
-                    ) {
-                        Text(stringResource(R.string.discard))
-                    }
-
-                    TextButton(
-                        onClick = onDismiss,
-                        colors = ButtonDefaults.textButtonColors(
-                            contentColor = Color.Gray
-                        )
-                    ) {
-                        Text(stringResource(R.string.cancel))
-                    }
+                TextButton(onClick = onDiscard) {
+                    Text(stringResource(R.string.discard))
                 }
-            },
-            containerColor = Color.White,
-            shape = RoundedCornerShape(16.dp)
+            }
         )
     }
 }
@@ -745,35 +714,34 @@ fun EditCourse(title: String, onTitleChange: (String) -> Unit) {
 
 @Composable
 fun SaveBtn(
-    enabled: Boolean
-){
+    enabled: Boolean,
+    onClick: () -> Unit
+) {
     val paddingValue = sbutton()
-    val paddingValue2 = logoSize() - 10.dp
-    val shareButtonSize = sbutton() - 8.dp
+    val titleFontSize = (txtSize().value + 1).sp
 
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = paddingValue)
-            .padding(vertical = paddingValue2)
+            .padding(top = paddingValue + 2.dp)
     ) {
         Button(
-            onClick = {},
+            onClick = onClick,
             enabled = enabled,
             modifier = Modifier
-                .fillMaxWidth(),
+                .fillMaxWidth()
+                .height(50.dp),
+            shape = RoundedCornerShape(12.dp),
             colors = ButtonDefaults.buttonColors(
                 containerColor = Color(0xFF395174),
-                disabledContainerColor = Color(0xFFB0B0B0), // cor quando desativado (ex: cinzento claro)
-                contentColor = Color.White,
-                disabledContentColor = Color.White.copy(alpha = 0.6f)
-            ),
-            shape = RoundedCornerShape(8.dp)
+                disabledContainerColor = Color(0xFF395174).copy(alpha = 0.5f)
+            )
         ) {
             Text(
                 text = stringResource(R.string.save),
-                fontSize = 16.sp,
-                modifier = Modifier.padding(vertical = shareButtonSize)
+                fontSize = titleFontSize,
+                color = Color.White
             )
         }
     }
@@ -783,7 +751,7 @@ fun SaveBtn(
 fun CleanBtn(
     enabled: Boolean,
     onClean: () -> Unit
-){
+) {
     val paddingValue = sbutton()
     val shareButtonSize = sbutton() - 8.dp
 
@@ -791,6 +759,7 @@ fun CleanBtn(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = paddingValue)
+            .padding(top = 16.dp)
     ) {
         Button(
             onClick = onClean,
@@ -799,7 +768,7 @@ fun CleanBtn(
                 .fillMaxWidth(),
             colors = ButtonDefaults.buttonColors(
                 containerColor = Color(0xFFFF0000),
-                disabledContainerColor = Color(0xFFB0B0B0), // cor quando desactivado (ex: cinzento claro)
+                disabledContainerColor = Color(0xFFB0B0B0),
                 contentColor = Color.White,
                 disabledContentColor = Color.White.copy(alpha = 0.6f)
             ),
@@ -816,8 +785,10 @@ fun CleanBtn(
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun EditProfileScreen(navController: NavHostController){
-    val userViewModel: UserViewModel = viewModel()
+fun EditProfileScreen(
+    navController: NavHostController,
+    userViewModel: UserViewModel = viewModel()
+) {
     val user by userViewModel.user.collectAsState()
 
     LaunchedEffect(Unit) {
@@ -855,7 +826,10 @@ fun EditProfileScreen(navController: NavHostController){
                             popUpTo("settings") { inclusive = true }
                         }
                     },
-                    user = user!!
+                    user = user!!,
+                    onSave = { updatedUser ->
+                        userViewModel.updateUser(updatedUser)
+                    }
                 )
             }
         }
@@ -865,7 +839,8 @@ fun EditProfileScreen(navController: NavHostController){
 @Composable
 fun IndiceEditProfile(
     onBack: () -> Unit,
-    user: User
+    user: User,
+    onSave: (User) -> Unit
 ) {
     // Valores originais (estado inicial)
     val originalName = user.name
@@ -934,6 +909,7 @@ fun IndiceEditProfile(
     }
 
     var showUnsavedDialog by remember { mutableStateOf(false) }
+    val context = LocalContext.current
 
     // Interceptar o botão de voltar do sistema
     BackHandler(enabled = hasChanges) {
@@ -980,11 +956,55 @@ fun IndiceEditProfile(
         EditSchool(school) { school = it }
         EditCourse(course) { course = it }
         SaveBtn(
-            enabled = hasChanges
+            enabled = hasChanges,
+            onClick = {
+                // Criar a data de nascimento no formato correto
+                val birthDate = "$selectedBirthYear-${getMonthNumber(selectedMonth)}-$selectedDay"
+                
+                // Criar o objeto User atualizado
+                val updatedUser = user.copy(
+                    name = name,
+                    school = school,
+                    course = course,
+                    country = country,
+                    birth_date = birthDate
+                )
+                
+                // Chamar a função de salvamento
+                onSave(updatedUser)
+                
+                // Mostrar Toast de sucesso
+                Toast.makeText(
+                    context,
+                    context.getString(R.string.profile_updated_successfully),
+                    Toast.LENGTH_SHORT
+                ).show()
+                
+                // Voltar para a tela anterior
+                onBack()
+            }
         )
         CleanBtn(
             enabled = hasChanges,
             onClean = { resetFields() }
         )
+    }
+}
+
+private fun getMonthNumber(month: String): String {
+    return when(month) {
+        "Janeiro" -> "01"
+        "Fevereiro" -> "02"
+        "Março" -> "03"
+        "Abril" -> "04"
+        "Maio" -> "05"
+        "Junho" -> "06"
+        "Julho" -> "07"
+        "Agosto" -> "08"
+        "Setembro" -> "09"
+        "Outubro" -> "10"
+        "Novembro" -> "11"
+        "Dezembro" -> "12"
+        else -> "01"
     }
 }
