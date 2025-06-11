@@ -177,4 +177,27 @@
     <string name="invalid_credentials">Invalid Credentials</string>
     <string name="invalid_credentials_message">Incorrect email or password</string>
 
+    <string name="onboarding_colearnhub_title">CoLearnHub</string>
+    <string name="onboarding_colearnhub_description">Quickly access all the materials you need to study. Organized, accessible and always ready to help you achieve your goals.</string>
+
+    <!-- Sessions Onboarding -->
+    <string name="onboarding_sessions_title">Sessions</string>
+    <string name="onboarding_sessions_description">Explore future study sessions. Use filters and search to find exactly what you\'re looking for - time management has never been easier!</string>
+
+    <!-- Share Onboarding -->
+    <string name="onboarding_share_title">Share</string>
+    <string name="onboarding_share_description">Share your study materials with colleagues. Collaboration has never been easier — we learn better together!</string>
+
+    <!-- Groups Onboarding -->
+    <string name="onboarding_groups_title">Groups</string>
+    <string name="onboarding_groups_description">Create or join study groups. Exchange ideas, work together and achieve your goals faster with mutual support!</string>
+
+    <!-- Common Buttons -->
+    <string name="button_skip">Skip</string>
+    <string name="button_next">Next</string>
+    <string name="button_done">Done</string>
+
+    <!-- Copyright -->
+    <string name="copyright_text">CoLearnHub @2025</string>
+
 </resources>

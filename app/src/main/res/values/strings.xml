@@ -176,4 +176,27 @@
     <string name="invalid_credentials">Credenciais inválidas</string>
     <string name="invalid_credentials_message">Email ou palavra-passe incorretos</string>
 
+    <string name="onboarding_colearnhub_title">CoLearnHub</string>
+    <string name="onboarding_colearnhub_description">Acede rapidamente a todos os materiais que precisas para estudar. Organizados, acessíveis e sempre prontos a ajudar-te a alcançar os teus objetivos.</string>
+
+    <!-- Sessions Onboarding -->
+    <string name="onboarding_sessions_title">Sessões</string>
+    <string name="onboarding_sessions_description">Explora futuras sessões de estudo. Usa filtros e pesquisa para encontrar exatamente o que procuras - a gestão de tempo nunca foi tão fácil!</string>
+
+    <!-- Share Onboarding -->
+    <string name="onboarding_share_title">Partilhar</string>
+    <string name="onboarding_share_description">Partilha os teus materiais de estudo com colegas. A colaboração nunca foi tão fácil — aprendemos melhor juntos!</string>
+
+    <!-- Groups Onboarding -->
+    <string name="onboarding_groups_title">Grupos</string>
+    <string name="onboarding_groups_description">Cria ou junta-te a grupos de estudo. Troca ideias, trabalha em conjunto e alcança os teus objetivos mais rapidamente com apoio mútuo!</string>
+
+    <!-- Common Buttons -->
+    <string name="button_skip">Saltar</string>
+    <string name="button_next">Seguinte</string>
+    <string name="button_done">Concluído</string>
+
+    <!-- Copyright -->
+    <string name="copyright_text">CoLearnHub @2025</string>
+
 </resources>
