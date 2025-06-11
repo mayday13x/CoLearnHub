@@ -157,7 +157,9 @@ fun SignupStep1Screen(
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = Color(0xFF395174),
                         unfocusedBorderColor = Color.Gray.copy(alpha = 0.5f),
-                        errorBorderColor = Color.Red
+                        errorBorderColor = Color.Red,
+                        focusedTextColor = Color.Black,
+                        unfocusedTextColor = Color.Black
                     ),
                     textStyle = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp)
                 )
@@ -188,7 +190,9 @@ fun SignupStep1Screen(
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = Color(0xFF395174),
                         unfocusedBorderColor = Color.Gray.copy(alpha = 0.5f),
-                        errorBorderColor = Color.Red
+                        errorBorderColor = Color.Red,
+                        focusedTextColor = Color.Black,
+                        unfocusedTextColor = Color.Black
                     ),
                     textStyle = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp)
                 )
@@ -239,7 +243,9 @@ fun SignupStep1Screen(
                                 },
                                 colors = OutlinedTextFieldDefaults.colors(
                                     focusedBorderColor = Color(0xFF395174),
-                                    unfocusedBorderColor = Color.Gray.copy(alpha = 0.5f)
+                                    unfocusedBorderColor = Color.Gray.copy(alpha = 0.5f),
+                                    focusedTextColor = Color.Black,
+                                    unfocusedTextColor = Color.Black
                                 ),
                                 textStyle = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp)
                             )
@@ -278,7 +284,9 @@ fun SignupStep1Screen(
                                 },
                                 colors = OutlinedTextFieldDefaults.colors(
                                     focusedBorderColor = Color(0xFF395174),
-                                    unfocusedBorderColor = Color.Gray.copy(alpha = 0.5f)
+                                    unfocusedBorderColor = Color.Gray.copy(alpha = 0.5f),
+                                    focusedTextColor = Color.Black,
+                                    unfocusedTextColor = Color.Black
                                 ),
                                 textStyle = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp)
                             )
@@ -317,7 +325,9 @@ fun SignupStep1Screen(
                                 },
                                 colors = OutlinedTextFieldDefaults.colors(
                                     focusedBorderColor = Color(0xFF395174),
-                                    unfocusedBorderColor = Color.Gray.copy(alpha = 0.5f)
+                                    unfocusedBorderColor = Color.Gray.copy(alpha = 0.5f),
+                                    focusedTextColor = Color.Black,
+                                    unfocusedTextColor = Color.Black
                                 ),
                                 textStyle = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp)
                             )
@@ -382,7 +392,9 @@ fun SignupStep1Screen(
                         },
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = Color(0xFF395174),
-                            unfocusedBorderColor = Color.Gray.copy(alpha = 0.5f)
+                            unfocusedBorderColor = Color.Gray.copy(alpha = 0.5f),
+                            focusedTextColor = Color.Black,
+                            unfocusedTextColor = Color.Black
                         ),
                         textStyle = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp)
                     )

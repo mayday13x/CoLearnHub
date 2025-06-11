@@ -140,7 +140,9 @@ fun LoginScreen(
                     unfocusedBorderColor = Color.Gray,
                     errorBorderColor = Color.Red,
                     focusedLabelColor = Color.Black,
-                    unfocusedLabelColor = Color.Gray
+                    unfocusedLabelColor = Color.Gray,
+                    focusedTextColor = Color.Black,
+                    unfocusedTextColor = Color.Black
                 ),
                 shape = RoundedCornerShape(4.dp),
                 singleLine = true
@@ -175,7 +177,9 @@ fun LoginScreen(
                     unfocusedBorderColor = Color.Gray,
                     errorBorderColor = Color.Red,
                     focusedLabelColor = Color.Black,
-                    unfocusedLabelColor = Color.Gray
+                    unfocusedLabelColor = Color.Gray,
+                    focusedTextColor = Color.Black,
+                    unfocusedTextColor = Color.Black
                 ),
                 shape = RoundedCornerShape(4.dp),
                 visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
