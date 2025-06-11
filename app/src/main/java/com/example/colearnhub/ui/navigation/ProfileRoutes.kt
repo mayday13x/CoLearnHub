@@ -5,16 +5,17 @@ import androidx.annotation.RequiresApi
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
-import com.example.colearnhub.ui.screen.login.LoginScreen
-//import com.example.colearnhub.ui.screen.test.TestScreen
+import com.example.colearnhub.ui.screen.others.EditProfileScreen
+import com.example.colearnhub.ui.screen.settings.SettingsScreen
 import com.example.colearnhub.viewmodel.AuthViewModel
 
 @RequiresApi(Build.VERSION_CODES.O)
-fun NavGraphBuilder.testRoutes(
+fun NavGraphBuilder.profileRoutes(
     navController: NavHostController
-) {
-    // ===== AUTH ROUTES =====
-    composable("test") {
-        //TestScreen()
+){
+
+    composable("editprofile"){
+        EditProfileScreen(navController = navController)
     }
+
 }

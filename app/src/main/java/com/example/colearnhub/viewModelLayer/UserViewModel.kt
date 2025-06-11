@@ -82,6 +82,7 @@ class UserViewModel : ViewModel() {
         }
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     fun getCurrentUser() {
         val currentUser = authRepository.getCurrentUser()
         if (currentUser != null) {
