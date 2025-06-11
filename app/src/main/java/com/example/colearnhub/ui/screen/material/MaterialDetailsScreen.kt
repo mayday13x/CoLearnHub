@@ -1,6 +1,13 @@
 package com.example.colearnhub.ui.screen.main
 
+import android.app.DownloadManager
+import android.content.Context
+import android.content.Intent
+import android.net.Uri
 import android.os.Build
+import android.os.Environment
+import android.webkit.MimeTypeMap
+import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
@@ -13,6 +20,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -186,11 +194,10 @@ fun MaterialDetailsScreen(
 
                     // Action Buttons
                     item {
+                        val activityContext = LocalContext.current
                         ActionButtonsSection(
-                            fileUrl = material.file_url,
-                            onDownload = {
-                                // TODO: Implement download functionality
-                            }
+                            material = material,
+                            context = activityContext
                         )
                     }
 
@@ -226,6 +233,16 @@ fun MaterialDetailsScreen(
                                             )
                                             // Refresh comments
                                             comments = commentsRepository.getCommentsForMaterial(materialId)
+
+                                            // Ensure current user's name is in the map after commenting
+                                            currentUserId?.let { userId ->
+                                                if (!userNames.containsKey(userId)) {
+                                                    userRepository.getUserById(userId)?.let { user ->
+                                                        userNames = userNames + (userId to user.name)
+                                                    }
+                                                }
+                                            }
+
                                             commentText = ""
                                             replyingTo = null
                                         } catch (e: Exception) {
@@ -237,7 +254,6 @@ fun MaterialDetailsScreen(
                             )
                         }
                     } else {
-                        // Mostrar mensagem para fazer login se não estiver autenticado
                         item {
                             Card(
                                 modifier = Modifier.fillMaxWidth(),
@@ -283,6 +299,96 @@ fun MaterialDetailsScreen(
                 }
             }
         }
+    }
+}
+
+// Helper function to get MIME type from URL
+private fun getMimeType(url: String): String? {
+    val extension = MimeTypeMap.getFileExtensionFromUrl(url)
+    return if (extension != null) {
+        MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension.lowercase())
+    } else {
+        // Fallback based on file extension from URL
+        val fileExtension = url.substringAfterLast('.', "").lowercase()
+        when (fileExtension) {
+            "pdf" -> "application/pdf"
+            "doc" -> "application/msword"
+            "docx" -> "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+            "ppt" -> "application/vnd.ms-powerpoint"
+            "pptx" -> "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+            "xls" -> "application/vnd.ms-excel"
+            "xlsx" -> "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            "jpg", "jpeg" -> "image/jpeg"
+            "png" -> "image/png"
+            "gif" -> "image/gif"
+            "txt" -> "text/plain"
+            "rtf" -> "application/rtf"
+            else -> null
+        }
+    }
+}
+
+// Helper function to download file
+private fun downloadFile(context: Context, url: String, fileName: String) {
+    try {
+        val request = DownloadManager.Request(Uri.parse(url)).apply {
+            setTitle("Downloading $fileName")
+            setDescription("Download em progresso...")
+            setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
+            setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, fileName)
+            setAllowedOverMetered(true)
+            setAllowedOverRoaming(true)
+        }
+
+        val downloadManager = context.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
+        downloadManager.enqueue(request)
+
+        Toast.makeText(context, "Download a iniciar...", Toast.LENGTH_SHORT).show()
+    } catch (e: Exception) {
+        Toast.makeText(context, "Erro ao fazer download: ${e.message}", Toast.LENGTH_LONG).show()
+    }
+}
+
+// Helper function to preview file - sempre abre no browser
+private fun previewFile(context: Context, url: String) {
+    try {
+        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url)).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK
+        }
+
+        context.startActivity(intent)
+        Toast.makeText(context, "A abrir preview no browser...", Toast.LENGTH_SHORT).show()
+
+    } catch (e: Exception) {
+        Toast.makeText(context, "Erro ao abrir no navegador: ${e.message}", Toast.LENGTH_LONG).show()
+    }
+}
+
+// Helper function to get filename from URL
+private fun getFileNameFromUrl(url: String, title: String): String {
+    return try {
+        val uri = Uri.parse(url)
+        val path = uri.path
+        if (path != null && path.contains("/")) {
+            val fileName = path.substringAfterLast("/")
+            if (fileName.contains(".")) {
+                fileName
+            } else {
+                // If no extension, try to add one based on detected MIME type
+                val mimeType = getMimeType(url)
+                val extension = when (mimeType) {
+                    "application/pdf" -> ".pdf"
+                    "application/msword" -> ".doc"
+                    "application/vnd.openxmlformats-officedocument.wordprocessingml.document" -> ".docx"
+                    else -> ""
+                }
+                "${title.take(50)}$extension"
+            }
+        } else {
+            "${title.take(50)}.pdf" // Default to PDF if can't determine
+        }
+    } catch (e: Exception) {
+        "${title.take(50)}.pdf"
     }
 }
 
@@ -618,8 +724,8 @@ fun MaterialInfoSection(
 
 @Composable
 fun ActionButtonsSection(
-    fileUrl: String?,
-    onDownload: () -> Unit
+    material: Material,
+    context: Context
 ) {
     Column(
         modifier = Modifier.fillMaxWidth(),
@@ -649,31 +755,68 @@ fun ActionButtonsSection(
             )
         }
 
-        // Download Button
-        if (!fileUrl.isNullOrEmpty()) {
-            Button(
-                onClick = onDownload,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(48.dp),
-                shape = RoundedCornerShape(8.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF395174)
-                )
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Download,
-                    contentDescription = null,
-                    tint = Color.White,
-                    modifier = Modifier.size(20.dp)
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = "Download",
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = Color.White
-                )
+        // Download and Preview Buttons in a Row
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            // Download Button
+            if (!material.file_url.isNullOrEmpty()) {
+                Button(
+                    onClick = {
+                        val fileName = getFileNameFromUrl(material.file_url, material.title)
+                        downloadFile(context, material.file_url, fileName)
+                    },
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(48.dp),
+                    shape = RoundedCornerShape(8.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFF395174)
+                    )
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Download,
+                        contentDescription = null,
+                        tint = Color.White,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "Download",
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = Color.White
+                    )
+                }
+
+                // Preview Button
+                Button(
+                    onClick = {
+                        previewFile(context, material.file_url)
+                    },
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(48.dp),
+                    shape = RoundedCornerShape(8.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFF395174)
+                    )
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Visibility,
+                        contentDescription = null,
+                        tint = Color.White,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "Preview",
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = Color.White
+                    )
+                }
             }
         }
     }
