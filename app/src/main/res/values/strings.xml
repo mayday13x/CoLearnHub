@@ -147,4 +147,18 @@
     <string name="discard">Descartar</string>
     <string name="cancel">Cancelar</string>
 
+    <!-- Adicione estas strings ao seu arquivo existente -->
+    <string name="unknown_time">Desconhecido</string>
+    <string name="just_now">Agora mesmo</string>
+    <string name="minutes_ago">à %d min</string>
+    <string name="hours_ago">à %dh</string>
+    <string name="yesterday">Ontem</string>
+    <string name="days_ago">à %dd</string>
+    <string name="months_ago">à %d meses</string>
+    <string name="years_ago">à %d anos</string>
+    <string name="invalid_date_parsing">Data inválida</string>
+
+
+
+
 </resources>

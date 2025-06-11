@@ -816,7 +816,6 @@ fun ShareBtn(
         }
     }
 }
-
 @Composable
 fun Indice4(){
     var title by remember { mutableStateOf("") }
@@ -844,14 +843,24 @@ fun Indice4(){
         }
     }
 
-    // Função para converter tags em IDs (assumindo que você tem uma função para isso)
-    fun getTagIds(tagNames: List<String>): List<Long> {
-        // Aqui você precisaria implementar a conversão dos nomes das tags para IDs
-        // Por enquanto, retorno uma lista vazia
-        return emptyList()
+    // Função para converter tags em IDs - CORRIGIDA
+    suspend fun getTagIds(tagNames: List<String>): List<Long> {
+        return if (tagNames.isEmpty()) {
+            emptyList()
+        } else {
+            try {
+                val tagRepository = TagRepository()
+                val tagIds = tagRepository.getTagIdsByNames(tagNames)
+                Log.d("ShareScreen", "Tags convertidas: $tagNames -> $tagIds")
+                tagIds
+            } catch (e: Exception) {
+                Log.e("ShareScreen", "Erro ao converter tags: ${e.message}")
+                emptyList()
+            }
+        }
     }
 
-    // Função para criar o material
+    // Função para criar o material - ATUALIZADA
     fun createMaterial() {
         coroutineScope.launch {
             isCreatingMaterial = true
@@ -860,8 +869,16 @@ fun Indice4(){
             try {
                 val materialsRepository = MaterialsRepository()
                 val authRepository = AuthRepository()
+
+                // Converter tags para IDs ANTES de criar o material
                 val tagIds = getTagIds(selectedTags)
                 val currentUser = authRepository.getCurrentUser()
+
+                Log.d("ShareScreen", "=== Criando material ===")
+                Log.d("ShareScreen", "Título: $title")
+                Log.d("ShareScreen", "Tags selecionadas: $selectedTags")
+                Log.d("ShareScreen", "Tag IDs: $tagIds")
+                Log.d("ShareScreen", "Usuário: ${currentUser?.id}")
 
                 val material = materialsRepository.createMaterial(
                     title = title,
@@ -876,6 +893,7 @@ fun Indice4(){
                 if (material != null) {
                     createSuccess = true
                     Log.d("ShareScreen", "Material criado com sucesso: ${material.id}")
+                    Log.d("ShareScreen", "Tags associadas: ${material.tags?.map { it.description }}")
 
                     // Resetar o formulário após sucesso
                     title = ""
@@ -938,6 +956,16 @@ fun Indice4(){
             isCreating = isCreatingMaterial,
             onClick = { createMaterial() }
         )
+
+        // Mostrar tags selecionadas para debug
+        if (selectedTags.isNotEmpty()) {
+            Text(
+                text = "Tags selecionadas: ${selectedTags.joinToString(", ")}",
+                color = Color.Gray,
+                fontSize = 12.sp,
+                modifier = Modifier.padding(horizontal = 32.dp, vertical = 4.dp)
+            )
+        }
 
         // Mostrar mensagens de erro ou sucesso
         createError?.let { error ->
