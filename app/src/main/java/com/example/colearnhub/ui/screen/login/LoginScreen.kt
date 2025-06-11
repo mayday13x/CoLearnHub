@@ -70,7 +70,6 @@ fun LoginScreen(
     // Observar mudanças no estado de autenticação
     LaunchedEffect(authState.isAuthenticated) {
         if (authState.isAuthenticated && authState.successMessage != null) {
-            //rota temporária enquanto não temos a home
             navController.navigate("MainScreen") {
                 popUpTo("login") { inclusive = true }
             }
@@ -102,15 +101,26 @@ fun LoginScreen(
 
         // Mostrar mensagem de erro se houver
         if (authState.errorMessage != null) {
-            Text(
-                text = authState.errorMessage!!,
-                color = Color.Red,
-                fontSize = 14.sp,
-                textAlign = TextAlign.Center,
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp)
-            )
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = stringResource(R.string.invalid_credentials),
+                    color = Color.Red,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Medium,
+                    textAlign = TextAlign.Center
+                )
+                Text(
+                    text = stringResource(R.string.invalid_credentials_message),
+                    color = Color.Red,
+                    fontSize = 14.sp,
+                    textAlign = TextAlign.Center
+                )
+            }
         }
 
         // Email Input
@@ -122,7 +132,7 @@ fun LoginScreen(
                     emailError = null
                     authViewModel.clearMessages()
                 },
-                label = { Text("Email") },
+                label = { Text(stringResource(R.string.email)) },
                 modifier = Modifier.fillMaxWidth(),
                 isError = emailError != null,
                 colors = OutlinedTextFieldDefaults.colors(
@@ -157,7 +167,7 @@ fun LoginScreen(
                     passwordError = null
                     authViewModel.clearMessages()
                 },
-                label = { Text("Password") },
+                label = { Text(stringResource(R.string.password)) },
                 modifier = Modifier.fillMaxWidth(),
                 isError = passwordError != null,
                 colors = OutlinedTextFieldDefaults.colors(

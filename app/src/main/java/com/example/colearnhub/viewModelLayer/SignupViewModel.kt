@@ -1,9 +1,13 @@
 package com.example.colearnhub.viewmodel
 
+import android.annotation.SuppressLint
+import android.app.Application
 import android.os.Build
 import androidx.annotation.RequiresApi
-import androidx.lifecycle.ViewModel
+import androidx.compose.ui.res.stringResource
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.colearnhub.R
 import com.example.colearnhub.modelLayer.UserData
 import com.example.colearnhub.repositoryLayer.AuthRepository
 import com.example.colearnhub.repositoryLayer.UserRepository
@@ -44,17 +48,19 @@ data class SignupUiState(
 
 @RequiresApi(Build.VERSION_CODES.O)
 class SignupViewModel(
+    application: Application,
     private val authRepository: AuthRepository = AuthRepository(),
     private val userRepository: UserRepository = UserRepository()
-) : ViewModel() {
+) : AndroidViewModel(application) {
 
+    private val context = application.applicationContext
     private val _uiState = MutableStateFlow(SignupUiState())
     val uiState: StateFlow<SignupUiState> = _uiState.asStateFlow()
 
     // Step 1 Actions
     fun updateName(name: String) {
         _uiState.value = _uiState.value.copy(
-            name = name.trim(),
+            name = name,
             nameError = null
         )
     }
@@ -124,11 +130,11 @@ class SignupViewModel(
         // Validate name
         when {
             currentState.name.isBlank() -> {
-                nameError = "Nome é obrigatório"
+                nameError = context.getString(R.string.name_required)
                 hasError = true
             }
             currentState.name.length < 2 -> {
-                nameError = "Nome deve ter pelo menos 2 caracteres"
+                nameError = context.getString(R.string.name_min_length)
                 hasError = true
             }
         }
@@ -136,11 +142,11 @@ class SignupViewModel(
         // Validate email
         when {
             currentState.email.isBlank() -> {
-                emailError = "Email é obrigatório"
+                emailError = context.getString(R.string.email_required)
                 hasError = true
             }
             !android.util.Patterns.EMAIL_ADDRESS.matcher(currentState.email).matches() -> {
-                emailError = "Email inválido"
+                emailError = context.getString(R.string.email_invalid)
                 hasError = true
             }
         }
@@ -148,7 +154,7 @@ class SignupViewModel(
         // Validate birth date
         when {
             currentState.day == 0 || currentState.month == 0 || currentState.year == 0 -> {
-                dateError = "Data de nascimento é obrigatória"
+                dateError = context.getString(R.string.birthdate_required)
                 hasError = true
             }
             else -> {
@@ -160,16 +166,16 @@ class SignupViewModel(
 
                     when {
                         age < 13 -> {
-                            dateError = "Deve ter pelo menos 13 anos"
+                            dateError = context.getString(R.string.age_too_young)
                             hasError = true
                         }
                         age > 100 -> {
-                            dateError = "Data inválida"
+                            dateError = context.getString(R.string.age_too_old)
                             hasError = true
                         }
                     }
                 } catch (e: Exception) {
-                    dateError = "Data inválida"
+                    dateError = context.getString(R.string.invalid_date)
                     hasError = true
                 }
             }
@@ -194,19 +200,19 @@ class SignupViewModel(
         // Validate username
         when {
             currentState.username.isBlank() -> {
-                usernameError = "Username é obrigatório"
+                usernameError = context.getString(R.string.username_required)
                 hasError = true
             }
             currentState.username.length < 3 -> {
-                usernameError = "Username deve ter pelo menos 3 caracteres"
+                usernameError = context.getString(R.string.username_min_length)
                 hasError = true
             }
             currentState.username.length > 20 -> {
-                usernameError = "Username deve ter no máximo 20 caracteres"
+                usernameError = context.getString(R.string.username_max_length)
                 hasError = true
             }
             !currentState.username.matches(Regex("^[a-zA-Z0-9_]+$")) -> {
-                usernameError = "Username pode conter apenas letras, números e _"
+                usernameError = context.getString(R.string.username_invalid_chars)
                 hasError = true
             }
         }
@@ -214,23 +220,23 @@ class SignupViewModel(
         // Validate password
         when {
             currentState.password.isBlank() -> {
-                passwordError = "Password é obrigatória"
+                passwordError = context.getString(R.string.password_required)
                 hasError = true
             }
             currentState.password.length < 8 -> {
-                passwordError = "Password deve ter pelo menos 8 caracteres"
+                passwordError = context.getString(R.string.password_min_length_8)
                 hasError = true
             }
             !currentState.password.any { it.isUpperCase() } -> {
-                passwordError = "Password deve conter pelo menos uma letra maiúscula"
+                passwordError = context.getString(R.string.password_uppercase_required)
                 hasError = true
             }
             !currentState.password.any { it.isLowerCase() } -> {
-                passwordError = "Password deve conter pelo menos uma letra minúscula"
+                passwordError = context.getString(R.string.password_lowercase_required)
                 hasError = true
             }
             !currentState.password.any { it.isDigit() } -> {
-                passwordError = "Password deve conter pelo menos um número"
+                passwordError = context.getString(R.string.password_digit_required)
                 hasError = true
             }
         }
@@ -238,11 +244,11 @@ class SignupViewModel(
         // Validate confirm password
         when {
             currentState.confirmPassword.isBlank() -> {
-                confirmPasswordError = "Confirmação de password é obrigatória"
+                confirmPasswordError = context.getString(R.string.confirm_password_required)
                 hasError = true
             }
             currentState.confirmPassword != currentState.password -> {
-                confirmPasswordError = "Passwords não coincidem"
+                confirmPasswordError = context.getString(R.string.confirm_password_mismatch)
                 hasError = true
             }
         }
@@ -257,6 +263,7 @@ class SignupViewModel(
     }
 
     // Step 1 - Validate and proceed
+    @SuppressLint("StringFormatInvalid")
     fun proceedToStep2() {
         if (!validateStep1()) return
 
@@ -267,7 +274,7 @@ class SignupViewModel(
                 val emailExists = authRepository.checkEmailExists(_uiState.value.email)
                 if (emailExists) {
                     _uiState.value = _uiState.value.copy(
-                        emailError = "Este email já está registado",
+                        emailError = context.getString(R.string.email_already_registered),
                         isLoading = false
                     )
                 } else {
@@ -279,7 +286,7 @@ class SignupViewModel(
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
-                    snackbarMessage = "Erro ao verificar email: ${e.message}"
+                    snackbarMessage = context.getString(R.string.error_checking_email, e.message)
                 )
             }
         }
@@ -298,7 +305,7 @@ class SignupViewModel(
                 // Check if username exists
                 if (userRepository.checkUsernameExists(currentState.username)) {
                     _uiState.value = _uiState.value.copy(
-                        usernameError = "Username já está em uso",
+                        usernameError = context.getString(R.string.username_already_taken),
                         isLoading = false
                     )
                     return@launch
@@ -308,7 +315,7 @@ class SignupViewModel(
                 if (authRepository.checkEmailExists(currentState.email)) {
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
-                        snackbarMessage = "Email já está registado"
+                        snackbarMessage = context.getString(R.string.email_already_registered_server)
                     )
                     return@launch
                 }
@@ -340,13 +347,13 @@ class SignupViewModel(
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
                     isSignupSuccess = true,
-                    snackbarMessage = "Conta criada com sucesso! Verifique o seu email."
+                    snackbarMessage = context.getString(R.string.account_created_success)
                 )
 
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
-                    snackbarMessage = "Erro ao criar conta: ${e.message}"
+                    snackbarMessage = context.getString(R.string.error_creating_account, e.message)
                 )
             }
         }

@@ -159,4 +159,22 @@
     <string name="years_ago">%d years ago</string>
     <string name="invalid_date_parsing">Invalid date</string>
 
+    <!-- ViewModel Validation Messages -->
+    <string name="email_already_registered">This email is already registered</string>
+    <string name="username_already_taken">Username is already taken</string>
+    <string name="password_min_length_8">Password must be at least 8 characters</string>
+    <string name="password_uppercase_required">Password must contain at least one uppercase letter</string>
+    <string name="password_lowercase_required">Password must contain at least one lowercase letter</string>
+    <string name="password_digit_required">Password must contain at least one number</string>
+    <string name="confirm_password_mismatch">Passwords do not match</string>
+    <string name="age_too_young">You must be at least 13 years old</string>
+    <string name="age_too_old">Invalid date</string>
+
+    <!-- Success and Error Messages -->
+    <string name="account_created_success">Account created successfully!</string>
+    <string name="error_creating_account">Error creating account: %s</string>
+    <string name="email_already_registered_server">Email is already registered</string>
+    <string name="invalid_credentials">Invalid Credentials</string>
+    <string name="invalid_credentials_message">Incorrect email or password</string>
+
 </resources>

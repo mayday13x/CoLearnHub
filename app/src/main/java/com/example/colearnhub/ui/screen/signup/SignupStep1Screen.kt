@@ -153,7 +153,6 @@ fun SignupStep1Screen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp),
-                    singleLine = true,
                     isError = uiState.nameError != null,
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = Color(0xFF395174),

@@ -185,13 +185,15 @@ fun Indice(
                 materials = materials,
                 isLoading = isLoading,
                 materialViewModel = materialViewModel,
-                navController = navController
+                navController = navController,
+                isAllTab = true
             )
             1 -> ContentArea(
                 materials = userMaterials,
                 isLoading = isLoading,
                 materialViewModel = materialViewModel,
-                navController = navController
+                navController = navController,
+                isAllTab = false
             )
         }
     }
@@ -232,7 +234,8 @@ fun ContentArea(
     materials: List<Material>,
     isLoading: Boolean,
     materialViewModel: MaterialViewModel,
-    navController: NavController
+    navController: NavController,
+    isAllTab: Boolean = true
 ) {
     val padding = dynamicPadding()
     val animationSize = animation()
@@ -319,7 +322,8 @@ fun ContentArea(
             MaterialsList(
                 materials = materials,
                 materialViewModel = materialViewModel,
-                navController = navController
+                navController = navController,
+                isAllTab = isAllTab
             )
         }
 
@@ -331,49 +335,70 @@ fun ContentArea(
 fun MaterialsList(
     materials: List<Material>,
     materialViewModel: MaterialViewModel,
-    navController: NavController
+    navController: NavController,
+    isAllTab: Boolean = true
 ) {
-    val highlights = materials.take(2)
-    val others = materials.drop(2)
+    // Ordenar materiais por data de criação (mais recentes primeiro)
+    val sortedMaterials = materials.sortedByDescending { it.created_at }
 
-    LazyColumn(
-        verticalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        // Seção Highlights
-        if (highlights.isNotEmpty()) {
-            item {
-                Text(
-                    text = "Highlights",
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color(0xFF395174),
-                    modifier = Modifier.padding(vertical = 8.dp)
-                )
+    if (isAllTab) {
+        // Lógica para aba All - dois mais recentes em Highlights
+        val highlights = sortedMaterials.take(2)
+        val others = sortedMaterials.drop(2)
+
+        LazyColumn(
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            // Seção Highlights
+            if (highlights.isNotEmpty()) {
+                item {
+                    Text(
+                        text = "Highlights",
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF395174),
+                        modifier = Modifier.padding(vertical = 8.dp)
+                    )
+                }
+
+                items(highlights) { material ->
+                    MaterialCard(
+                        material = material,
+                        materialViewModel = materialViewModel,
+                        isHighlight = true,
+                        navController = navController
+                    )
+                }
             }
 
-            items(highlights) { material ->
-                MaterialCard(
-                    material = material,
-                    materialViewModel = materialViewModel,
-                    isHighlight = true,
-                    navController = navController
-                )
+            // Seção Others
+            if (others.isNotEmpty()) {
+                item {
+                    Text(
+                        text = "Others",
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF395174),
+                        modifier = Modifier.padding(vertical = 8.dp)
+                    )
+                }
+
+                items(others) { material ->
+                    MaterialCard(
+                        material = material,
+                        materialViewModel = materialViewModel,
+                        isHighlight = false,
+                        navController = navController
+                    )
+                }
             }
         }
-
-        // Seção Others
-        if (others.isNotEmpty()) {
-            item {
-                Text(
-                    text = "Others",
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color(0xFF395174),
-                    modifier = Modifier.padding(vertical = 8.dp)
-                )
-            }
-
-            items(others) { material ->
+    } else {
+        // Lista simples ordenada por data para a aba Shared
+        LazyColumn(
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            items(sortedMaterials) { material ->
                 MaterialCard(
                     material = material,
                     materialViewModel = materialViewModel,

@@ -4,6 +4,7 @@ import android.content.Context
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.colearnhub.R
 import com.example.colearnhub.repositoryLayer.AuthRepository
 import com.example.colearnhub.ui.utils.SharedPreferenceHelper
 import io.github.jan.supabase.auth.user.UserInfo
@@ -99,7 +100,7 @@ class AuthViewModel(private val context: Context) : ViewModel() {
             } catch (e: Exception) {
                 _authState.value = _authState.value.copy(
                     isLoading = false,
-                    errorMessage = e.message ?: "Login failed"
+                    errorMessage = context.getString(R.string.invalid_credentials)
                 )
             }
         }

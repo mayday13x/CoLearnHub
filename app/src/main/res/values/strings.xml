@@ -158,7 +158,22 @@
     <string name="years_ago">à %d anos</string>
     <string name="invalid_date_parsing">Data inválida</string>
 
+    <!-- ViewModel Validation Messages -->
+    <string name="email_already_registered">Este email já está registado</string>
+    <string name="username_already_taken">Nome de utilizador já está em uso</string>
+    <string name="password_min_length_8">Palavra-passe deve ter pelo menos 8 caracteres</string>
+    <string name="password_uppercase_required">Palavra-passe deve conter pelo menos uma letra maiúscula</string>
+    <string name="password_lowercase_required">Palavra-passe deve conter pelo menos uma letra minúscula</string>
+    <string name="password_digit_required">Palavra-passe deve conter pelo menos um número</string>
+    <string name="confirm_password_mismatch">Palavras-passe não coincidem</string>
+    <string name="age_too_young">Deve ter pelo menos 13 anos</string>
+    <string name="age_too_old">Data inválida</string>
 
-
+    <!-- Success and Error Messages -->
+    <string name="account_created_success">Conta criada com sucesso!</string>
+    <string name="error_creating_account">Erro ao criar conta: %s</string>
+    <string name="email_already_registered_server">Email já está registado</string>
+    <string name="invalid_credentials">Credenciais inválidas</string>
+    <string name="invalid_credentials_message">Email ou palavra-passe incorretos</string>
 
 </resources>
