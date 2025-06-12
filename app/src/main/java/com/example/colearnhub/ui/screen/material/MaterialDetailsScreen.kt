@@ -6,6 +6,7 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Build
 import android.os.Environment
+import android.util.Log
 import android.webkit.MimeTypeMap
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
@@ -27,11 +28,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.colearnhub.R
 import com.example.colearnhub.modelLayer.Comments
 import com.example.colearnhub.modelLayer.Material
 import com.example.colearnhub.repositoryLayer.CommentsRepository
@@ -46,6 +50,8 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeFormatterBuilder
 import java.util.*
+import com.example.colearnhub.repositoryLayer.RatingRepository
+import com.example.colearnhub.modelLayer.Rating
 
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -62,6 +68,12 @@ fun MaterialDetailsScreen(
     val authViewModel: AuthViewModel = viewModel(
         factory = AuthViewModelFactory(context)
     )
+
+    val ratingRepository = remember { RatingRepository() }
+    var currentUserRating by remember { mutableStateOf<Rating?>(null) }
+    var averageRating by remember { mutableStateOf(0.0) }
+    var totalRatings by remember { mutableStateOf(0) }
+    var showRatingDialog by remember { mutableStateOf(false) }
 
     val currentUser by authViewModel.currentUser.collectAsState()
     val currentUserId = currentUser?.id
@@ -90,7 +102,7 @@ fun MaterialDetailsScreen(
     }
 
     // Load material, comments and author data
-    LaunchedEffect(materialId) {
+    LaunchedEffect(materialId, currentUserId) {
         try {
             isLoading = true
             material = materialsRepository.getMaterialByIdWithTags(materialId)
@@ -118,6 +130,25 @@ fun MaterialDetailsScreen(
             }
             userNames = names
 
+            // Fetch rating data if user is logged in
+            currentUserId?.let { userId ->
+                try {
+                    // Get current user's rating
+                    currentUserRating = ratingRepository.getRating(userId, materialId.toLong())
+
+                    // Get average rating and total ratings
+                    val allRatings = ratingRepository.getMaterialRatings(materialId.toLong())
+                    totalRatings = allRatings.size
+                    averageRating = if (allRatings.isNotEmpty()) {
+                        allRatings.mapNotNull { it.rating }.average()
+                    } else {
+                        0.0
+                    }
+                } catch (e: Exception) {
+                    Log.e("MaterialDetailsScreen", "Erro ao carregar ratings: ${e.message}")
+                }
+            }
+
             error = null
         } catch (e: Exception) {
             error = e.message
@@ -135,7 +166,7 @@ fun MaterialDetailsScreen(
         TopAppBar(
             title = {
                 Text(
-                    text = material?.title ?: "Material Details",
+                    text = stringResource(R.string.material_details_title),
                     color = Color.White,
                     fontWeight = FontWeight.Bold
                 )
@@ -188,7 +219,12 @@ fun MaterialDetailsScreen(
                     item {
                         MaterialInfoSection(
                             material = material,
-                            authorName = authorName
+                            authorName = authorName,
+                            averageRating = averageRating,
+                            totalRatings = totalRatings,
+                            currentUserRating = currentUserRating,
+                            onRateClick = { showRatingDialog = true },
+                            canRate = currentUserId != null
                         )
                     }
 
@@ -236,10 +272,20 @@ fun MaterialDetailsScreen(
 
                                             // Ensure current user's name is in the map after commenting
                                             currentUserId?.let { userId ->
-                                                if (!userNames.containsKey(userId)) {
-                                                    userRepository.getUserById(userId)?.let { user ->
-                                                        userNames = userNames + (userId to user.name)
+                                                try {
+                                                    // Get current user's rating
+                                                    currentUserRating = ratingRepository.getRating(userId, materialId.toLong())
+
+                                                    // Get average rating and total ratings
+                                                    val allRatings = ratingRepository.getMaterialRatings(materialId.toLong())
+                                                    totalRatings = allRatings.size
+                                                    averageRating = if (allRatings.isNotEmpty()) {
+                                                        allRatings.mapNotNull { it.rating }.average()
+                                                    } else {
+                                                        0.0
                                                     }
+                                                } catch (e: Exception) {
+                                                    Log.e("MaterialDetailsScreen", "Erro ao carregar ratings: ${e.message}")
                                                 }
                                             }
 
@@ -296,6 +342,44 @@ fun MaterialDetailsScreen(
                             canInteract = currentUserId != null
                         )
                     }
+                }
+                // Rating Dialog
+                if (showRatingDialog && currentUserId != null) {
+                    RatingDialog(
+                        showDialog = showRatingDialog,
+                        currentRating = currentUserRating?.rating?.toInt() ?: 0,
+                        onDismiss = { showRatingDialog = false },
+                        onRatingSubmit = { rating ->
+                            scope.launch {
+                                if (currentUserId != null) {
+                                    val success = ratingRepository.upsertRating(
+                                        Rating(
+                                            user_id = currentUserId,
+                                            material_id = materialId.toLong(),
+                                            rating = rating.toLong()
+                                        )
+                                    )
+                                    if (success) {
+                                        // Refresh ratings after submission
+                                        currentUserRating = ratingRepository.getRating(currentUserId, materialId.toLong())
+                                        val allRatings = ratingRepository.getMaterialRatings(materialId.toLong())
+                                        totalRatings = allRatings.size
+                                        averageRating = if (allRatings.isNotEmpty()) {
+                                            allRatings.mapNotNull { it.rating }.average()
+                                        } else {
+                                            0.0
+                                        }
+                                        Toast.makeText(context, "Rating submitted!", Toast.LENGTH_SHORT).show()
+                                    } else {
+                                        Toast.makeText(context, "Failed to submit rating.", Toast.LENGTH_SHORT).show()
+                                    }
+                                } else {
+                                    Toast.makeText(context, "You must be logged in to rate.", Toast.LENGTH_SHORT).show()
+                                }
+                                showRatingDialog = false
+                            }
+                        }
+                    )
                 }
             }
         }
@@ -590,7 +674,12 @@ data class MaterialDetail(
 @Composable
 fun MaterialInfoSection(
     material: Material,
-    authorName: String?
+    authorName: String?,
+    averageRating: Double = 0.0,
+    totalRatings: Int = 0,
+    currentUserRating: Rating? = null,
+    onRateClick: () -> Unit = {},
+    canRate: Boolean = true
 ) {
     val dateFormatter = DateTimeFormatterBuilder()
         .appendPattern("dd/MM/yyyy HH:mm")
@@ -699,6 +788,74 @@ fun MaterialInfoSection(
 
         Spacer(modifier = Modifier.height(16.dp))
 
+        // Rating Section
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            if (totalRatings == 0) {
+                Text(
+                    text = stringResource(R.string.no_ratings_yet),
+                    fontSize = 14.sp,
+                    color = Color.Gray,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(top = 2.dp, bottom = 8.dp)
+                )
+            } else {
+                // Star and Rating
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Text(
+                        text = "⭐",
+                        fontSize = 24.sp
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = String.format("%.1f", averageRating),
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.Black
+                    )
+                }
+
+                Text(
+                    text = "Average Rating",
+                    fontSize = 12.sp,
+                    color = Color.Gray,
+                    modifier = Modifier.padding(top = 2.dp)
+                )
+            }
+
+            // Rate Now Button
+            if (canRate) {
+                TextButton(
+                    onClick = onRateClick,
+                    modifier = Modifier.padding(top = 4.dp)
+                ) {
+                    Text(
+                        text = if (currentUserRating != null) "Update Rating" else "Rate Now",
+                        fontSize = 14.sp,
+                        color = Color(0xFF395174),
+                        fontWeight = FontWeight.Medium
+                    )
+                }
+            }
+
+            // Show current user rating if exists
+            if (currentUserRating != null && totalRatings > 0) {
+                Text(
+                    text = "Your rating: ${currentUserRating.rating} ⭐",
+                    fontSize = 12.sp,
+                    color = Color.Gray,
+                    modifier = Modifier.padding(top = 4.dp)
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
         // Created At
         if (!material.created_at.isNullOrEmpty()) {
             Text(
@@ -719,6 +876,100 @@ fun MaterialInfoSection(
                 modifier = Modifier.padding(top = 2.dp)
             )
         }
+    }
+}
+
+@Composable
+fun RatingDialog(
+    showDialog: Boolean,
+    currentRating: Int = 0,
+    onDismiss: () -> Unit,
+    onRatingSubmit: (Int) -> Unit
+) {
+    var selectedRating by remember(showDialog) { mutableStateOf(currentRating) }
+
+    if (showDialog) {
+        AlertDialog(
+            onDismissRequest = onDismiss,
+            title = {
+                Text(
+                    text = "Rate this Material",
+                    fontWeight = FontWeight.Bold,
+                    color = Color.Black
+                )
+            },
+            text = {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = "How would you rate this material?",
+                        fontSize = 14.sp,
+                        color = Color.Gray,
+                        modifier = Modifier.padding(bottom = 16.dp)
+                    )
+
+                    // Star Rating
+                    Row(
+                        horizontalArrangement = Arrangement.Center,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        for (i in 1..5) {
+                            IconButton(
+                                onClick = { selectedRating = i }
+                            ) {
+                                Text(
+                                    text = if (i <= selectedRating) "⭐" else "☆",
+                                    fontSize = 32.sp,
+                                    color = if (i <= selectedRating) Color(0xFFFFD700) else Color.Gray
+                                )
+                            }
+                        }
+                    }
+
+                    if (selectedRating > 0) {
+                        Text(
+                            text = when (selectedRating) {
+                                1 -> "Poor"
+                                2 -> "Fair"
+                                3 -> "Good"
+                                4 -> "Very Good"
+                                5 -> "Excellent"
+                                else -> ""
+                            },
+                            fontSize = 14.sp,
+                            color = Color(0xFF395174),
+                            fontWeight = FontWeight.Medium,
+                            modifier = Modifier.padding(top = 8.dp)
+                        )
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        if (selectedRating > 0) {
+                            onRatingSubmit(selectedRating)
+                        }
+                    },
+                    enabled = selectedRating > 0
+                ) {
+                    Text(
+                        text = "Submit",
+                        color = if (selectedRating > 0) Color(0xFF395174) else Color.Gray
+                    )
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = onDismiss) {
+                    Text(
+                        text = "Cancel",
+                        color = Color.Gray
+                    )
+                }
+            }
+        )
     }
 }
 

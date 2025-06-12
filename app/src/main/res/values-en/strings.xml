@@ -251,4 +251,7 @@
     <!-- Main Screen -->
     <string name="loading_materials">Loading materials...</string>
 
+    <string name="material_details_title">Material Details</string>
+    <string name="no_ratings_yet">No ratings yet. Be the first to rate!</string>
+
 </resources>

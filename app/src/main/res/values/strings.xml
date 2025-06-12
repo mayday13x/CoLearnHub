@@ -249,4 +249,7 @@
 
     <string name="loading_materials">A carregar materiais...</string>
 
+    <string name="material_details_title">Detalhes do Material</string>
+    <string name="no_ratings_yet">Ainda sem avaliações. Seja o primeiro a avaliar!</string>
+
 </resources>
