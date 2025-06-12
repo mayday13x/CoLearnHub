@@ -19,6 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -26,6 +27,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.colearnhub.R
 import com.example.colearnhub.repositoryLayer.User
 import com.example.colearnhub.viewModelLayer.AuthViewModelFactory
 import com.example.colearnhub.viewModelLayer.GroupViewModel
@@ -67,7 +69,7 @@ fun CreateGroupScreen(
         TopAppBar(
             title = {
                 Text(
-                    text = "New Group",
+                    text = stringResource(R.string.new_group_title),
                     fontWeight = FontWeight.Medium,
                     fontSize = 18.sp
                 )
@@ -97,7 +99,7 @@ fun CreateGroupScreen(
             // Campo Nome
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(
-                    text = "Name",
+                    text = stringResource(R.string.name),
                     fontWeight = FontWeight.Medium,
                     fontSize = 16.sp,
                     color = Color(0xFF395174)
@@ -121,7 +123,7 @@ fun CreateGroupScreen(
             // Campo Descrição
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(
-                    text = "Description",
+                    text = stringResource(R.string.description),
                     fontWeight = FontWeight.Medium,
                     fontSize = 16.sp,
                     color = Color(0xFF395174)
@@ -147,7 +149,7 @@ fun CreateGroupScreen(
             // Seção Convidar Pessoas
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text(
-                    text = "Invite people",
+                    text = stringResource(R.string.invite_people),
                     fontWeight = FontWeight.Medium,
                     fontSize = 16.sp,
                     color = Color(0xFF395174)
@@ -160,7 +162,7 @@ fun CreateGroupScreen(
                     modifier = Modifier.fillMaxWidth(),
                     placeholder = {
                         Text(
-                            text = "Search users...",
+                            text = stringResource(R.string.search_users),
                             color = Color(0xFF9E9E9E)
                         )
                     },
@@ -248,7 +250,7 @@ fun CreateGroupScreen(
                                 modifier = Modifier.size(48.dp)
                             )
                             Text(
-                                text = "Invite new people to this group.",
+                                text = stringResource(R.string.invite_message),
                                 fontSize = 14.sp,
                                 color = Color(0xFF9E9E9E),
                                 textAlign = TextAlign.Center
@@ -287,7 +289,7 @@ fun CreateGroupScreen(
                     )
                 } else {
                     Text(
-                        text = "Create",
+                        text = stringResource(R.string.create),
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Medium,
                         color = Color.White

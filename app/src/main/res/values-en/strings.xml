@@ -207,4 +207,48 @@
     <string name="leave_group">Leave Group</string>
     <string name="leave_group_message">Are you sure you want to leave the group?</string>
 
+    <!-- Invites Screen -->
+    <string name="invites_title">Invites</string>
+    <string name="new_invites">New Invites</string>
+    <string name="no_pending_invites">No pending invites</string>
+    <string name="pending_invites_message">When you receive group invites,\nthey will appear here</string>
+    <string name="invite_details">Invite Details</string>
+    <string name="accept_invite">Accept Invite</string>
+    <string name="decline">Decline</string>
+    <string name="members_count">%d members</string>
+    <string name="search_users">Search users...</string>
+    <string name="invite_people">Invite people</string>
+    <string name="invite_message">Invite new people to this group.</string>
+    <string name="invited_count">Invited (%d)</string>
+    <string name="invited">Invited</string>
+    <string name="remove">Remove</string>
+    <string name="create">Create</string>
+    <string name="new_group_title">New Group</string>
+
+    <!-- Group Participants Screen -->
+    <string name="participants">Participants</string>
+    <string name="search_participants">Search participants...</string>
+    <string name="owner_badge">Owner</string>
+    <string name="loading_participants">Loading participants...</string>
+    <string name="error_loading_participants">Error loading participants</string>
+    <string name="retry">Retry</string>
+
+    <!-- Group Details Screen -->
+    <string name="group_name">Group Name</string>
+    <string name="group_description">Group Description</string>
+    <string name="no_description">No description available</string>
+    <string name="group_owner">Group Owner</string>
+    <string name="unknown_owner">Unknown</string>
+    <string name="participants_count">Participants (%d)</string>
+    <string name="loading_group">Loading group details...</string>
+    <string name="error_loading_group">Error loading group details</string>
+    <string name="leave_group_confirmation">Are you sure you want to leave the group?</string>
+    <string name="leave_group_warning">This action cannot be undone.</string>
+    <string name="no_group_yet">You are not in a group yep.</string>
+    <string name="create_a_new_one">Create a new group to start!</string>
+
+
+    <!-- Main Screen -->
+    <string name="loading_materials">Loading materials...</string>
+
 </resources>

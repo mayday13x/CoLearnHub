@@ -21,6 +21,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -40,10 +42,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
+import com.example.colearnhub.R
 import com.example.colearnhub.ui.utils.logoSize
 import com.example.colearnhub.ui.utils.sbutton
 import com.example.colearnhub.ui.utils.spacer3
@@ -72,7 +76,7 @@ fun ParticipantsTopBar(onBack: () -> Unit) {
         contentAlignment = Alignment.Center
     ) {
         Text(
-            text = "Participants",
+            text = stringResource(R.string.participants),
             color = Color.White,
             fontSize = txtSize,
             fontWeight = FontWeight.Medium
@@ -111,7 +115,7 @@ fun SearchBar(
             .padding(top = 16.dp),
         placeholder = {
             Text(
-                text = "Search participants...",
+                text = stringResource(R.string.search_participants),
                 color = Color.Gray
             )
         },
@@ -195,7 +199,7 @@ fun ParticipantItem(
                     modifier = Modifier.padding(start = 8.dp)
                 ) {
                     Text(
-                        text = "Owner",
+                        text = stringResource(R.string.owner_badge),
                         color = Color.White,
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Medium,
@@ -323,10 +327,19 @@ fun GroupParticipantsScreen(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = groupDetailsState.errorMessage!!,
+                        text = stringResource(R.string.error_loading_participants),
                         color = Color.Red,
                         fontSize = 16.sp
                     )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Button(
+                        onClick = { viewModel.loadGroupDetails(groupId) },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFF395174)
+                        )
+                    ) {
+                        Text(stringResource(R.string.retry), color = Color.White)
+                    }
                 }
             }
 

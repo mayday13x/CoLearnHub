@@ -209,4 +209,44 @@
     <string name="leave_group">Sair do Grupo</string>
     <string name="leave_group_message">Tem a certeza que quer sair do grupo?</string>
 
+    <!-- Invites Screen -->
+    <string name="invites_title">Convites</string>
+    <string name="new_invites">Novos Convites</string>
+    <string name="no_pending_invites">Sem convites pendentes</string>
+    <string name="pending_invites_message">Quando receber convites para grupos,\neles aparecerão aqui</string>
+    <string name="invite_details">Detalhes do Convite</string>
+    <string name="accept_invite">Aceitar Convite</string>
+    <string name="decline">Recusar</string>
+    <string name="members_count">%d membros</string>
+    <string name="search_users">Procurar utilizadores...</string>
+    <string name="invite_people">Convidar pessoas</string>
+    <string name="invite_message">Convide novas pessoas para este grupo.</string>
+    <string name="invited_count">Convidados (%d)</string>
+    <string name="invited">Convidado</string>
+    <string name="remove">Remover</string>
+    <string name="create">Criar</string>
+    <string name="new_group_title">Novo Grupo</string>
+
+    <!-- Group Participants Screen -->
+    <string name="participants">Participantes</string>
+    <string name="search_participants">Procurar participantes...</string>
+    <string name="owner_badge">Dono</string>
+    <string name="loading_participants">A carregar participantes...</string>
+    <string name="error_loading_participants">Erro ao carregar participantes</string>
+    <string name="retry">Tentar novamente</string>
+
+    <!-- Group Details Screen -->
+    <string name="group_name">Nome do Grupo</string>
+    <string name="group_description">Descrição do Grupo</string>
+    <string name="no_description">Sem descrição disponível</string>
+    <string name="group_owner">Dono do Grupo</string>
+    <string name="unknown_owner">Desconhecido</string>
+    <string name="participants_count">Participantes (%d)</string>
+    <string name="loading_group">A carregar detalhes do grupo...</string>
+    <string name="error_loading_group">Erro ao carregar detalhes do grupo</string>
+    <string name="leave_group_confirmation">Tem a certeza que quer sair do grupo?</string>
+    <string name="leave_group_warning">Esta ação não pode ser desfeita.</string>
+
+    <string name="loading_materials">A carregar materiais...</string>
+
 </resources>

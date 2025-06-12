@@ -110,7 +110,7 @@ fun GDName(groupName: String?){
             modifier = Modifier.padding(bottom = 8.dp)
         )
         Text(
-            text = groupName ?: "Loading...",
+            text = groupName ?: stringResource(R.string.loading_group),
             fontSize = (titleFontSize.value - 2).sp,
             color = Color.Black,
             fontWeight = FontWeight.Normal
@@ -138,7 +138,7 @@ fun GDDescription(groupDescription: String?){
         )
         Spacer(modifier = Modifier.height(4.dp))
         Text(
-            text = if (groupDescription.isNullOrBlank()) "No description available" else groupDescription,
+            text = if (groupDescription.isNullOrBlank()) stringResource(R.string.no_description) else groupDescription,
             fontSize = (titleFontSize.value - 2).sp,
             color = Color.Black,
             fontWeight = FontWeight.Normal
@@ -181,7 +181,7 @@ fun GDOwner(ownerUsername: String?){
                 )
             }
             Text(
-                text = ownerUsername ?: "Loading...",
+                text = ownerUsername ?: stringResource(R.string.unknown_owner),
                 fontSize = (titleFontSize.value - 2).sp,
                 color = Color.Black,
                 fontWeight = FontWeight.Normal,
@@ -213,7 +213,7 @@ fun GDParticipants(memberCount: Int, onParticipantsClick: () -> Unit = {}){
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "Participants ($memberCount)",
+                text = stringResource(R.string.participants_count, memberCount),
                 fontSize = 16.sp,
                 color = Color.Black
             )
@@ -282,7 +282,7 @@ fun LeaveGroupDialog(
             },
             text = {
                 Text(
-                    text = stringResource(R.string.leave_group_message),
+                    text = stringResource(R.string.leave_group_confirmation),
                     lineHeight = 20.sp,
                     color = Color.Black
                 )
@@ -428,7 +428,7 @@ fun GroupDetailsScreen(
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Text(
-                            text = groupDetailsState.errorMessage!!,
+                            text = stringResource(R.string.error_loading_group),
                             color = Color.Red,
                             fontSize = 16.sp
                         )
@@ -439,7 +439,7 @@ fun GroupDetailsScreen(
                                 containerColor = Color(0xFF395174)
                             )
                         ) {
-                            Text("Retry", color = Color.White)
+                            Text(stringResource(R.string.retry), color = Color.White)
                         }
                     }
                 }

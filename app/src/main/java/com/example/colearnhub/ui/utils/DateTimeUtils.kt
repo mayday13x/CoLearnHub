@@ -1,10 +1,12 @@
 package com.example.colearnhub.ui.utils
 
+import android.content.Context
 import java.text.ParseException
 import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.TimeUnit
 import android.util.Log
+import com.example.colearnhub.R
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -28,8 +30,8 @@ object DateTimeUtils {
         }
     }
 
-    fun formatTimeAgo(dateString: String?): String {
-        if (dateString.isNullOrEmpty()) return "Desconhecido"
+    fun formatTimeAgo(dateString: String?, context: Context): String {
+        if (dateString.isNullOrEmpty()) return context.getString(R.string.unknown_time)
 
         val parsedDateString = truncateToMillis(dateString)
         Log.d("DateTimeUtils", "Parsed Date String: $parsedDateString")
@@ -71,7 +73,7 @@ object DateTimeUtils {
 
         if (date == null) {
             Log.e("DateTimeUtils", "Não foi possível fazer parse da data!")
-            return "Data inválida"
+            return context.getString(R.string.invalid_date)
         }
 
         // Não precisamos mais converter o fuso horário pois já está em UTC+1
@@ -86,13 +88,13 @@ object DateTimeUtils {
         Log.d("DateTimeUtils", "Diferença em dias: $days")
 
         return when {
-            minutes < 5 -> "Agora mesmo"
-            minutes < 60 -> "à $minutes min"
-            hours < 24 -> "à ${hours}h"
-            days == 1L -> "Ontem"
-            days < 30 -> "à ${days}d"
-            days < 365 -> "à ${days / 30} meses"
-            else -> "à ${days / 365} anos"
+            minutes < 5 -> context.getString(R.string.just_now)
+            minutes < 60 -> context.getString(R.string.minutes_ago, minutes)
+            hours < 24 -> context.getString(R.string.hours_ago, hours)
+            days == 1L -> context.getString(R.string.yesterday)
+            days < 30 -> context.getString(R.string.days_ago, days)
+            days < 365 -> context.getString(R.string.months_ago, days / 30)
+            else -> context.getString(R.string.years_ago, days / 365)
         }
     }
 }

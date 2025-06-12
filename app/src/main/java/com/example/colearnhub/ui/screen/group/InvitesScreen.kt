@@ -104,14 +104,14 @@ fun InvitesScreen(navController: NavController) {
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
-                        text = "Sem convites pendentes",
+                        text = stringResource(R.string.no_pending_invites),
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Medium,
                         color = Color.Gray
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = "Quando receber convites para grupos,\neles aparecerão aqui",
+                        text = stringResource(R.string.pending_invites_message),
                         fontSize = 14.sp,
                         color = Color.Gray,
                         textAlign = TextAlign.Center
@@ -124,7 +124,7 @@ fun InvitesScreen(navController: NavController) {
                 modifier = Modifier.padding(20.dp)
             ) {
                 Text(
-                    text = "New Invites",
+                    text = stringResource(R.string.new_invites),
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color.Black,
@@ -386,7 +386,7 @@ fun InviteDetailsScreen(
                             )
                         } else {
                             Text(
-                                text = "Accept Invite",
+                                text = stringResource(R.string.accept_invite),
                                 fontSize = 16.sp,
                                 fontWeight = FontWeight.Bold
                             )
@@ -442,7 +442,7 @@ fun InviteDetailsScreen(
                             )
                         } else {
                             Text(
-                                text = "Decline",
+                                text = stringResource(R.string.decline),
                                 fontSize = 16.sp,
                                 fontWeight = FontWeight.Medium
                             )

@@ -123,10 +123,16 @@ fun Indice(
     val userMaterials by materialViewModel.userMaterials.collectAsState()
     val isLoading by materialViewModel.isLoading.collectAsState()
 
+    // Forçar loading state inicial
+    var isInitialLoad by remember { mutableStateOf(true) }
+
     // Carregar materiais públicos na inicialização
     LaunchedEffect(Unit) {
         Log.d("IndiceScreen", "Carregando materiais públicos")
         materialViewModel.loadPublicMaterials()
+        // Dar um pequeno delay para garantir que o loading seja visível
+        kotlinx.coroutines.delay(500)
+        isInitialLoad = false
     }
 
     LaunchedEffect(selectedTab, currentUserId) {
@@ -209,14 +215,14 @@ fun Indice(
         when (selectedTab) {
             0 -> ContentArea(
                 materials = materials,
-                isLoading = isLoading,
+                isLoading = isLoading || isInitialLoad,
                 materialViewModel = materialViewModel,
                 navController = navController,
                 isAllTab = true
             )
             1 -> ContentArea(
                 materials = userMaterials,
-                isLoading = isLoading,
+                isLoading = isLoading || isInitialLoad,
                 materialViewModel = materialViewModel,
                 navController = navController,
                 isAllTab = false
@@ -255,6 +261,7 @@ fun ShareButton() {
     }
 }
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun ContentArea(
     materials: List<Material>,
@@ -277,13 +284,28 @@ fun ContentArea(
     ) {
         if (isLoading) {
             Box(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center
             ) {
-                CircularProgressIndicator(
-                    color = Color(0xFF395174),
-                    modifier = Modifier.padding(16.dp)
-                )
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(48.dp),
+                        color = Color(0xFF395174),
+                        strokeWidth = 4.dp
+                    )
+                    
+                    Spacer(modifier = Modifier.height(16.dp))
+                    
+                    Text(
+                        text = stringResource(R.string.loading_materials),
+                        fontSize = titleFontSize,
+                        color = Color(0xFF395174),
+                        fontWeight = FontWeight.Medium
+                    )
+                }
             }
         } else if (materials.isEmpty()) {
             // Tela vazia - igual ao original
@@ -320,7 +342,9 @@ fun ContentArea(
                 Spacer(modifier = Modifier.height(verticalSpacing))
 
                 Button(
-                    onClick = { },
+                    onClick = { navController.navigate("MainScreen?selectedItem=2") {
+                        popUpTo("share") { inclusive = true }
+                    } },
                     modifier = Modifier
                         .width(dynamicWidth(maxWidth = 300.dp))
                         .height(btnHeight)
@@ -357,6 +381,7 @@ fun ContentArea(
     }
 }
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun MaterialsList(
     materials: List<Material>,
@@ -436,6 +461,7 @@ fun MaterialsList(
     }
 }
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun MaterialCard(
     material: Material,
@@ -445,6 +471,7 @@ fun MaterialCard(
 ) {
     val authorName = materialViewModel.getUserName(material.author_id)
     val (languageName, languageFlag) = materialViewModel.getLanguageInfo(material.language)
+    val context = LocalContext.current
 
     // Lista de cores para as tags
     val tagColors = listOf(
@@ -540,7 +567,7 @@ fun MaterialCard(
 
                 // Tempo
                 Text(
-                    text = DateTimeUtils.formatTimeAgo(material.created_at),
+                    text = DateTimeUtils.formatTimeAgo(material.created_at, context),
                     fontSize = 12.sp,
                     color = Color.Gray
                 )
@@ -677,6 +704,7 @@ data class BottomNavItem(
     val drawableRes: Int? = null
 )
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun MainScreen(navController: NavController, initialSelectedItem: Int = 0) {
     var selectedItem by remember { mutableIntStateOf(initialSelectedItem) }
