@@ -1,6 +1,7 @@
 package com.example.colearnhub.ui.screen.main
 
 import android.os.Build
+import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -26,6 +27,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -73,30 +75,57 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 @Composable
-fun InvitesLink(onClick: () -> Unit) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 20.dp)
-            .padding(top = 50.dp),
-        horizontalArrangement = Arrangement.End,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Icon(
-            imageVector = Icons.Default.Email,
-            contentDescription = "Invites",
-            tint = Color(0xFF395174),
-            modifier = Modifier.size(23.dp)
-        )
-        Spacer(Modifier.width(4.dp))
-        Text(
-            text = stringResource(R.string.Invites),
-            color = Color(0xFF395174),
-            fontSize = 14.sp,
-            textDecoration = TextDecoration.Underline,
+fun InvitesLink(
+    hasPendingInvites: Boolean,
+    inviteCount: Int,
+    onClick: () -> Unit
+) {
+    if (hasPendingInvites) {
+        Row(
             modifier = Modifier
-                .clickable(onClick = onClick)
-        )
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp)
+                .padding(top = 50.dp),
+            horizontalArrangement = Arrangement.End,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = Icons.Default.Email,
+                contentDescription = "Invites",
+                tint = Color(0xFF395174),
+                modifier = Modifier.size(23.dp)
+            )
+            Spacer(Modifier.width(4.dp))
+            Text(
+                text = stringResource(R.string.Invites),
+                color = Color(0xFF395174),
+                fontSize = 14.sp,
+                textDecoration = TextDecoration.Underline,
+                modifier = Modifier
+                    .clickable(onClick = onClick)
+            )
+
+            // Mostrar contador de convites pendentes
+            if (inviteCount > 0) {
+                Spacer(Modifier.width(4.dp))
+                Box(
+                    modifier = Modifier
+                        .size(20.dp)
+                        .background(
+                            Color.Red,
+                            shape = RoundedCornerShape(50)
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = inviteCount.toString(),
+                        color = Color.White,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+        }
     }
 }
 
@@ -202,29 +231,50 @@ fun ContentArea3(navController: NavController, currentUserId: String?) {
 
     var groups by remember { mutableStateOf<List<GroupResponse>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
+    var hasPendingInvites by remember { mutableStateOf(false) }
+    var pendingInvitesCount by remember { mutableStateOf(0) }
     val groupRepository = remember { GroupRepository() }
 
-    // Carregar grupos do utilizador
-    LaunchedEffect(currentUserId) {
+    // Função para carregar dados
+    suspend fun loadUserData() {
         if (currentUserId != null) {
             isLoading = true
-            CoroutineScope(Dispatchers.IO).launch {
-                try {
-                    val userGroups = groupRepository.getUserGroups(currentUserId)
-                    groups = userGroups.filter { groupResponse ->
-                        // Mostrar apenas grupos onde o utilizador foi aceito
-                        groupResponse.members.any { member ->
-                            member.user_id == currentUserId && member.accept == true
-                        }
-                    }
-                } catch (e: Exception) {
-                    // Handle error
-                } finally {
-                    isLoading = false
-                }
+            try {
+                // Usar o método específico para grupos aceitos
+                val acceptedGroups = groupRepository.getUserAcceptedGroups(currentUserId)
+
+                // Verificar convites pendentes
+                val pendingCount = groupRepository.getPendingInvitesCount(currentUserId)
+
+                groups = acceptedGroups
+                hasPendingInvites = pendingCount > 0
+                pendingInvitesCount = pendingCount
+
+                Log.d("ContentArea3", "Grupos aceitos: ${acceptedGroups.size}, Convites: $pendingCount")
+
+            } catch (e: Exception) {
+                Log.e("ContentArea3", "Erro ao carregar dados: ${e.message}")
+            } finally {
+                isLoading = false
             }
         } else {
             isLoading = false
+        }
+    }
+
+    // Carregar dados quando o componente é criado ou quando volta de uma tela
+    LaunchedEffect(currentUserId) {
+        CoroutineScope(Dispatchers.IO).launch {
+            loadUserData()
+        }
+    }
+
+    // Recarregar dados quando volta para esta tela (para atualizar após aceitar/rejeitar convites)
+    LaunchedEffect(navController.currentDestination?.route) {
+        if (navController.currentDestination?.route == "groups" && currentUserId != null) {
+            CoroutineScope(Dispatchers.IO).launch {
+                loadUserData()
+            }
         }
     }
 
@@ -269,15 +319,13 @@ fun ContentArea3(navController: NavController, currentUserId: String?) {
 
         // Lista de grupos ou estado vazio
         if (isLoading) {
-            // Loading state - pode adicionar um loading indicator aqui
+            // Loading state
             Box(
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center
             ) {
-                Text(
-                    text = "Carregando grupos...",
-                    fontSize = titleFontSize,
-                    color = Color.Gray
+                CircularProgressIndicator(
+                    color = Color(0xFF395174)
                 )
             }
         } else if (groups.isNotEmpty() && currentUserId != null) {
@@ -335,10 +383,48 @@ fun Indice3(navController: NavController) {
     val currentUser by authViewModel.currentUser.collectAsState()
     val currentUserId = currentUser?.id
 
-    InvitesLink(onClick = {
-        // Navegar para tela de convites
-        navController.navigate("invites")
-    })
+    var hasPendingInvites by remember { mutableStateOf(false) }
+    var pendingInvitesCount by remember { mutableStateOf(0) }
+    val groupRepository = remember { GroupRepository() }
+
+    // Função para carregar convites pendentes
+    suspend fun loadPendingInvites() {
+        if (currentUserId != null) {
+            try {
+                val count = groupRepository.getPendingInvitesCount(currentUserId)
+                hasPendingInvites = count > 0
+                pendingInvitesCount = count
+                Log.d("Indice3", "Convites pendentes: $count")
+            } catch (e: Exception) {
+                Log.e("Indice3", "Erro ao carregar convites: ${e.message}")
+            }
+        }
+    }
+
+    // Verificar convites pendentes na inicialização
+    LaunchedEffect(currentUserId) {
+        CoroutineScope(Dispatchers.IO).launch {
+            loadPendingInvites()
+        }
+    }
+
+    // Recarregar convites quando volta para esta tela
+    LaunchedEffect(navController.currentDestination?.route) {
+        if (navController.currentDestination?.route == "groups") {
+            CoroutineScope(Dispatchers.IO).launch {
+                loadPendingInvites()
+            }
+        }
+    }
+
+    InvitesLink(
+        hasPendingInvites = hasPendingInvites,
+        inviteCount = pendingInvitesCount,
+        onClick = {
+            // Navegar para tela de convites
+            navController.navigate("invites")
+        }
+    )
     ContentArea3(navController, currentUserId)
 }
 

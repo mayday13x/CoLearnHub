@@ -143,6 +143,141 @@ class GroupRepository {
     }
 
     /**
+     * Busca apenas os convites pendentes do usuário (accept = null)
+     */
+    suspend fun getUserPendingInvites(userId: String): List<GroupResponse> = withContext(Dispatchers.IO) {
+        return@withContext try {
+            Log.d("GroupRepository", "Buscando convites pendentes do usuário: $userId")
+
+            // Filtro corrigido: busca apenas convites não respondidos (accept = null)
+            val pendingMemberships = SupabaseClient.client
+                .from("Group_Members")
+                .select {
+                    filter {
+                        eq("user_id", userId)
+                        isNull("accept")
+                    }
+                }
+                .decodeList<Group_Members>()
+
+            val pendingInvites = mutableListOf<GroupResponse>()
+
+            pendingMemberships.forEach { membership ->
+                val group = getGroupById(membership.group_id)
+                group?.let {
+                    val members = getGroupMembers(membership.group_id)
+                    // Verificação adicional para garantir que é um convite pendente
+                    if (membership.accept == null) {
+                        pendingInvites.add(
+                            GroupResponse(
+                                group = it,
+                                members = members
+                            )
+                        )
+                    }
+                }
+            }
+
+            Log.d("GroupRepository", "Encontrados ${pendingInvites.size} convites pendentes")
+            pendingInvites
+        } catch (e: Exception) {
+            Log.e("GroupRepository", "Erro ao buscar convites pendentes: ${e.message}")
+            emptyList()
+        }
+    }
+    /**
+     * Busca apenas os grupos aceitos do usuário (accept = true)
+     */
+    suspend fun getUserAcceptedGroups(userId: String): List<GroupResponse> = withContext(Dispatchers.IO) {
+        return@withContext try {
+            Log.d("GroupRepository", "Buscando grupos aceitos do usuário: $userId")
+
+            // Buscar apenas grupos onde o usuário foi aceito
+            val acceptedMemberships = SupabaseClient.client
+                .from("Group_Members")
+                .select {
+                    filter {
+                        eq("user_id", userId)
+                        eq("accept", true)
+                    }
+                }
+                .decodeList<Group_Members>()
+
+            val acceptedGroups = mutableListOf<GroupResponse>()
+
+            acceptedMemberships.forEach { membership ->
+                val group = getGroupById(membership.group_id)
+                group?.let {
+                    val members = getGroupMembers(membership.group_id)
+                    acceptedGroups.add(
+                        GroupResponse(
+                            group = it,
+                            members = members
+                        )
+                    )
+                }
+            }
+
+            Log.d("GroupRepository", "Encontrados ${acceptedGroups.size} grupos aceitos")
+            acceptedGroups
+        } catch (e: Exception) {
+            Log.e("GroupRepository", "Erro ao buscar grupos aceitos: ${e.message}")
+            emptyList()
+        }
+    }
+
+    /**
+     * Verifica se o usuário tem convites pendentes
+     */
+    suspend fun hasPendingInvites(userId: String): Boolean = withContext(Dispatchers.IO) {
+        return@withContext try {
+            val pendingCount = SupabaseClient.client
+                .from("Group_Members")
+                .select {
+                    filter {
+                        eq("user_id", userId)
+                        isNull("accept")
+                    }
+                }
+                .decodeList<Group_Members>()
+                .size
+
+            pendingCount > 0
+        } catch (e: Exception) {
+            Log.e("GroupRepository", "Erro ao verificar convites pendentes: ${e.message}")
+            false
+        }
+    }
+
+    /**
+     * Conta o número de convites pendentes do usuário
+     */
+    suspend fun getPendingInvitesCount(userId: String): Int = withContext(Dispatchers.IO) {
+        return@withContext try {
+            val pendingInvites = SupabaseClient.client
+                .from("Group_Members")
+                .select {
+                    filter {
+                        eq("user_id", userId)
+                        isNull("accept")
+                    }
+                }
+                .decodeList<Group_Members>()
+                .filter { it.accept == null }  // Additional filter to ensure we only count null accepts
+            
+            Log.d("GroupRepository", "Pending invites for user $userId: ${pendingInvites.size}")
+            pendingInvites.forEach { invite ->
+                Log.d("GroupRepository", "Pending invite: groupId=${invite.group_id}, userId=${invite.user_id}, accept=${invite.accept}")
+            }
+            
+            pendingInvites.size
+        } catch (e: Exception) {
+            Log.e("GroupRepository", "Erro ao contar convites pendentes: ${e.message}")
+            0
+        }
+    }
+
+    /**
      * Busca um grupo por ID
      */
     suspend fun getGroupById(groupId: Long): Groups? = withContext(Dispatchers.IO) {
