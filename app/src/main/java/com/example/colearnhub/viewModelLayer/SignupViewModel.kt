@@ -1,8 +1,10 @@
 package com.example.colearnhub.viewmodel
 
+import android.app.Application
 import android.os.Build
+import android.util.Log
 import androidx.annotation.RequiresApi
-import androidx.lifecycle.ViewModel
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.colearnhub.modelLayer.UserData
 import com.example.colearnhub.repositoryLayer.AuthRepository
@@ -12,6 +14,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
 data class SignupUiState(
     // Step 1 fields
@@ -42,14 +46,21 @@ data class SignupUiState(
 
 )
 
-@RequiresApi(Build.VERSION_CODES.O)
-class SignupViewModel(
-    private val authRepository: AuthRepository = AuthRepository(),
-    private val userRepository: UserRepository = UserRepository()
-) : ViewModel() {
+class SignupViewModel(application: Application) : AndroidViewModel(application) {
+    private val authRepository = AuthRepository()
+    private val userRepository = UserRepository(application.applicationContext)
 
     private val _uiState = MutableStateFlow(SignupUiState())
     val uiState: StateFlow<SignupUiState> = _uiState.asStateFlow()
+
+    private val _isLoading = MutableStateFlow(false)
+    val isLoading: StateFlow<Boolean> = _isLoading
+
+    private val _error = MutableStateFlow<String?>(null)
+    val error: StateFlow<String?> = _error
+
+    private val _isSuccess = MutableStateFlow(false)
+    val isSuccess: StateFlow<Boolean> = _isSuccess
 
     // Step 1 Actions
     fun updateName(name: String) {
@@ -114,6 +125,7 @@ class SignupViewModel(
     }
 
     // Validation methods
+    @RequiresApi(Build.VERSION_CODES.O)
     private fun validateStep1(): Boolean {
         val currentState = _uiState.value
         var hasError = false
@@ -260,7 +272,9 @@ class SignupViewModel(
     fun proceedToStep2() {
         if (!validateStep1()) return
 
-        _uiState.value = _uiState.value.copy(isLoading = true)
+        _isLoading.value = true
+        _error.value = null
+        _isSuccess.value = false
 
         viewModelScope.launch {
             try {
@@ -277,19 +291,22 @@ class SignupViewModel(
                     )
                 }
             } catch (e: Exception) {
-                _uiState.value = _uiState.value.copy(
-                    isLoading = false,
-                    snackbarMessage = "Erro ao verificar email: ${e.message}"
-                )
+                Log.e("SignupViewModel", "Error during signup: ${e.message}")
+                _error.value = e.message ?: "An error occurred during signup"
+            } finally {
+                _isLoading.value = false
             }
         }
     }
 
     // Step 2 - Complete signup
+    @RequiresApi(Build.VERSION_CODES.O)
     fun completeSignup() {
         if (!validateStep2()) return
 
-        _uiState.value = _uiState.value.copy(isLoading = true)
+        _isLoading.value = true
+        _error.value = null
+        _isSuccess.value = false
 
         viewModelScope.launch {
             try {
@@ -344,10 +361,10 @@ class SignupViewModel(
                 )
 
             } catch (e: Exception) {
-                _uiState.value = _uiState.value.copy(
-                    isLoading = false,
-                    snackbarMessage = "Erro ao criar conta: ${e.message}"
-                )
+                Log.e("SignupViewModel", "Error during signup: ${e.message}")
+                _error.value = e.message ?: "An error occurred during signup"
+            } finally {
+                _isLoading.value = false
             }
         }
     }
@@ -372,18 +389,11 @@ class SignupViewModel(
         )
     }
 
-    // Get current user data as User object
- /*   fun getCurrentUserData(): UserData {
-        val currentState = _uiState.value
-        val birthDate = String.format("%04d-%02d-%02d", currentState.year, currentState.month, currentState.day)
+    fun clearError() {
+        _error.value = null
+    }
 
-        return UserData(
-            name = currentState.name,
-            email = currentState.email,
-            username = currentState.username,
-            password = currentState.password,
-            country = currentState.country,
-            birth_date = birthDate
-        )
-    }*/
+    fun clearSuccess() {
+        _isSuccess.value = false
+    }
 }

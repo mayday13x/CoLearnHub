@@ -1,9 +1,10 @@
 package com.example.colearnhub.viewmodel
 
+import android.app.Application
 import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
-import androidx.lifecycle.ViewModel
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.colearnhub.repositoryLayer.AuthRepository
 import com.example.colearnhub.repositoryLayer.CountryRepository
@@ -17,9 +18,9 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 
-class UserViewModel : ViewModel() {
+class UserViewModel(application: Application) : AndroidViewModel(application) {
 
-    private val userRepository = UserRepository()
+    private val userRepository = UserRepository(application.applicationContext)
     private val authRepository = AuthRepository()
     private val countryRepository = CountryRepository()
     private val ratingRepository = RatingRepository()
@@ -45,6 +46,9 @@ class UserViewModel : ViewModel() {
         val currentUser = authRepository.getCurrentUser()
         if (currentUser != null) {
             loadUserById(currentUser.id)
+        } else {
+            // Se não houver usuário autenticado, tenta carregar do SharedPreferences
+            _user.value = userRepository.getUserFromPrefs()
         }
     }
 
@@ -53,6 +57,9 @@ class UserViewModel : ViewModel() {
         val currentUser = authRepository.getCurrentUser()
         if (currentUser != null) {
             loadUserByIdEditProfile(currentUser.id)
+        } else {
+            // Se não houver usuário autenticado, tenta carregar do SharedPreferences
+            _user.value = userRepository.getUserFromPrefs()
         }
     }
 
@@ -116,8 +123,13 @@ class UserViewModel : ViewModel() {
 
     private fun loadCountryName(countryId: Int) {
         viewModelScope.launch {
-            val country = countryRepository.getCountryById(countryId)
-            _countryName.value = country?.country ?: "Not defined"
+            try {
+                val country = countryRepository.getCountryById(countryId)
+                _countryName.value = country?.country ?: "Not defined"
+            } catch (e: Exception) {
+                Log.e("UserViewModel", "Error loading country name: ${e.message}")
+                _countryName.value = "Not defined"
+            }
         }
     }
 
@@ -133,15 +145,25 @@ class UserViewModel : ViewModel() {
 
     private fun loadUserContributions(userId: String) {
         viewModelScope.launch {
-            val contributions = ratingRepository.getUserContributions(userId)
-            _userContributions.value = contributions
+            try {
+                val contributions = ratingRepository.getUserContributions(userId)
+                _userContributions.value = contributions
+            } catch (e: Exception) {
+                Log.e("UserViewModel", "Error loading user contributions: ${e.message}")
+                _userContributions.value = 0
+            }
         }
     }
 
     private fun loadAverageRatingForUserMaterials(userId: String) {
         viewModelScope.launch {
-            val average = ratingRepository.getAverageRatingForUserMaterials(userId)
-            _averageRating.value = average
+            try {
+                val average = ratingRepository.getAverageRatingForUserMaterials(userId)
+                _averageRating.value = average
+            } catch (e: Exception) {
+                Log.e("UserViewModel", "Error loading average rating: ${e.message}")
+                _averageRating.value = 0.0
+            }
         }
     }
 
@@ -154,6 +176,8 @@ class UserViewModel : ViewModel() {
                 loadCountryName(user.country)
             } catch (e: Exception) {
                 Log.e("UserViewModel", "Error updating user: ${e.message}")
+                // Mesmo com erro na atualização online, atualiza o estado local
+                _user.value = user
             }
         }
     }

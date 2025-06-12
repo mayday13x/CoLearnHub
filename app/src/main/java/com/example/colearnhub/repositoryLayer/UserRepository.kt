@@ -1,5 +1,7 @@
 package com.example.colearnhub.repositoryLayer
 
+import android.content.Context
+import android.content.SharedPreferences
 import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
@@ -9,12 +11,80 @@ import io.github.jan.supabase.postgrest.from
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
 import java.time.format.DateTimeFormatter
 
 @Serializable
 data class UserUsername(val username: String)
 
-class UserRepository {
+class UserRepository(private val context: Context) {
+    private val sharedPreferences: SharedPreferences = context.getSharedPreferences("user_prefs", Context.MODE_PRIVATE)
+    private val json = Json { ignoreUnknownKeys = true }
+
+    /**
+     * Salva os dados do usuário no SharedPreferences
+     */
+    private fun saveUserToPrefs(user: User) {
+        val userJson = json.encodeToString(User.serializer(), user)
+        sharedPreferences.edit().apply {
+            putString("user_data", userJson)
+            putBoolean("has_offline_changes", true) // Marca que há alterações offline
+            apply()
+        }
+    }
+
+    /**
+     * Recupera os dados do usuário do SharedPreferences
+     */
+    fun getUserFromPrefs(): User? {
+        val userJson = sharedPreferences.getString("user_data", null)
+        return userJson?.let {
+            try {
+                json.decodeFromString(User.serializer(), it)
+            } catch (e: Exception) {
+                Log.e("UserRepository", "Error parsing user data from prefs: ${e.message}")
+                null
+            }
+        }
+    }
+
+    /**
+     * Verifica se há alterações offline pendentes
+     */
+    private fun hasOfflineChanges(): Boolean {
+        return sharedPreferences.getBoolean("has_offline_changes", false)
+    }
+
+    /**
+     * Marca as alterações offline como sincronizadas
+     */
+    private fun markOfflineChangesSynced() {
+        sharedPreferences.edit().apply {
+            putBoolean("has_offline_changes", false)
+            apply()
+        }
+    }
+
+    /**
+     * Sincroniza alterações offline com o servidor
+     */
+    private suspend fun syncOfflineChanges(user: User) {
+        if (hasOfflineChanges()) {
+            try {
+                SupabaseClient.client
+                    .from("Users")
+                    .update(user) {
+                        filter {
+                            eq("id", user.id)
+                        }
+                    }
+                markOfflineChangesSynced()
+            } catch (e: Exception) {
+                Log.e("UserRepository", "Error syncing offline changes: ${e.message}")
+                throw e
+            }
+        }
+    }
 
     /**
      * Verifica se um username já existe na base de dados
@@ -37,7 +107,7 @@ class UserRepository {
             if (e.message?.contains("List is empty") == true) {
                 false
             } else {
-                Log.e("UserRepository", "stringResource(R.string.error_checking_username): ${e.message}")
+                Log.e("UserRepository", "Error checking username: ${e.message}")
                 false
             }
         }
@@ -72,9 +142,18 @@ class UserRepository {
             email = email
         )
 
-        SupabaseClient.client
-            .from("Users")
-            .insert(user)
+        try {
+            SupabaseClient.client
+                .from("Users")
+                .insert(user)
+            
+            // Salva no SharedPreferences após criar
+            saveUserToPrefs(user)
+        } catch (e: Exception) {
+            // Se falhar ao criar online, salva apenas localmente
+            saveUserToPrefs(user)
+            throw e
+        }
     }
 
     /**
@@ -84,7 +163,7 @@ class UserRepository {
      */
     suspend fun getUserById(userId: String): User? {
         return try {
-            SupabaseClient.client
+            val user = SupabaseClient.client
                 .from("Users")
                 .select {
                     filter {
@@ -92,8 +171,23 @@ class UserRepository {
                     }
                 }
                 .decodeSingleOrNull<User>()
+            
+            // Se houver alterações offline, mantém as alterações locais
+            if (hasOfflineChanges()) {
+                val localUser = getUserFromPrefs()
+                if (localUser != null) {
+                    // Tenta sincronizar as alterações offline
+                    syncOfflineChanges(localUser)
+                    return localUser
+                }
+            }
+            
+            // Se não houver alterações offline, salva os dados do servidor
+            user?.let { saveUserToPrefs(it) }
+            user
         } catch (e: Exception) {
-            null
+            // Em caso de erro, retorna os dados locais
+            getUserFromPrefs()
         }
     }
 
@@ -104,7 +198,7 @@ class UserRepository {
      */
     suspend fun getUserByUsername(username: String): User? {
         return try {
-            SupabaseClient.client
+            val user = SupabaseClient.client
                 .from("Users")
                 .select {
                     filter {
@@ -112,8 +206,23 @@ class UserRepository {
                     }
                 }
                 .decodeSingleOrNull<User>()
+            
+            // Se houver alterações offline, mantém as alterações locais
+            if (hasOfflineChanges()) {
+                val localUser = getUserFromPrefs()
+                if (localUser != null) {
+                    // Tenta sincronizar as alterações offline
+                    syncOfflineChanges(localUser)
+                    return localUser
+                }
+            }
+            
+            // Se não houver alterações offline, salva os dados do servidor
+            user?.let { saveUserToPrefs(it) }
+            user
         } catch (e: Exception) {
-            null
+            // Em caso de erro, retorna os dados locais
+            getUserFromPrefs()
         }
     }
 
@@ -121,7 +230,7 @@ class UserRepository {
         try {
             if (userIds.isEmpty()) return@withContext emptyList()
 
-            SupabaseClient.client
+            val users = SupabaseClient.client
                 .from("Users")
                 .select {
                     filter {
@@ -129,20 +238,46 @@ class UserRepository {
                     }
                 }
                 .decodeList<User>()
+            
+            // Se houver alterações offline para o usuário atual, mantém as alterações locais
+            if (hasOfflineChanges()) {
+                val localUser = getUserFromPrefs()
+                if (localUser != null && userIds.contains(localUser.id)) {
+                    // Tenta sincronizar as alterações offline
+                    syncOfflineChanges(localUser)
+                    return@withContext users.map { if (it.id == localUser.id) localUser else it }
+                }
+            }
+            
+            // Se não houver alterações offline, salva os dados do servidor
+            users.find { it.id == userIds.firstOrNull() }?.let { saveUserToPrefs(it) }
+            users
         } catch (e: Exception) {
-            Log.e("UserRepository", "Erro ao buscar utilizadores: ${e.message}", e)
-            emptyList()
+            Log.e("UserRepository", "Error fetching users: ${e.message}", e)
+            // Em caso de erro, retorna os dados locais
+            getUserFromPrefs()?.let { listOf(it) } ?: emptyList()
         }
     }
 
     suspend fun updateUser(user: User) {
-        SupabaseClient.client
-            .from("Users")
-            .update(user) {
-                filter {
-                    eq("id", user.id)
+        try {
+            SupabaseClient.client
+                .from("Users")
+                .update(user) {
+                    filter {
+                        eq("id", user.id)
+                    }
                 }
-            }
+            
+            // Salva no SharedPreferences após atualizar
+            saveUserToPrefs(user)
+            markOfflineChangesSynced() // Marca como sincronizado após sucesso
+        } catch (e: Exception) {
+            Log.e("UserRepository", "Error updating user: ${e.message}")
+            // Mesmo com erro na atualização online, salva localmente
+            saveUserToPrefs(user)
+            throw e
+        }
     }
 
 }
