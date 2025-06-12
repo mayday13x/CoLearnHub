@@ -830,6 +830,17 @@ fun EditProfileScreen(
         userViewModel.loadCurrentUserEditProfile()
     }
 
+    val navigateBack = {
+        navController.navigate("MainScreen?selectedItem=4") {
+            popUpTo("group_details") { inclusive = true }
+            launchSingleTop = true
+        }
+    }
+
+    BackHandler {
+        navigateBack()
+    }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -856,11 +867,7 @@ fun EditProfileScreen(
                 }
             } else {
                 IndiceEditProfile(
-                    onBack = {
-                        navController.navigate("MainScreen?selectedItem=4") {
-                            popUpTo("settings") { inclusive = true }
-                        }
-                    },
+                    onBack = navigateBack,
                     user = user!!,
                     onSave = { updatedUser ->
                         userViewModel.updateUser(updatedUser)

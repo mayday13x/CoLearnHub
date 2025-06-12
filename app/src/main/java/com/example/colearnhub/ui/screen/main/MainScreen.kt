@@ -1,6 +1,8 @@
 package com.example.colearnhub.ui.screen.main
 
+import android.os.Build
 import android.util.Log
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -624,6 +626,7 @@ data class BottomNavItem(
     val drawableRes: Int? = null
 )
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun MainScreen(navController: NavController, initialSelectedItem: Int = 0) {
     var selectedItem by remember { mutableIntStateOf(initialSelectedItem) }

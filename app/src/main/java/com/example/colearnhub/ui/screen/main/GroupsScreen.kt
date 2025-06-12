@@ -1,5 +1,7 @@
 package com.example.colearnhub.ui.screen.main
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -33,7 +35,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -162,6 +163,7 @@ fun Indice3(){
     ContentArea3()
 }
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun GroupsScreen(navController: NavController){
     var selectedItem by remember { mutableIntStateOf(3) }

@@ -479,6 +479,7 @@ fun Indice5(navController: NavController? = null,
     })
 }
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun ProfileScreen(navController: NavController){
     var selectedItem by remember { mutableIntStateOf(4) }

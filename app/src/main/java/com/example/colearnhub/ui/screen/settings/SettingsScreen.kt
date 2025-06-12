@@ -2,6 +2,7 @@
 
 package com.example.colearnhub.ui.screen.settings
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -45,6 +46,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import com.example.colearnhub.R
 import com.example.colearnhub.ui.utils.logoSize
@@ -265,6 +267,12 @@ fun VersionApp(){
     }
 }
 
+@Composable
+fun SettingsIndice(onBack: () -> Unit, authViewModel: AuthViewModel = viewModel()){
+    TopSettingsBar(onBack = onBack)
+    SettingsList(authViewModel = authViewModel)
+    VersionApp()
+}
 
 @Composable
 fun SettingsScreen(
@@ -281,6 +289,17 @@ fun SettingsScreen(
         }
     }
 
+    val navigateBack = {
+        navController.navigate("MainScreen?selectedItem=4") {
+            popUpTo("group_details") { inclusive = true }
+            launchSingleTop = true
+        }
+    }
+
+    BackHandler {
+        navigateBack()
+    }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -289,15 +308,7 @@ fun SettingsScreen(
         Column(
             modifier = Modifier.fillMaxSize()
         ) {
-            TopSettingsBar(
-                onBack = {
-                    navController.navigate("MainScreen?selectedItem=4") {
-                        popUpTo("settings") { inclusive = true }
-                    }
-                }
-            )
-            SettingsList(authViewModel = authViewModel)
-            VersionApp()
+            SettingsIndice(onBack = navigateBack, authViewModel = authViewModel)
         }
     }
 }

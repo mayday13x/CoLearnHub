@@ -1,5 +1,7 @@
 package com.example.colearnhub.ui.screen.main
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -198,6 +200,7 @@ fun NewSessionBtn(onSettingsClick: () -> Unit){
     }
 }
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun StudySessionScreen(navController: NavController) {
     var selectedItem by remember { mutableIntStateOf(1) }
