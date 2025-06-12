@@ -74,6 +74,7 @@ fun MaterialDetailsScreen(
     var averageRating by remember { mutableStateOf(0.0) }
     var totalRatings by remember { mutableStateOf(0) }
     var showRatingDialog by remember { mutableStateOf(false) }
+    var showDeleteConfirmationDialog by remember { mutableStateOf<Comments?>(null) }
 
     val currentUser by authViewModel.currentUser.collectAsState()
     val currentUserId = currentUser?.id
@@ -91,6 +92,20 @@ fun MaterialDetailsScreen(
     var authorName by remember { mutableStateOf<String?>(null) }
     var replyingTo by remember { mutableStateOf<Comments?>(null) }
     var userNames by remember { mutableStateOf<Map<String, String>>(emptyMap()) }
+
+    // Helper function to count all comments recursively
+    fun getTotalCommentCount(commentsList: List<Comments>): Int {
+        var count = 0
+        for (comment in commentsList) {
+            count++
+            count += getTotalCommentCount(comment.responses)
+        }
+        return count
+    }
+
+    val totalCommentsCount = remember(comments) {
+        getTotalCommentCount(comments)
+    }
 
     // Handle back navigation
     BackHandler {
@@ -117,7 +132,7 @@ fun MaterialDetailsScreen(
             // Fetch comments
             comments = commentsRepository.getCommentsForMaterial(materialId)
 
-            // Fetch user names for all comments
+            // Fetch user names for all comments and replies
             val userIds = comments.flatMap { comment ->
                 listOf(comment.user_id) + comment.responses.map { it.user_id }
             }.filterNotNull().distinct()
@@ -245,7 +260,7 @@ fun MaterialDetailsScreen(
                     // Comments Header
                     item {
                         CommentsHeader(
-                            commentCount = comments.size,
+                            commentCount = totalCommentsCount,
                             replyingTo = replyingTo,
                             onCancelReply = { replyingTo = null },
                             userName = replyingTo?.user_id?.let { userNames[it] }
@@ -269,26 +284,6 @@ fun MaterialDetailsScreen(
                                             )
                                             // Refresh comments
                                             comments = commentsRepository.getCommentsForMaterial(materialId)
-
-                                            // Ensure current user's name is in the map after commenting
-                                            currentUserId?.let { userId ->
-                                                try {
-                                                    // Get current user's rating
-                                                    currentUserRating = ratingRepository.getRating(userId, materialId.toLong())
-
-                                                    // Get average rating and total ratings
-                                                    val allRatings = ratingRepository.getMaterialRatings(materialId.toLong())
-                                                    totalRatings = allRatings.size
-                                                    averageRating = if (allRatings.isNotEmpty()) {
-                                                        allRatings.mapNotNull { it.rating }.average()
-                                                    } else {
-                                                        0.0
-                                                    }
-                                                } catch (e: Exception) {
-                                                    Log.e("MaterialDetailsScreen", "Erro ao carregar ratings: ${e.message}")
-                                                }
-                                            }
-
                                             commentText = ""
                                             replyingTo = null
                                         } catch (e: Exception) {
@@ -296,7 +291,8 @@ fun MaterialDetailsScreen(
                                         }
                                     }
                                 },
-                                replyingTo = replyingTo
+                                replyingTo = replyingTo,
+                                userNames = userNames
                             )
                         }
                     } else {
@@ -323,23 +319,18 @@ fun MaterialDetailsScreen(
                             comment = comment,
                             userName = userNames[comment.user_id],
                             onReply = {
-                                // Só permite resposta se estiver logado
                                 if (currentUserId != null) {
                                     replyingTo = it
                                 }
                             },
-                            onDelete = { commentId ->
-                                scope.launch {
-                                    try {
-                                        commentsRepository.deleteComment(commentId)
-                                        // Refresh comments
-                                        comments = commentsRepository.getCommentsForMaterial(materialId)
-                                    } catch (e: Exception) {
-                                        error = e.message
-                                    }
-                                }
+                            onDelete = { commentToDelete ->
+                                showDeleteConfirmationDialog = commentToDelete
                             },
-                            canInteract = currentUserId != null
+                            canInteract = currentUserId != null,
+                            userNames = userNames,
+                            isAuthor = comment.user_id == currentUserId,
+                            currentUserId = currentUserId,
+                            depth = 0 // Top-level comments start at depth 0
                         )
                     }
                 }
@@ -377,6 +368,57 @@ fun MaterialDetailsScreen(
                                     Toast.makeText(context, "You must be logged in to rate.", Toast.LENGTH_SHORT).show()
                                 }
                                 showRatingDialog = false
+                            }
+                        }
+                    )
+                }
+                // Delete Confirmation Dialog
+                showDeleteConfirmationDialog?.let { comment ->
+                    AlertDialog(
+                        onDismissRequest = { showDeleteConfirmationDialog = null },
+                        title = {
+                            Text(
+                                text = "Delete Comment",
+                                fontWeight = FontWeight.Bold,
+                                color = Color.Black
+                            )
+                        },
+                        text = {
+                            Text(
+                                text = "Are you sure you want to delete this comment?",
+                                fontSize = 14.sp,
+                                color = Color.Gray
+                            )
+                        },
+                        confirmButton = {
+                            TextButton(
+                                onClick = {
+                                    scope.launch {
+                                        try {
+                                            comment.id?.let { commentId ->
+                                                commentsRepository.deleteComment(commentId)
+                                                // Refresh comments
+                                                comments = commentsRepository.getCommentsForMaterial(materialId)
+                                            }
+                                        } catch (e: Exception) {
+                                            error = e.message
+                                        }
+                                        showDeleteConfirmationDialog = null
+                                    }
+                                }
+                            ) {
+                                Text(
+                                    text = "Delete",
+                                    color = Color.Red
+                                )
+                            }
+                        },
+                        dismissButton = {
+                            TextButton(onClick = { showDeleteConfirmationDialog = null }) {
+                                Text(
+                                    text = "Cancel",
+                                    color = Color.Gray
+                                )
                             }
                         }
                     )
@@ -537,46 +579,75 @@ fun CommentItem(
     comment: Comments,
     userName: String?,
     onReply: (Comments) -> Unit,
-    onDelete: (Int) -> Unit,
-    canInteract: Boolean = true
+    onDelete: (Comments) -> Unit,
+    canInteract: Boolean = true,
+    userNames: Map<String, String>,
+    isAuthor: Boolean = false,
+    currentUserId: String?,
+    depth: Int = 0 // New parameter for indentation depth
 ) {
-    Column(
+    var isExpanded by remember(comment) { mutableStateOf(depth == 0) } // Top-level expanded, replies collapsed
+
+    Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 8.dp)
+            .padding(vertical = 4.dp)
+            .then(if (depth > 0) Modifier.padding(start = (12 * depth).dp) else Modifier), // Dynamic padding
+        horizontalArrangement = Arrangement.spacedBy(4.dp) // Adjusted spacing
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            // Avatar
+        // Vertical line for replies
+        if (depth > 0) {
             Box(
                 modifier = Modifier
-                    .size(32.dp)
-                    .background(Color(0xFF395174), CircleShape)
+                    .width(2.dp)
+                    .fillMaxHeight()
+                    .background(Color.LightGray)
+                    .align(Alignment.CenterVertically)
             )
+        }
 
-            Column(modifier = Modifier.weight(1f)) {
-                // Author and time
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
+        // Avatar
+        Box(
+            modifier = Modifier
+                .size(32.dp)
+                .background(Color(0xFF395174), CircleShape)
+        )
+
+        Column(modifier = Modifier.weight(1f)) {
+            // Author, time, and toggle
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
                         text = userName ?: "Unknown User",
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color.Black
                     )
+                    Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         text = formatTimeAgo(comment.created_at, LocalContext.current),
                         fontSize = 12.sp,
                         color = Color.Gray
                     )
                 }
+                // Only show Collapse/Expand button if it's a reply OR if it's a top-level comment with responses
+                if (depth > 0 || comment.responses.isNotEmpty()) {
+                    TextButton(onClick = { isExpanded = !isExpanded }) {
+                        Text(
+                            text = if (isExpanded) "Collapse" else "Expand",
+                            fontSize = 12.sp,
+                            color = Color.Gray
+                        )
+                    }
+                }
+            }
 
-                // Comment content
+            // Comment content and actions - only show if expanded
+            if (isExpanded) {
                 if (!comment.content.isNullOrEmpty()) {
                     Text(
                         text = comment.content,
@@ -587,7 +658,6 @@ fun CommentItem(
                     )
                 }
 
-                // Actions - só mostra se o usuário pode interagir
                 if (canInteract) {
                     Row(
                         modifier = Modifier.padding(top = 8.dp),
@@ -603,31 +673,37 @@ fun CommentItem(
                             )
                         }
 
-                        TextButton(
-                            onClick = { comment.id?.let { onDelete(it) } }
-                        ) {
-                            Text(
-                                text = "Delete",
-                                fontSize = 12.sp,
-                                color = Color.Red
-                            )
+                        if (isAuthor) {
+                            TextButton(
+                                onClick = { onDelete(comment) }
+                            ) {
+                                Text(
+                                    text = "Delete",
+                                    fontSize = 12.sp,
+                                    color = Color.Red
+                                )
+                            }
                         }
                     }
                 }
 
-                // Responses
+                // Responses - only show if expanded
                 if (comment.responses.isNotEmpty()) {
                     Column(
                         modifier = Modifier
-                            .padding(start = 16.dp, top = 8.dp)
+                            .padding(top = 8.dp) // Removed start padding here, now handled by the Row's Modifier
                     ) {
                         comment.responses.forEach { response ->
                             CommentItem(
                                 comment = response,
-                                userName = userName,
+                                userName = userNames[response.user_id],
                                 onReply = onReply,
                                 onDelete = onDelete,
-                                canInteract = canInteract
+                                canInteract = canInteract,
+                                userNames = userNames,
+                                isAuthor = response.user_id == currentUserId,
+                                currentUserId = currentUserId,
+                                depth = depth + 1 // Increment depth for nested replies
                             )
                         }
                     }
@@ -1123,7 +1199,8 @@ fun CommentInputSection(
     commentText: String,
     onCommentChange: (String) -> Unit,
     onSendComment: () -> Unit,
-    replyingTo: Comments? = null
+    replyingTo: Comments? = null,
+    userNames: Map<String, String>
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -1144,7 +1221,10 @@ fun CommentInputSection(
                 onValueChange = onCommentChange,
                 placeholder = {
                     Text(
-                        text = if (replyingTo != null) "Write a reply..." else "Leave a comment",
+                        text = if (replyingTo != null) {
+                            val replyToName = userNames[replyingTo.user_id] ?: "Unknown User"
+                            "Reply to ${replyToName}..."
+                        } else "Leave a comment",
                         fontSize = 14.sp,
                         color = Color.Gray
                     )

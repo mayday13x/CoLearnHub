@@ -40,6 +40,11 @@ class CommentsRepository {
         return@withContext try {
             Log.d("CommentsRepository", "Creating comment for material: $materialId")
 
+            // If this is a reply, get the original comment to determine if it's a reply to a reply
+            val originalComment = if (responseTo != null) {
+                getCommentById(responseTo)
+            } else null
+
             val commentRequest = CreateCommentRequest(
                 user_id = userId,
                 material_id = materialId.toInt(),
@@ -70,7 +75,6 @@ class CommentsRepository {
         return@withContext try {
             Log.d("CommentsRepository", "Fetching comments for material: $materialId")
 
-            // First, get all comments for this material
             val allComments = SupabaseClient.client
                 .from("Comments")
                 .select {
@@ -80,21 +84,48 @@ class CommentsRepository {
                 }
                 .decodeList<Comments>()
 
-            // Separate top-level comments from replies
-            val topLevelComments = allComments.filter { it.response == null }
-            val replies = allComments.filter { it.response != null }
+            // Create a map to store comments by their ID, to easily find parents
+            // Initialize each comment with a mutable list for responses
+            val commentMap = allComments.associateBy { it.id!! }
+                .mapValues { (_, comment) -> comment.copy(responses = mutableListOf()) }
+                .toMutableMap()
 
-            // Build the comment tree
-            val commentsWithReplies = topLevelComments.map { comment ->
-                val commentReplies = replies.filter { reply ->
-                    reply.response == comment.id
-                }.sortedBy { it.created_at } // Sort replies by creation time
+            val topLevelComments = mutableListOf<Comments>()
 
-                comment.copy(responses = commentReplies)
-            }.sortedByDescending { it.created_at } // Sort top-level comments by creation time (newest first)
+            // Sort comments by creation date to ensure parents are processed before their children
+            val sortedComments = allComments.sortedBy { it.created_at }
 
-            Log.d("CommentsRepository", "Found ${commentsWithReplies.size} top-level comments with ${replies.size} total replies")
-            commentsWithReplies
+            // Build the hierarchy
+            for (comment in sortedComments) {
+                val currentComment = commentMap[comment.id!!]!!
+                if (comment.response == null) {
+                    // This is a top-level comment
+                    topLevelComments.add(currentComment)
+                } else {
+                    // This is a reply, find its parent
+                    val parent = commentMap[comment.response]
+                    if (parent != null) {
+                        // Add the current comment to the parent's responses list
+                        (parent.responses as MutableList).add(currentComment)
+                    } else {
+                        // If parent not found (e.g., parent was deleted), treat as top-level
+                        Log.w("CommentsRepository", "Parent comment ${comment.response} not found for reply ${comment.id}. Treating as top-level.")
+                        topLevelComments.add(currentComment)
+                    }
+                }
+            }
+
+            // Recursively sort comments and their responses by creation time (newest first)
+            fun sortCommentsRecursively(comments: List<Comments>): List<Comments> {
+                return comments.sortedByDescending { it.created_at }.map { 
+                    it.copy(responses = sortCommentsRecursively(it.responses))
+                }
+            }
+
+            val finalComments = sortCommentsRecursively(topLevelComments)
+
+            Log.d("CommentsRepository", "Found ${finalComments.size} top-level comments with nested replies")
+            finalComments
         } catch (e: Exception) {
             Log.e("CommentsRepository", "Error fetching comments: ${e.message}", e)
             emptyList()
