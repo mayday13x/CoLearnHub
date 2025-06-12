@@ -24,13 +24,42 @@ class UserRepository(private val context: Context) {
     /**
      * Salva os dados do usuário no SharedPreferences
      */
-    private fun saveUserToPrefs(user: User) {
+    private fun saveUserToPrefs(user: User, countryName: String? = null, contributions: Int? = null, averageRating: Double? = null) {
+        val userJson = json.encodeToString(User.serializer(), user)
+
+        // Preserva valores existentes se os novos não forem fornecidos
+        val currentCountryName = countryName ?: sharedPreferences.getString("country_name", null)
+        val currentContributions = contributions ?: sharedPreferences.getInt("contributions", 0)
+        val currentAverageRating = averageRating ?: sharedPreferences.getFloat("average_rating", 0f).toDouble()
+
+        sharedPreferences.edit().apply {
+            putString("user_data", userJson)
+            putBoolean("has_offline_changes", true)
+            currentCountryName?.let { putString("country_name", it) }
+            putInt("contributions", currentContributions)
+            putFloat("average_rating", currentAverageRating.toFloat())
+            apply()
+        }
+
+        Log.d("UserRepository", "Data saved to SharedPreferences:")
+        Log.d("UserRepository", "User: $userJson")
+        Log.d("UserRepository", "Country Name: $currentCountryName")
+        Log.d("UserRepository", "Contributions: $currentContributions")
+        Log.d("UserRepository", "Average Rating: $currentAverageRating")
+    }
+
+    /**
+     * Atualiza apenas os dados do usuário (preservando dados adicionais)
+     */
+    private fun saveUserOnlyToPrefs(user: User) {
         val userJson = json.encodeToString(User.serializer(), user)
         sharedPreferences.edit().apply {
             putString("user_data", userJson)
-            putBoolean("has_offline_changes", true) // Marca que há alterações offline
+            putBoolean("has_offline_changes", true)
             apply()
         }
+
+        Log.d("UserRepository", "User data updated in SharedPreferences: $userJson")
     }
 
     /**
@@ -38,6 +67,7 @@ class UserRepository(private val context: Context) {
      */
     fun getUserFromPrefs(): User? {
         val userJson = sharedPreferences.getString("user_data", null)
+        Log.d("UserRepository", "Loading user from SharedPreferences: $userJson")
         return userJson?.let {
             try {
                 json.decodeFromString(User.serializer(), it)
@@ -46,6 +76,22 @@ class UserRepository(private val context: Context) {
                 null
             }
         }
+    }
+
+    /**
+     * Recupera dados adicionais do usuário do SharedPreferences
+     */
+    fun getUserAdditionalDataFromPrefs(): Triple<String?, Int, Double> {
+        val countryName = sharedPreferences.getString("country_name", null)
+        val contributions = sharedPreferences.getInt("contributions", 0)
+        val averageRating = sharedPreferences.getFloat("average_rating", 0f).toDouble()
+
+        Log.d("UserRepository", "Loading additional data from SharedPreferences:")
+        Log.d("UserRepository", "Country Name: $countryName")
+        Log.d("UserRepository", "Contributions: $contributions")
+        Log.d("UserRepository", "Average Rating: $averageRating")
+
+        return Triple(countryName, contributions, averageRating)
     }
 
     /**
@@ -113,7 +159,6 @@ class UserRepository(private val context: Context) {
         }
     }
 
-
     /**
      * Cria um novo utilizador na base de dados
      * @param userId ID do utilizador
@@ -146,12 +191,12 @@ class UserRepository(private val context: Context) {
             SupabaseClient.client
                 .from("Users")
                 .insert(user)
-            
+
             // Salva no SharedPreferences após criar
-            saveUserToPrefs(user)
+            saveUserToPrefs(user, contributions = 0, averageRating = 0.0)
         } catch (e: Exception) {
             // Se falhar ao criar online, salva apenas localmente
-            saveUserToPrefs(user)
+            saveUserToPrefs(user, contributions = 0, averageRating = 0.0)
             throw e
         }
     }
@@ -171,7 +216,7 @@ class UserRepository(private val context: Context) {
                     }
                 }
                 .decodeSingleOrNull<User>()
-            
+
             // Se houver alterações offline, mantém as alterações locais
             if (hasOfflineChanges()) {
                 val localUser = getUserFromPrefs()
@@ -181,9 +226,9 @@ class UserRepository(private val context: Context) {
                     return localUser
                 }
             }
-            
-            // Se não houver alterações offline, salva os dados do servidor
-            user?.let { saveUserToPrefs(it) }
+
+            // Se não houver alterações offline, salva apenas os dados do usuário (preservando dados adicionais)
+            user?.let { saveUserOnlyToPrefs(it) }
             user
         } catch (e: Exception) {
             // Em caso de erro, retorna os dados locais
@@ -206,7 +251,7 @@ class UserRepository(private val context: Context) {
                     }
                 }
                 .decodeSingleOrNull<User>()
-            
+
             // Se houver alterações offline, mantém as alterações locais
             if (hasOfflineChanges()) {
                 val localUser = getUserFromPrefs()
@@ -216,9 +261,9 @@ class UserRepository(private val context: Context) {
                     return localUser
                 }
             }
-            
-            // Se não houver alterações offline, salva os dados do servidor
-            user?.let { saveUserToPrefs(it) }
+
+            // Se não houver alterações offline, salva apenas os dados do usuário (preservando dados adicionais)
+            user?.let { saveUserOnlyToPrefs(it) }
             user
         } catch (e: Exception) {
             // Em caso de erro, retorna os dados locais
@@ -238,7 +283,7 @@ class UserRepository(private val context: Context) {
                     }
                 }
                 .decodeList<User>()
-            
+
             // Se houver alterações offline para o usuário atual, mantém as alterações locais
             if (hasOfflineChanges()) {
                 val localUser = getUserFromPrefs()
@@ -248,9 +293,9 @@ class UserRepository(private val context: Context) {
                     return@withContext users.map { if (it.id == localUser.id) localUser else it }
                 }
             }
-            
-            // Se não houver alterações offline, salva os dados do servidor
-            users.find { it.id == userIds.firstOrNull() }?.let { saveUserToPrefs(it) }
+
+            // Se não houver alterações offline, salva apenas os dados do usuário (preservando dados adicionais)
+            users.find { it.id == userIds.firstOrNull() }?.let { saveUserOnlyToPrefs(it) }
             users
         } catch (e: Exception) {
             Log.e("UserRepository", "Error fetching users: ${e.message}", e)
@@ -259,7 +304,7 @@ class UserRepository(private val context: Context) {
         }
     }
 
-    suspend fun updateUser(user: User) {
+    suspend fun updateUser(user: User, countryName: String? = null, contributions: Int? = null, averageRating: Double? = null) {
         try {
             SupabaseClient.client
                 .from("Users")
@@ -268,16 +313,15 @@ class UserRepository(private val context: Context) {
                         eq("id", user.id)
                     }
                 }
-            
+
             // Salva no SharedPreferences após atualizar
-            saveUserToPrefs(user)
+            saveUserToPrefs(user, countryName, contributions, averageRating)
             markOfflineChangesSynced() // Marca como sincronizado após sucesso
         } catch (e: Exception) {
             Log.e("UserRepository", "Error updating user: ${e.message}")
             // Mesmo com erro na atualização online, salva localmente
-            saveUserToPrefs(user)
+            saveUserToPrefs(user, countryName, contributions, averageRating)
             throw e
         }
     }
-
 }

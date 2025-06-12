@@ -34,10 +34,11 @@ class UserViewModel(application: Application) : AndroidViewModel(application) {
     private val _formattedCreatedAt = MutableStateFlow<String>("Not defined")
     val formattedCreatedAt: StateFlow<String> = _formattedCreatedAt
 
-    private val _userContributions = MutableStateFlow(0)
+    // Inicializar com valores do SharedPreferences
+    private val _userContributions = MutableStateFlow(userRepository.getUserAdditionalDataFromPrefs().second)
     val userContributions: StateFlow<Int> = _userContributions
 
-    private val _averageRating = MutableStateFlow(0.0)
+    private val _averageRating = MutableStateFlow(userRepository.getUserAdditionalDataFromPrefs().third)
     val averageRating: StateFlow<Double> = _averageRating
 
     // Crud do utilizador
@@ -47,8 +48,7 @@ class UserViewModel(application: Application) : AndroidViewModel(application) {
         if (currentUser != null) {
             loadUserById(currentUser.id)
         } else {
-            // Se não houver usuário autenticado, tenta carregar do SharedPreferences
-            _user.value = userRepository.getUserFromPrefs()
+            loadUserFromPrefs()
         }
     }
 
@@ -58,28 +58,79 @@ class UserViewModel(application: Application) : AndroidViewModel(application) {
         if (currentUser != null) {
             loadUserByIdEditProfile(currentUser.id)
         } else {
-            // Se não houver usuário autenticado, tenta carregar do SharedPreferences
-            _user.value = userRepository.getUserFromPrefs()
+            loadUserFromPrefs()
+        }
+    }
+
+    private fun loadUserFromPrefs() {
+        val user = userRepository.getUserFromPrefs()
+        if (user != null) {
+            _user.value = user
+            val (countryName, contributions, avgRating) = userRepository.getUserAdditionalDataFromPrefs()
+            _countryName.value = countryName
+            _userContributions.value = contributions
+            _averageRating.value = avgRating
+
+            Log.d("UserViewModel", "Dados carregados do SharedPreferences:")
+            Log.d("UserViewModel", "User: ${user.toString()}")
+            Log.d("UserViewModel", "Country Name: $countryName")
+            Log.d("UserViewModel", "Contributions: $contributions")
+            Log.d("UserViewModel", "Average Rating: $avgRating")
         }
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
     fun loadUserById(userId: String) {
         viewModelScope.launch {
-            val user = userRepository.getUserById(userId)
-            _user.value = user
-            // Get country name when user is loaded
-            user?.country?.let { countryId ->
-                loadCountryName(countryId)
-            }
-            // Format created_at date
-            user?.created_at?.let { dateStr ->
-                formatCreatedAtDate(dateStr)
-            }
-            // Get user contributions and average rating
-            user?.id?.let { id ->
-                loadUserContributions(id)
-                loadAverageRatingForUserMaterials(id)
+            // Primeiro, carregar dados do SharedPreferences
+            loadUserFromPrefs()
+            
+            try {
+                val user = userRepository.getUserById(userId)
+                if (user != null) {
+                    _user.value = user
+                    
+                    // Get country name when user is loaded
+                    user.country.let { countryId ->
+                        try {
+                            val country = countryRepository.getCountryById(countryId)
+                            _countryName.value = country?.country
+                        } catch (e: Exception) {
+                            Log.e("UserViewModel", "Error loading country: ${e.message}")
+                        }
+                    }
+                    
+                    // Format created_at date
+                    user.created_at?.let { dateStr ->
+                        formatCreatedAtDate(dateStr)
+                    }
+                    
+                    // Get user contributions and average rating
+                    try {
+                        val contributions = ratingRepository.getUserContributions(userId)
+                        val average = ratingRepository.getAverageRatingForUserMaterials(userId)
+                        
+                        // Só atualiza se os valores forem diferentes de 0
+                        if (contributions > 0) {
+                            _userContributions.value = contributions
+                        }
+                        if (average > 0) {
+                            _averageRating.value = average
+                        }
+                        
+                        // Salvar todos os dados no SharedPreferences
+                        userRepository.updateUser(
+                            user = user,
+                            countryName = _countryName.value,
+                            contributions = _userContributions.value,
+                            averageRating = _averageRating.value
+                        )
+                    } catch (e: Exception) {
+                        Log.e("UserViewModel", "Error loading contributions/rating: ${e.message}")
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e("UserViewModel", "Error loading from server: ${e.message}")
             }
         }
     }
@@ -87,15 +138,31 @@ class UserViewModel(application: Application) : AndroidViewModel(application) {
     @RequiresApi(Build.VERSION_CODES.O)
     fun loadUserByIdEditProfile(userId: String) {
         viewModelScope.launch {
-            val user = userRepository.getUserById(userId)
-            _user.value = user
-            // Get country name when user is loaded
-            user?.country?.let { countryId ->
-                loadCountryName(countryId)
-            }
-            // Format created_at date
-            user?.created_at?.let { dateStr ->
-                formatCreatedAtDate(dateStr)
+            // Primeiro, carregar dados do SharedPreferences
+            loadUserFromPrefs()
+            
+            try {
+                val user = userRepository.getUserById(userId)
+                if (user != null) {
+                    _user.value = user
+                    
+                    // Get country name when user is loaded
+                    user.country.let { countryId ->
+                        try {
+                            val country = countryRepository.getCountryById(countryId)
+                            _countryName.value = country?.country
+                        } catch (e: Exception) {
+                            Log.e("UserViewModel", "Error loading country: ${e.message}")
+                        }
+                    }
+                    
+                    // Format created_at date
+                    user.created_at?.let { dateStr ->
+                        formatCreatedAtDate(dateStr)
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e("UserViewModel", "Error loading from server: ${e.message}")
             }
         }
     }
@@ -103,32 +170,55 @@ class UserViewModel(application: Application) : AndroidViewModel(application) {
     @RequiresApi(Build.VERSION_CODES.O)
     fun loadUserByUsername(username: String) {
         viewModelScope.launch {
-            val user = userRepository.getUserByUsername(username)
-            _user.value = user
-            // Get country name when user is loaded
-            user?.country?.let { countryId ->
-                loadCountryName(countryId)
-            }
-            // Format created_at date
-            user?.created_at?.let { dateStr ->
-                formatCreatedAtDate(dateStr)
-            }
-            // Get user contributions and average rating
-            user?.id?.let { id ->
-                loadUserContributions(id)
-                loadAverageRatingForUserMaterials(id)
-            }
-        }
-    }
-
-    private fun loadCountryName(countryId: Int) {
-        viewModelScope.launch {
+            // Primeiro, carregar dados do SharedPreferences
+            loadUserFromPrefs()
+            
             try {
-                val country = countryRepository.getCountryById(countryId)
-                _countryName.value = country?.country ?: "Not defined"
+                val user = userRepository.getUserByUsername(username)
+                if (user != null) {
+                    _user.value = user
+                    
+                    // Get country name when user is loaded
+                    user.country.let { countryId ->
+                        try {
+                            val country = countryRepository.getCountryById(countryId)
+                            _countryName.value = country?.country
+                        } catch (e: Exception) {
+                            Log.e("UserViewModel", "Error loading country: ${e.message}")
+                        }
+                    }
+                    
+                    // Format created_at date
+                    user.created_at?.let { dateStr ->
+                        formatCreatedAtDate(dateStr)
+                    }
+                    
+                    // Get user contributions and average rating
+                    try {
+                        val contributions = ratingRepository.getUserContributions(user.id)
+                        val average = ratingRepository.getAverageRatingForUserMaterials(user.id)
+                        
+                        // Só atualiza se os valores forem diferentes de 0
+                        if (contributions > 0) {
+                            _userContributions.value = contributions
+                        }
+                        if (average > 0) {
+                            _averageRating.value = average
+                        }
+                        
+                        // Salvar todos os dados no SharedPreferences
+                        userRepository.updateUser(
+                            user = user,
+                            countryName = _countryName.value,
+                            contributions = _userContributions.value,
+                            averageRating = _averageRating.value
+                        )
+                    } catch (e: Exception) {
+                        Log.e("UserViewModel", "Error loading contributions/rating: ${e.message}")
+                    }
+                }
             } catch (e: Exception) {
-                Log.e("UserViewModel", "Error loading country name: ${e.message}")
-                _countryName.value = "Not defined"
+                Log.e("UserViewModel", "Error loading from server: ${e.message}")
             }
         }
     }
@@ -143,52 +233,20 @@ class UserViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    private fun loadUserContributions(userId: String) {
-        viewModelScope.launch {
-            try {
-                val contributions = ratingRepository.getUserContributions(userId)
-                _userContributions.value = contributions
-            } catch (e: Exception) {
-                Log.e("UserViewModel", "Error loading user contributions: ${e.message}")
-                _userContributions.value = 0
-            }
-        }
-    }
-
-    private fun loadAverageRatingForUserMaterials(userId: String) {
-        viewModelScope.launch {
-            try {
-                val average = ratingRepository.getAverageRatingForUserMaterials(userId)
-                _averageRating.value = average
-            } catch (e: Exception) {
-                Log.e("UserViewModel", "Error loading average rating: ${e.message}")
-                _averageRating.value = 0.0
-            }
-        }
-    }
-
     fun updateUser(user: User) {
         viewModelScope.launch {
             try {
-                userRepository.updateUser(user)
+                userRepository.updateUser(
+                    user = user,
+                    countryName = _countryName.value,
+                    contributions = _userContributions.value,
+                    averageRating = _averageRating.value
+                )
                 _user.value = user
-                // Reload country name
-                loadCountryName(user.country)
             } catch (e: Exception) {
                 Log.e("UserViewModel", "Error updating user: ${e.message}")
-                // Mesmo com erro na atualização online, atualiza o estado local
                 _user.value = user
             }
         }
     }
-
-    //fun getUserCountry
-
-   //TODO:
- /*   fun updateUser(user: User) {
-        viewModelScope.launch {
-            UserRepository.updateUser(user)
-            _user.value = user
-        }
-    } */
 }

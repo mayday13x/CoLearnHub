@@ -269,6 +269,7 @@ class SignupViewModel(application: Application) : AndroidViewModel(application) 
     }
 
     // Step 1 - Validate and proceed
+    @RequiresApi(Build.VERSION_CODES.O)
     fun proceedToStep2() {
         if (!validateStep1()) return
 
