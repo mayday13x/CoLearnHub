@@ -12,6 +12,13 @@ import kotlinx.coroutines.withContext
 
 class MaterialsRepository {
 
+    private val ratingRepository = RatingRepository()
+
+    private suspend fun addAverageRatingToMaterial(material: Material): Material {
+        val averageRating = material.id?.let { ratingRepository.getAverageRating(it) }
+        return material.copy(average_rating = averageRating)
+    }
+
     /**
      * Cria um novo material
      */
@@ -60,8 +67,12 @@ class MaterialsRepository {
                 Log.d("MaterialsRepository", "Created ${materialTags.size} tag relationships")
             }
 
-            // Fetch the complete material with tags
-            getMaterialByIdWithTags(material.id.toString())
+            // Fetch the complete material with tags and then add average rating
+            material.id?.let { id ->
+                val materialWithTags = getMaterialByIdWithTags(id.toString())
+                materialWithTags?.let { addAverageRatingToMaterial(it) }
+            } ?: material
+
         } catch (e: Exception) {
             Log.e("MaterialsRepository", "Error creating material: ${e.message}")
             null
@@ -90,11 +101,12 @@ class MaterialsRepository {
                 Log.d("MaterialRepository", "  - Visibility: ${result.visibility}")
                 Log.d("MaterialRepository", "  - Author: ${result.author_id}")
                 Log.d("MaterialRepository", "  - Language: ${result.language}")
+                addAverageRatingToMaterial(result)
             } else {
                 Log.w("MaterialRepository", "Material $materialId não encontrado")
+                null
             }
 
-            result
         } catch (e: Exception) {
             Log.e("MaterialRepository", "Erro ao buscar material: ${e.message}")
             null
@@ -139,7 +151,8 @@ class MaterialsRepository {
                     .decodeSingleOrNull<com.example.colearnhub.modelLayer.TagData>()
             }
 
-            material.copy(tags = tagDetails)
+            val materialWithTags = material.copy(tags = tagDetails)
+            addAverageRatingToMaterial(materialWithTags)
         } catch (e: Exception) {
             Log.e("MaterialsRepository", "Error fetching material: ${e.message}")
             null
@@ -162,10 +175,10 @@ class MaterialsRepository {
 
             Log.d("MaterialRepository", "Encontrados ${materials.size} materiais públicos")
 
-            // Carregar tags para cada material
+            // Carregar tags e average rating para cada material
             materials.map { material ->
                 val tags = getTagsByMaterialId(material.id)
-                material.copy(tags = tags)
+                addAverageRatingToMaterial(material.copy(tags = tags))
             }
         } catch (e: Exception) {
             Log.e("MaterialRepository", "Erro ao buscar materiais públicos: ${e.message}")
@@ -190,10 +203,10 @@ class MaterialsRepository {
 
             Log.d("MaterialsRepository", "searchMaterialsByTitle: response size = ${materials.size}")
 
-            // Carregar tags para cada material
+            // Carregar tags e average rating para cada material
             materials.map { material ->
                 val tags = getTagsByMaterialId(material.id)
-                material.copy(tags = tags)
+                addAverageRatingToMaterial(material.copy(tags = tags))
             }
         } catch (e: Exception) {
             Log.e("MaterialsRepository", "Erro ao pesquisar materiais: ${e.message}")
@@ -237,8 +250,9 @@ class MaterialsRepository {
 
             Log.d("MaterialRepository", "Material atualizado: ${result.id}")
 
-            // Retornar o material com tags
-            getMaterialByIdWithTags(result.id.toString())
+            // Retornar o material com tags e average rating
+            result.id?.let { id -> getMaterialByIdWithTags(id.toString()) } ?: result
+
         } catch (e: Exception) {
             Log.e("MaterialRepository", "Erro ao atualizar: ${e.message}")
             null
@@ -262,10 +276,10 @@ class MaterialsRepository {
 
             Log.d("MaterialsRepository", "getMaterialsByAuthor: response size = ${materials.size}")
 
-            // Carregar tags para cada material
+            // Carregar tags e average rating para cada material
             materials.map { material ->
                 val tags = getTagsByMaterialId(material.id)
-                material.copy(tags = tags)
+                addAverageRatingToMaterial(material.copy(tags = tags))
             }
         } catch (e: Exception) {
             Log.e("MaterialsRepository", "Erro ao obter materiais por autor: ${e.message}")
@@ -310,10 +324,10 @@ class MaterialsRepository {
 
             Log.d("MaterialRepository", "Encontrados ${materials.size} materiais com a tag $tagId")
 
-            // Carregar tags para cada material
+            // Carregar tags e average rating para cada material
             materials.map { material ->
                 val tags = getTagsByMaterialId(material.id)
-                material.copy(tags = tags)
+                addAverageRatingToMaterial(material.copy(tags = tags))
             }
         } catch (e: Exception) {
             Log.e("MaterialRepository", "Erro ao buscar por tag: ${e.message}")
@@ -374,10 +388,10 @@ class MaterialsRepository {
 
             Log.d("MaterialRepository", "Encontrados ${materials.size} materiais no idioma $languageId")
 
-            // Carregar tags para cada material
+            // Carregar tags e average rating para cada material
             materials.map { material ->
                 val tags = getTagsByMaterialId(material.id)
-                material.copy(tags = tags)
+                addAverageRatingToMaterial(material.copy(tags = tags))
             }
         } catch (e: Exception) {
             Log.e("MaterialRepository", "Erro ao buscar por idioma: ${e.message}")

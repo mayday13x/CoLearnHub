@@ -570,7 +570,7 @@ fun CommentItem(
                         color = Color.Black
                     )
                     Text(
-                        text = formatTimeAgo(comment.created_at),
+                        text = formatTimeAgo(comment.created_at, LocalContext.current),
                         fontSize = 12.sp,
                         color = Color.Gray
                     )
@@ -638,8 +638,8 @@ fun CommentItem(
 }
 
 @RequiresApi(Build.VERSION_CODES.O)
-private fun formatTimeAgo(createdAt: String?): String {
-    if (createdAt == null) return "Unknown time"
+private fun formatTimeAgo(createdAt: String?, context: Context): String {
+    if (createdAt == null) return context.getString(R.string.unknown_time)
 
     try {
         val formatter = DateTimeFormatter.ISO_DATE_TIME
@@ -648,16 +648,16 @@ private fun formatTimeAgo(createdAt: String?): String {
         val duration = Duration.between(commentTime, now)
 
         return when {
-            duration.toMinutes() < 5 -> "Agora mesmo"
-            duration.toHours() < 1 -> "à ${duration.toMinutes()} min"
-            duration.toDays() < 1 -> "à ${duration.toHours()}h"
-            duration.toDays() == 1L -> "Ontem"
-            duration.toDays() < 30 -> "à ${duration.toDays()}d"
-            duration.toDays() < 365 -> "à ${duration.toDays() / 30} meses"
-            else -> "à ${duration.toDays() / 365} anos"
+            duration.toMinutes() < 5 -> context.getString(R.string.just_now)
+            duration.toHours() < 1 -> context.getString(R.string.minutes_ago, duration.toMinutes().toInt())
+            duration.toDays() < 1 -> context.getString(R.string.hours_ago, duration.toHours().toInt())
+            duration.toDays() == 1L -> context.getString(R.string.yesterday)
+            duration.toDays() < 30 -> context.getString(R.string.days_ago, duration.toDays().toInt())
+            duration.toDays() < 365 -> context.getString(R.string.months_ago, (duration.toDays() / 30).toInt())
+            else -> context.getString(R.string.years_ago, (duration.toDays() / 365).toInt())
         }
     } catch (e: Exception) {
-        return createdAt // Return the original string if parsing fails
+        return context.getString(R.string.invalid_date) // Return a generic invalid date string if parsing fails
     }
 }
 

@@ -134,13 +134,13 @@ class RatingRepository {
     /**
      * Get average rating for a material
      */
-    suspend fun getAverageRating(materialId: Long): Double = withContext(Dispatchers.IO) {
+    suspend fun getAverageRating(materialId: Long): Double? = withContext(Dispatchers.IO) {
         return@withContext try {
             Log.d("RatingRepository", "Calculando média de ratings para material: $materialId")
 
             val ratings = getMaterialRatings(materialId)
             if (ratings.isEmpty()) {
-                return@withContext 0.0
+                return@withContext null // Return null if no ratings
             }
 
             val average = ratings.mapNotNull { it.rating }.average()
@@ -148,7 +148,7 @@ class RatingRepository {
             average
         } catch (e: Exception) {
             Log.e("RatingRepository", "Erro ao calcular média de ratings: ${e.message}")
-            0.0
+            null // Return null on error
         }
     }
 

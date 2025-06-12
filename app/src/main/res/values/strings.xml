@@ -150,7 +150,7 @@
     <string name="cancel">Cancelar</string>
 
     <!-- Adicione estas strings ao seu arquivo existente -->
-    <string name="unknown_time">Desconhecido</string>
+    <string name="unknown_time">Tempo desconhecido</string>
     <string name="just_now">Agora mesmo</string>
     <string name="minutes_ago">à %d min</string>
     <string name="hours_ago">à %dh</string>
@@ -158,7 +158,6 @@
     <string name="days_ago">à %dd</string>
     <string name="months_ago">à %d meses</string>
     <string name="years_ago">à %d anos</string>
-    <string name="invalid_date_parsing">Data inválida</string>
 
     <!-- ViewModel Validation Messages -->
     <string name="email_already_registered">Este email já está registado</string>
@@ -250,6 +249,9 @@
     <string name="loading_materials">A carregar materiais...</string>
 
     <string name="material_details_title">Detalhes do Material</string>
+    <string name="highlights_title">Destaques</string>
+    <string name="others_title">Outros</string>
     <string name="no_ratings_yet">Ainda sem avaliações. Seja o primeiro a avaliar!</string>
+    <string name="no_rating_available">N/A</string>
 
 </resources>

@@ -404,7 +404,7 @@ fun MaterialsList(
             if (highlights.isNotEmpty()) {
                 item {
                     Text(
-                        text = "Highlights",
+                        text = stringResource(R.string.highlights_title),
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color(0xFF395174),
@@ -426,7 +426,7 @@ fun MaterialsList(
             if (others.isNotEmpty()) {
                 item {
                     Text(
-                        text = "Others",
+                        text = stringResource(R.string.others_title),
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color(0xFF395174),
@@ -581,11 +581,19 @@ fun MaterialCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 // Downloads (valores fictícios por enquanto)
-                StatIcon(Icons.Default.Download, "203")
-                Spacer(modifier = Modifier.width(12.dp))
+                // Removed downloads icon
+                // Spacer(modifier = Modifier.width(12.dp))
 
-                // Rating (valores fictícios por enquanto)
-                StatIcon(Icons.Default.Star, "5.0", Color(0xFFFFA500))
+                // Rating
+                if (material.average_rating != null) {
+                    StatIcon(Icons.Default.Star, String.format("%.1f", material.average_rating), Color(0xFFFFA500))
+                } else {
+                    Text(
+                        text = stringResource(R.string.no_rating_available),
+                        fontSize = 12.sp,
+                        color = Color.Gray
+                    )
+                }
                 Spacer(modifier = Modifier.width(12.dp))
 
                 // Idioma com bandeira (se disponível)

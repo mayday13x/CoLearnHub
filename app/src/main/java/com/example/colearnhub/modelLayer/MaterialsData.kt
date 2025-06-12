@@ -13,7 +13,8 @@ data class Material(
     val author_id: String? = null,
     val created_at: String? = null,
     // Adding tags list to handle many-to-many relationship
-    val tags: List<TagData>? = null
+    val tags: List<TagData>? = null,
+    val average_rating: Double? = null
 )
 
 @Serializable
