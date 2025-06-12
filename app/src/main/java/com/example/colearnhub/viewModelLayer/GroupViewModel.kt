@@ -32,6 +32,12 @@ data class GroupsUiState(
     val errorMessage: String? = null
 )
 
+data class GroupDetailsUiState(
+    val isLoading: Boolean = false,
+    val groupDetails: GroupResponse? = null,
+    val errorMessage: String? = null
+)
+
 class GroupViewModel : ViewModel() {
 
     private val groupRepository = GroupRepository()
@@ -44,6 +50,10 @@ class GroupViewModel : ViewModel() {
     // Estado para listagem de grupos
     private val _groupsUiState = MutableStateFlow(GroupsUiState())
     val groupsUiState: StateFlow<GroupsUiState> = _groupsUiState.asStateFlow()
+
+    // Estado para detalhes do grupo
+    private val _groupDetailsUiState = MutableStateFlow(GroupDetailsUiState())
+    val groupDetailsUiState: StateFlow<GroupDetailsUiState> = _groupDetailsUiState.asStateFlow()
 
     /**
      * Atualiza o nome do grupo
@@ -288,4 +298,74 @@ class GroupViewModel : ViewModel() {
     fun resetCreateGroupState() {
         _createGroupUiState.value = CreateGroupUiState()
     }
+
+    /**
+     * Carrega os detalhes de um grupo específico
+     */
+    fun loadGroupDetails(groupId: Long) {
+        viewModelScope.launch {
+            try {
+                _groupDetailsUiState.value = _groupDetailsUiState.value.copy(isLoading = true)
+
+                val groupDetails = groupRepository.getGroupDetails(groupId)
+
+                _groupDetailsUiState.value = _groupDetailsUiState.value.copy(
+                    isLoading = false,
+                    groupDetails = groupDetails
+                )
+            } catch (e: Exception) {
+                Log.e("GroupViewModel", "Erro ao carregar detalhes do grupo: ${e.message}")
+                _groupDetailsUiState.value = _groupDetailsUiState.value.copy(
+                    isLoading = false,
+                    errorMessage = "Erro ao carregar detalhes do grupo"
+                )
+            }
+        }
+    }
+
+    /**
+     * Remove um usuário de um grupo
+     */
+    fun leaveGroup(groupId: Long, onSuccess: (Boolean) -> Unit) {
+        viewModelScope.launch {
+            try {
+                val success = groupRepository.leaveGroup(groupId)
+                onSuccess(success)
+            } catch (e: Exception) {
+                Log.e("GroupViewModel", "Erro ao sair do grupo: ${e.message}")
+                _groupDetailsUiState.value = _groupDetailsUiState.value.copy(
+                    errorMessage = "Erro ao sair do grupo"
+                )
+                onSuccess(false)
+            }
+        }
+    }
+
+
+    /**
+     * Remove um usuário de um grupo (versão atualizada)
+     */
+    fun leaveGroup(groupId: Long, userId: String, onSuccess: (Boolean) -> Unit) {
+        viewModelScope.launch {
+            try {
+                // Usar o método removeGroupMember que já existe
+                val success = groupRepository.removeGroupMember(userId, groupId)
+                onSuccess(success)
+            } catch (e: Exception) {
+                Log.e("GroupViewModel", "Erro ao sair do grupo: ${e.message}")
+                _groupDetailsUiState.value = _groupDetailsUiState.value.copy(
+                    errorMessage = "Erro ao sair do grupo"
+                )
+                onSuccess(false)
+            }
+        }
+    }
+
+    /**
+     * Limpa mensagem de erro dos detalhes do grupo
+     */
+    fun clearGroupDetailsError() {
+        _groupDetailsUiState.value = _groupDetailsUiState.value.copy(errorMessage = null)
+    }
+
 }

@@ -200,4 +200,11 @@
     <!-- Copyright -->
     <string name="copyright_text">CoLearnHub @2025</string>
 
+    <!-- Grupo -->
+    <string name="group_details">Group Details</string>
+    <string name="owner">Owner</string>
+    <string name="leave">Leave</string>
+    <string name="leave_group">Leave Group</string>
+    <string name="leave_group_message">Are you sure you want to leave the group?</string>
+
 </resources>

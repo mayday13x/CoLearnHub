@@ -5,6 +5,7 @@ import android.util.Log
 import androidx.annotation.RequiresApi
 import com.example.colearnhub.modelLayer.*
 import com.example.colearnhub.modelLayer.SupabaseClient.client
+import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.postgrest.from
 import io.ktor.client.utils.EmptyContent.contentType
 import kotlinx.coroutines.Dispatchers
@@ -407,6 +408,85 @@ class GroupRepository {
         } catch (e: Exception) {
             Log.e("GroupRepository", "Erro ao remover membro: ${e.message}")
             false
+        }
+    }
+
+    suspend fun getGroupDetails(groupId: Long): GroupResponse? = withContext(Dispatchers.IO) {
+        return@withContext try {
+            Log.d("GroupRepository", "Buscando detalhes do grupo: $groupId")
+
+            val group = getGroupById(groupId)
+            if (group != null) {
+                val members = getGroupMembers(groupId)
+                GroupResponse(
+                    group = group,
+                    members = members
+                )
+            } else {
+                null
+            }
+        } catch (e: Exception) {
+            Log.e("GroupRepository", "Erro ao buscar detalhes do grupo: ${e.message}")
+            null
+        }
+    }
+
+    /**
+     * Busca informações do usuário por ID (para exibir dados do owner)
+     */
+    suspend fun getUserById(userId: String): User? = withContext(Dispatchers.IO) {
+        return@withContext try {
+            SupabaseClient.client
+                .from("Users")
+                .select {
+                    filter {
+                        eq("id", userId)
+                    }
+                }
+                .decodeSingleOrNull<User>()
+        } catch (e: Exception) {
+            Log.e("GroupRepository", "Erro ao buscar usuário: ${e.message}")
+            null
+        }
+    }
+
+    /**
+     * Remove o usuário atual do grupo (deixar grupo)
+     */
+    suspend fun leaveGroup(groupId: Long): Boolean = withContext(Dispatchers.IO) {
+        return@withContext try {
+            val currentUserId = getCurrentUserId()
+            if (currentUserId == null) {
+                Log.e("GroupRepository", "Usuário não está autenticado")
+                return@withContext false
+            }
+
+            SupabaseClient.client
+                .from("Group_Members")
+                .delete {
+                    filter {
+                        eq("user_id", currentUserId)
+                        eq("group_id", groupId)
+                    }
+                }
+
+            Log.d("GroupRepository", "Usuário $currentUserId saiu do grupo $groupId")
+            true
+        } catch (e: Exception) {
+            Log.e("GroupRepository", "Erro ao sair do grupo: ${e.message}")
+            false
+        }
+    }
+
+    /**
+     * Obtém o ID do usuário atual autenticado
+     */
+    private suspend fun getCurrentUserId(): String? = withContext(Dispatchers.IO) {
+        return@withContext try {
+            SupabaseClient.client.auth.currentUserOrNull()?.id
+        } catch (e: Exception) {
+            Log.e("GroupRepository", "Erro ao obter ID do usuário atual: ${e.message}")
+            null
         }
     }
 }
