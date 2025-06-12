@@ -1,10 +1,12 @@
 package com.example.colearnhub.ui.screen.main
 
 import android.net.Uri
+import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -17,6 +19,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
@@ -25,9 +29,12 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Upload
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
@@ -37,15 +44,16 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -63,14 +71,12 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.NavController
 import com.example.colearnhub.R
-import com.example.colearnhub.ui.utils.Circles
-import com.example.colearnhub.ui.utils.Nav
-import com.example.colearnhub.ui.utils.SBar
-import com.example.colearnhub.ui.utils.ScreenContent
+import com.example.colearnhub.modelLayer.SupabaseClient
+import com.example.colearnhub.repositoryLayer.AuthRepository
+import com.example.colearnhub.repositoryLayer.MaterialsRepository
+import com.example.colearnhub.repositoryLayer.TagRepository
 import com.example.colearnhub.ui.utils.ScreenSize
-import com.example.colearnhub.ui.utils.SearchBar
 import com.example.colearnhub.ui.utils.getFileExtension
 import com.example.colearnhub.ui.utils.getFileIcon
 import com.example.colearnhub.ui.utils.getScreenSize
@@ -79,24 +85,8 @@ import com.example.colearnhub.ui.utils.sbutton
 import com.example.colearnhub.ui.utils.spacer2
 import com.example.colearnhub.ui.utils.textFieldHeight
 import com.example.colearnhub.ui.utils.txtSize
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Checkbox
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Surface
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import io.github.jan.supabase.storage.storage
 import kotlinx.coroutines.launch
-import androidx.compose.runtime.rememberCoroutineScope
-import android.util.Log
-import androidx.compose.foundation.clickable
-import com.example.colearnhub.modelLayer.SupabaseClient
-import com.example.colearnhub.repositoryLayer.AuthRepository
-import com.example.colearnhub.repositoryLayer.MaterialsRepository
-import com.example.colearnhub.repositoryLayer.TagRepository
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 
 @Composable
 fun TopBar() {

@@ -68,7 +68,7 @@ fun MaterialDetailsScreen(
 
     val materialsRepository = remember { MaterialsRepository() }
     val commentsRepository = remember { CommentsRepository() }
-    val userRepository = remember { UserRepository() }
+    val userRepository = remember { UserRepository(context) }
     val scope = rememberCoroutineScope()
 
     var material by remember { mutableStateOf<Material?>(null) }

@@ -21,6 +21,4 @@ fun NavGraphBuilder.settingsRoutes(
             authViewModel = authViewModel
         )
     }
-
-
 }

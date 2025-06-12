@@ -159,7 +159,13 @@
     <string name="years_ago">à %d anos</string>
     <string name="invalid_date_parsing">Data inválida</string>
 
-
-
+    <string name="new_session">Nova Sessão de Estudo</string>
+    <string name="session_name">Nome da Sessão</string>
+    <string name="session_link">Link da Sessão</string>
+    <string name="date">Data</string>
+    <string name="start_time">Hora de Início</string>
+    <string name="duration">Duração</string>
+    <string name="tag">Tags</string>
+    <string name="create">Criar</string>
 
 </resources>
