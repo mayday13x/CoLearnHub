@@ -2,7 +2,9 @@
 
 package com.example.colearnhub.ui.screen.others
 
+import android.os.Build
 import androidx.activity.compose.BackHandler
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -29,17 +31,20 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -64,6 +69,12 @@ import com.example.colearnhub.ui.utils.spacer2
 import com.example.colearnhub.ui.utils.spacer3
 import com.example.colearnhub.ui.utils.textFieldHeight
 import com.example.colearnhub.ui.utils.txtSize
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.compose.runtime.collectAsState
+import com.example.colearnhub.modelLayer.User
+import com.example.colearnhub.viewmodel.UserViewModel
+import android.widget.Toast
+import androidx.compose.ui.platform.LocalContext
 
 @Composable
 fun UnsavedChangesDialog(
@@ -176,7 +187,11 @@ fun TopEditProfileBar(
 }
 
 @Composable
-fun IdentityWithEdit(modifier: Modifier = Modifier) {
+fun IdentityWithEdit(
+    modifier: Modifier = Modifier,
+    name: String,
+    username: String
+) {
     val titleFontSize = (txtSize().value + 2).sp
     val sizeValue = logoSize()
     val profileSize = sizeValue + 30.dp
@@ -230,14 +245,14 @@ fun IdentityWithEdit(modifier: Modifier = Modifier) {
         Spacer(modifier = Modifier.height(8.dp))
 
         Text(
-            text = "Miguel Silva",
+            text = name,
             fontSize = titleFontSize,
             fontWeight = FontWeight.Bold,
             color = Color.White
         )
 
         Text(
-            text = "@michelangelo",
+            text = "@$username",
             fontSize = (titleFontSize.value - 4).sp,
             color = Color.White.copy(alpha = 0.8f)
         )
@@ -249,14 +264,14 @@ fun EditName(title: String, onTitleChange: (String) -> Unit) {
     val spacer = spacer2() - 8.dp
     val textFieldHeight = textFieldHeight()
     val paddingValue = sbutton()
-    val paddingValue2 = logoSize() + 50.dp
+    val paddingValue2 = logoSize() + 48.dp
     val titleFontSize = (txtSize().value + 1).sp
 
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = paddingValue)
-            .offset(y = paddingValue2),
+            .padding(top = paddingValue + paddingValue2),
         verticalArrangement = Arrangement.spacedBy(spacer)
     ) {
         Text(
@@ -266,10 +281,19 @@ fun EditName(title: String, onTitleChange: (String) -> Unit) {
             color = Color(0xFF395174),
         )
 
-        ScrollableOutlinedTextField(
-            text = title,
-            onTextChange = onTitleChange,
-            height = textFieldHeight
+        OutlinedTextField(
+            value = title,
+            onValueChange = onTitleChange,
+            textStyle = TextStyle(
+                fontSize = titleFontSize,
+                color = Color(0xFF000000)
+            ),
+            shape = RoundedCornerShape(12.dp),
+            modifier = Modifier.fillMaxWidth(),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = Color(0xFF395174),
+                unfocusedBorderColor = Color(0xFF395174)
+            )
         )
     }
 }
@@ -279,7 +303,7 @@ fun EditUsername(title: String, onTitleChange: (String) -> Unit) {
     val spacer = spacer2() - 8.dp
     val textFieldHeight = textFieldHeight()
     val paddingValue = sbutton()
-    val paddingValue2 = logoSize() + 48.dp
+    val paddingValue2 = 8.dp
     val titleFontSize = (txtSize().value + 1).sp
 
     Column(
@@ -296,10 +320,24 @@ fun EditUsername(title: String, onTitleChange: (String) -> Unit) {
             color = Color(0xFF395174),
         )
 
-        ScrollableOutlinedTextField(
-            text = title,
-            onTextChange = onTitleChange,
-            height = textFieldHeight
+        OutlinedTextField(
+            value = title,
+            onValueChange = onTitleChange,
+            readOnly = true,
+            enabled = false,
+            textStyle = TextStyle(
+                fontSize = titleFontSize,
+                color = Color.Gray
+            ),
+            shape = RoundedCornerShape(12.dp),
+            modifier = Modifier.fillMaxWidth(),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = Color(0xFF395174),
+                unfocusedBorderColor = Color(0xFF395174),
+                disabledBorderColor = Color(0xFF395174),
+                disabledTextColor = Color.Gray,
+                disabledContainerColor = Color(0xFFF5F5F5)
+            )
         )
     }
 }
@@ -325,33 +363,40 @@ fun EditEmail(title: String, onTitleChange: (String) -> Unit) {
             color = Color(0xFF395174),
         )
 
-        ScrollableOutlinedTextField(
-            text = title,
-            onTextChange = onTitleChange,
-            height = textFieldHeight
+        OutlinedTextField(
+            value = title,
+            onValueChange = onTitleChange,
+            readOnly = true,
+            enabled = false,
+            textStyle = TextStyle(
+                fontSize = titleFontSize,
+                color = Color.Gray
+            ),
+            shape = RoundedCornerShape(12.dp),
+            modifier = Modifier.fillMaxWidth(),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = Color(0xFF395174),
+                unfocusedBorderColor = Color(0xFF395174),
+                disabledBorderColor = Color(0xFF395174),
+                disabledTextColor = Color.Gray,
+                disabledContainerColor = Color(0xFFF5F5F5)
+            )
         )
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun EditLanguage(
-    selectedLanguage: String,
-    onLanguageChange: (String) -> Unit
+fun EditCountry(
+    selectedCountry: Int,
+    onCountryChange: (Int) -> Unit
 ) {
     var isDropdownExpanded by remember { mutableStateOf(false) }
-    val languages = listOf(stringResource(R.string.ingles), stringResource(R.string.portugues))
+    val countries = listOf(
+        "🇵🇹 ${stringResource(R.string.portugal)}" to 1,
+        "🇺🇸 ${stringResource(R.string.unitedstates)}" to 2
+    )
     val titleFontSize = (txtSize().value + 1).sp
-    val titleFontSize2 = (txtSize().value + 9).sp
     val paddingValue = sbutton() - 6.dp
-
-    fun getFlagEmoji(language: String): String {
-        return when (language) {
-            "Inglês" -> "\uD83C\uDDFA\uD83C\uDDF8"  // 🇺🇸
-            "Português" -> "\uD83C\uDDF5\uD83C\uDDF9"  // 🇵🇹
-            else -> ""
-        }
-    }
 
     Column(modifier = Modifier
         .padding(horizontal = 12.dp)
@@ -371,7 +416,7 @@ fun EditLanguage(
             onExpandedChange = { isDropdownExpanded = !isDropdownExpanded }
         ) {
             OutlinedTextField(
-                value = selectedLanguage,
+                value = countries.find { it.second == selectedCountry }?.first ?: countries[0].first,
                 onValueChange = {},
                 readOnly = true,
                 textStyle = TextStyle(
@@ -387,12 +432,6 @@ fun EditLanguage(
                         expanded = isDropdownExpanded
                     )
                 },
-                leadingIcon = {
-                    Text(
-                        text = getFlagEmoji(selectedLanguage),
-                        fontSize = titleFontSize2
-                    )
-                },
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = Color(0xFF395174),
                     unfocusedBorderColor = Color(0xFF395174)
@@ -404,23 +443,19 @@ fun EditLanguage(
                 onDismissRequest = { isDropdownExpanded = false },
                 modifier = Modifier.background(Color.White)
             ) {
-                languages.forEach { language ->
+                countries.forEach { (countryName, countryId) ->
                     DropdownMenuItem(
                         text = {
-                            Row {
-                                Text(
-                                    text = getFlagEmoji(language),
-                                    fontSize = titleFontSize2,
-                                    modifier = Modifier.padding(end = 8.dp),
-                                )
-                                Text(text = language,
-                                    color = Color(0xFF000000),)
-                            }
+                            Text(
+                                text = countryName,
+                                fontSize = titleFontSize,
+                                color = Color(0xFF000000)
+                            )
                         },
                         onClick = {
-                            onLanguageChange(language)
+                            onCountryChange(countryId)
                             isDropdownExpanded = false
-                        },
+                        }
                     )
                 }
             }
@@ -436,183 +471,199 @@ fun EditDate(
     onDayChange: (String) -> Unit,
     onMonthChange: (String) -> Unit,
     onYearChange: (String) -> Unit
-){
-    var dayExpanded by remember { mutableStateOf(false) }
-    var monthExpanded by remember { mutableStateOf(false) }
-    var yearExpanded by remember { mutableStateOf(false) }
-
+) {
+    var expandedDay by remember { mutableStateOf(false) }
+    var expandedMonth by remember { mutableStateOf(false) }
+    var expandedYear by remember { mutableStateOf(false) }
     val days = (1..31).map { it.toString() }
     val months = listOf(
-        stringResource(R.string.january), stringResource(R.string.february), stringResource(R.string.march),
-        stringResource(R.string.april), stringResource(R.string.may), stringResource(R.string.june),
-        stringResource(R.string.july), stringResource(R.string.august), stringResource(R.string.september),
-        stringResource(R.string.october), stringResource(R.string.november), stringResource(R.string.december)
+        stringResource(R.string.january),
+        stringResource(R.string.february),
+        stringResource(R.string.march),
+        stringResource(R.string.april),
+        stringResource(R.string.may),
+        stringResource(R.string.june),
+        stringResource(R.string.july),
+        stringResource(R.string.august),
+        stringResource(R.string.september),
+        stringResource(R.string.october),
+        stringResource(R.string.november),
+        stringResource(R.string.december)
     )
-    val years = (1950..2010).map { it.toString() }
-
+    val years = (1950..2010).map { it.toString() }.reversed()
     val titleFontSize = (txtSize().value + 1).sp
-    Spacer(modifier = Modifier.height(24.dp))
+    val paddingValue = sbutton() - 6.dp
 
-    // Birth Date
-    Text(
-        text = stringResource(R.string.birthdate),
-        fontSize = titleFontSize,
-        fontWeight = FontWeight.Medium,
-        color = Color(0xFF395174),
-        modifier = Modifier
-            .padding(bottom = 8.dp)
-            .padding(horizontal = 12.dp)
-    )
+    Column(modifier = Modifier
+        .padding(horizontal = 12.dp)
+        .padding(top = paddingValue)) {
+        Text(
+            text = stringResource(R.string.birthdate),
+            fontSize = titleFontSize,
+            fontWeight = FontWeight.Medium,
+            color = Color(0xFF395174),
+            modifier = Modifier
+                .padding(bottom = 8.dp)
+                .padding(top = 8.dp)
+        )
 
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 12.dp),
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        // Day dropdown
-        ExposedDropdownMenuBox(
-            expanded = dayExpanded,
-            onExpandedChange = { dayExpanded = !dayExpanded },
-            modifier = Modifier.weight(0.65f)
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            OutlinedTextField(
-                value = selectedDay,
-                onValueChange = {},
-                readOnly = true,
-                trailingIcon = {
-                    Icon(
-                        imageVector = Icons.Default.KeyboardArrowDown,
-                        contentDescription = null
-                    )
-                },
-                shape = RoundedCornerShape(12.dp),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .menuAnchor(),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = Color(0xFF395174),
-                    unfocusedBorderColor = Color(0xFF395174),
-                    focusedContainerColor = Color.White,
-                    unfocusedContainerColor = Color.White
-                ),
-                textStyle = TextStyle(
-                    fontSize = 14.sp,
-                    color = Color.Black
-                )
-            )
-
-            ExposedDropdownMenu(
-                expanded = dayExpanded,
-                onDismissRequest = { dayExpanded = false },
-                modifier = Modifier.background(Color.White)
+            // Dia
+            ExposedDropdownMenuBox(
+                expanded = expandedDay,
+                onExpandedChange = { expandedDay = !expandedDay },
+                modifier = Modifier.weight(0.8f)
             ) {
-                days.forEach { day ->
-                    DropdownMenuItem(
-                        text = { Text(day, color = Color(0xFF000000)) },
-                        onClick = {
-                            onDayChange(day)
-                            dayExpanded = false
-                        }
+                OutlinedTextField(
+                    value = selectedDay,
+                    onValueChange = {},
+                    readOnly = true,
+                    textStyle = TextStyle(
+                        fontSize = titleFontSize,
+                        color = Color(0xFF000000)
+                    ),
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .menuAnchor(),
+                    trailingIcon = {
+                        ExposedDropdownMenuDefaults.TrailingIcon(
+                            expanded = expandedDay
+                        )
+                    },
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = Color(0xFF395174),
+                        unfocusedBorderColor = Color(0xFF395174)
                     )
+                )
+
+                ExposedDropdownMenu(
+                    expanded = expandedDay,
+                    onDismissRequest = { expandedDay = false },
+                    modifier = Modifier.background(Color.White)
+                ) {
+                    days.forEach { day ->
+                        DropdownMenuItem(
+                            text = {
+                                Text(
+                                    text = day,
+                                    fontSize = titleFontSize,
+                                    color = Color(0xFF000000)
+                                )
+                            },
+                            onClick = {
+                                onDayChange(day)
+                                expandedDay = false
+                            }
+                        )
+                    }
                 }
             }
-        }
 
-        // Month dropdown
-        ExposedDropdownMenuBox(
-            expanded = monthExpanded,
-            onExpandedChange = { monthExpanded = !monthExpanded },
-            modifier = Modifier.weight(1.1f)
-        ) {
-            OutlinedTextField(
-                value = selectedMonth,
-                onValueChange = {},
-                readOnly = true,
-                trailingIcon = {
-                    Icon(
-                        imageVector = Icons.Default.KeyboardArrowDown,
-                        contentDescription = null
-                    )
-                },
-                shape = RoundedCornerShape(12.dp),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .menuAnchor(),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = Color(0xFF395174),
-                    unfocusedBorderColor = Color(0xFF395174),
-                    focusedContainerColor = Color.White,
-                    unfocusedContainerColor = Color.White
-                ),
-                textStyle = TextStyle(
-                    fontSize = 14.sp,
-                    color = Color.Black
-                )
-            )
-
-            ExposedDropdownMenu(
-                expanded = monthExpanded,
-                onDismissRequest = { monthExpanded = false },
-                modifier = Modifier.background(Color.White)
+            // Mês
+            ExposedDropdownMenuBox(
+                expanded = expandedMonth,
+                onExpandedChange = { expandedMonth = !expandedMonth },
+                modifier = Modifier.weight(1.2f)
             ) {
-                months.forEach { month ->
-                    DropdownMenuItem(
-                        text = { Text(month, color = Color(0xFF000000)) },
-                        onClick = {
-                            onMonthChange(month)
-                            monthExpanded = false
-                        }
+                OutlinedTextField(
+                    value = selectedMonth,
+                    onValueChange = {},
+                    readOnly = true,
+                    textStyle = TextStyle(
+                        fontSize = titleFontSize,
+                        color = Color(0xFF000000)
+                    ),
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .menuAnchor(),
+                    trailingIcon = {
+                        ExposedDropdownMenuDefaults.TrailingIcon(
+                            expanded = expandedMonth
+                        )
+                    },
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = Color(0xFF395174),
+                        unfocusedBorderColor = Color(0xFF395174)
                     )
+                )
+
+                ExposedDropdownMenu(
+                    expanded = expandedMonth,
+                    onDismissRequest = { expandedMonth = false },
+                    modifier = Modifier.background(Color.White)
+                ) {
+                    months.forEach { month ->
+                        DropdownMenuItem(
+                            text = {
+                                Text(
+                                    text = month,
+                                    fontSize = titleFontSize,
+                                    color = Color(0xFF000000)
+                                )
+                            },
+                            onClick = {
+                                onMonthChange(month)
+                                expandedMonth = false
+                            }
+                        )
+                    }
                 }
             }
-        }
 
-        // Year dropdown
-        ExposedDropdownMenuBox(
-            expanded = yearExpanded,
-            onExpandedChange = { yearExpanded = !yearExpanded },
-            modifier = Modifier.weight(0.75f)
-        ) {
-            OutlinedTextField(
-                value = selectedYear,
-                onValueChange = {},
-                readOnly = true,
-                trailingIcon = {
-                    Icon(
-                        imageVector = Icons.Default.KeyboardArrowDown,
-                        contentDescription = null
-                    )
-                },
-                shape = RoundedCornerShape(12.dp),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .menuAnchor(),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = Color(0xFF395174),
-                    unfocusedBorderColor = Color(0xFF395174),
-                    focusedContainerColor = Color.White,
-                    unfocusedContainerColor = Color.White
-                ),
-                textStyle = TextStyle(
-                    fontSize = 14.sp,
-                    color = Color.Black
-                )
-            )
-
-            ExposedDropdownMenu(
-                expanded = yearExpanded,
-                onDismissRequest = { yearExpanded = false },
-                modifier = Modifier.background(Color.White)
+            // Ano
+            ExposedDropdownMenuBox(
+                expanded = expandedYear,
+                onExpandedChange = { expandedYear = !expandedYear },
+                modifier = Modifier.weight(1f)
             ) {
-                years.reversed().forEach { year ->
-                    DropdownMenuItem(
-                        text = { Text(year, color = Color(0xFF000000)) },
-                        onClick = {
-                            onYearChange(year)
-                            yearExpanded = false
-                        }
+                OutlinedTextField(
+                    value = selectedYear,
+                    onValueChange = {},
+                    readOnly = true,
+                    textStyle = TextStyle(
+                        fontSize = titleFontSize,
+                        color = Color(0xFF000000)
+                    ),
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .menuAnchor(),
+                    trailingIcon = {
+                        ExposedDropdownMenuDefaults.TrailingIcon(
+                            expanded = expandedYear
+                        )
+                    },
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = Color(0xFF395174),
+                        unfocusedBorderColor = Color(0xFF395174)
                     )
+                )
+
+                ExposedDropdownMenu(
+                    expanded = expandedYear,
+                    onDismissRequest = { expandedYear = false },
+                    modifier = Modifier.background(Color.White)
+                ) {
+                    years.forEach { year ->
+                        DropdownMenuItem(
+                            text = {
+                                Text(
+                                    text = year,
+                                    fontSize = titleFontSize,
+                                    color = Color(0xFF000000)
+                                )
+                            },
+                            onClick = {
+                                onYearChange(year)
+                                expandedYear = false
+                            }
+                        )
+                    }
                 }
             }
         }
@@ -630,7 +681,7 @@ fun EditSchool(title: String, onTitleChange: (String) -> Unit) {
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = paddingValue)
-            .padding(top = paddingValue + 8.dp),
+            .padding(top = paddingValue + 2.dp),
         verticalArrangement = Arrangement.spacedBy(spacer)
     ) {
         Text(
@@ -640,10 +691,19 @@ fun EditSchool(title: String, onTitleChange: (String) -> Unit) {
             color = Color(0xFF395174),
         )
 
-        ScrollableOutlinedTextField(
-            text = title,
-            onTextChange = onTitleChange,
-            height = textFieldHeight
+        OutlinedTextField(
+            value = title,
+            onValueChange = onTitleChange,
+            textStyle = TextStyle(
+                fontSize = titleFontSize,
+                color = Color(0xFF000000)
+            ),
+            shape = RoundedCornerShape(12.dp),
+            modifier = Modifier.fillMaxWidth(),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = Color(0xFF395174),
+                unfocusedBorderColor = Color(0xFF395174)
+            )
         )
     }
 }
@@ -669,18 +729,28 @@ fun EditCourse(title: String, onTitleChange: (String) -> Unit) {
             color = Color(0xFF395174),
         )
 
-        ScrollableOutlinedTextField(
-            text = title,
-            onTextChange = onTitleChange,
-            height = textFieldHeight
+        OutlinedTextField(
+            value = title,
+            onValueChange = onTitleChange,
+            textStyle = TextStyle(
+                fontSize = titleFontSize,
+                color = Color(0xFF000000)
+            ),
+            shape = RoundedCornerShape(12.dp),
+            modifier = Modifier.fillMaxWidth(),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = Color(0xFF395174),
+                unfocusedBorderColor = Color(0xFF395174)
+            )
         )
     }
 }
 
 @Composable
-fun EditCYear(title: String, onTitleChange: (String) -> Unit) {
-    val spacer = spacer2() - 8.dp
-    val textFieldHeight = textFieldHeight()
+fun SaveBtn(
+    enabled: Boolean,
+    onClick: () -> Unit
+) {
     val paddingValue = sbutton()
     val titleFontSize = (txtSize().value + 1).sp
 
@@ -688,55 +758,24 @@ fun EditCYear(title: String, onTitleChange: (String) -> Unit) {
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = paddingValue)
-            .padding(top = paddingValue + 2.dp),
-        verticalArrangement = Arrangement.spacedBy(spacer)
-    ) {
-        Text(
-            text = stringResource(R.string.curricular_year_label),
-            fontSize = titleFontSize,
-            fontWeight = FontWeight.Medium,
-            color = Color(0xFF395174),
-        )
-
-        ScrollableOutlinedTextField(
-            text = title,
-            onTextChange = onTitleChange,
-            height = textFieldHeight
-        )
-    }
-}
-
-@Composable
-fun SaveBtn(
-    enabled: Boolean
-){
-    val paddingValue = sbutton()
-    val paddingValue2 = logoSize() - 10.dp
-    val shareButtonSize = sbutton() - 8.dp
-
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = paddingValue)
-            .padding(vertical = paddingValue2)
+            .padding(top = paddingValue + 2.dp)
     ) {
         Button(
-            onClick = {},
+            onClick = onClick,
             enabled = enabled,
             modifier = Modifier
-                .fillMaxWidth(),
+                .fillMaxWidth()
+                .height(50.dp),
+            shape = RoundedCornerShape(12.dp),
             colors = ButtonDefaults.buttonColors(
                 containerColor = Color(0xFF395174),
-                disabledContainerColor = Color(0xFFB0B0B0), // cor quando desativado (ex: cinzento claro)
-                contentColor = Color.White,
-                disabledContentColor = Color.White.copy(alpha = 0.6f)
-            ),
-            shape = RoundedCornerShape(8.dp)
+                disabledContainerColor = Color(0xFF395174).copy(alpha = 0.5f)
+            )
         ) {
             Text(
                 text = stringResource(R.string.save),
-                fontSize = 16.sp,
-                modifier = Modifier.padding(vertical = shareButtonSize)
+                fontSize = titleFontSize,
+                color = Color.White
             )
         }
     }
@@ -746,7 +785,7 @@ fun SaveBtn(
 fun CleanBtn(
     enabled: Boolean,
     onClean: () -> Unit
-){
+) {
     val paddingValue = sbutton()
     val shareButtonSize = sbutton() - 8.dp
 
@@ -754,6 +793,7 @@ fun CleanBtn(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = paddingValue)
+            .padding(top = 16.dp)
     ) {
         Button(
             onClick = onClean,
@@ -762,7 +802,7 @@ fun CleanBtn(
                 .fillMaxWidth(),
             colors = ButtonDefaults.buttonColors(
                 containerColor = Color(0xFFFF0000),
-                disabledContainerColor = Color(0xFFB0B0B0), // cor quando desactivado (ex: cinzento claro)
+                disabledContainerColor = Color(0xFFB0B0B0),
                 contentColor = Color.White,
                 disabledContentColor = Color.White.copy(alpha = 0.6f)
             ),
@@ -777,19 +817,97 @@ fun CleanBtn(
     }
 }
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun IndiceEditProfile(onBack: () -> Unit){
+fun EditProfileScreen(
+    navController: NavHostController,
+    userViewModel: UserViewModel = viewModel()
+) {
+    val user by userViewModel.user.collectAsState()
+    var showSuccessDialog by remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) {
+        userViewModel.loadCurrentUserEditProfile()
+    }
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.White)
+    ){
+        Column (
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(bottom = 80.dp)
+        ){
+            Column {
+                Circles()
+            }
+            if (user == null) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(40.dp),
+                        color = Color(0xFF395174)
+                    )
+                }
+            } else {
+                IndiceEditProfile(
+                    onBack = {
+                        navController.navigate("MainScreen?selectedItem=4") {
+                            popUpTo("settings") { inclusive = true }
+                        }
+                    },
+                    user = user!!,
+                    onSave = { updatedUser ->
+                        userViewModel.updateUser(updatedUser)
+                        showSuccessDialog = true
+                    }
+                )
+            }
+        }
+    }
+
+}
+
+@Composable
+fun IndiceEditProfile(
+    onBack: () -> Unit,
+    user: User,
+    onSave: (User) -> Unit
+) {
+    // Função auxiliar para converter número do mês para nome
+    fun getMonthName(monthNumber: String): String {
+        return when(monthNumber) {
+            "01" -> "Janeiro"
+            "02" -> "Fevereiro"
+            "03" -> "Março"
+            "04" -> "Abril"
+            "05" -> "Maio"
+            "06" -> "Junho"
+            "07" -> "Julho"
+            "08" -> "Agosto"
+            "09" -> "Setembro"
+            "10" -> "Outubro"
+            "11" -> "Novembro"
+            "12" -> "Dezembro"
+            else -> ""
+        }
+    }
+
     // Valores originais (estado inicial)
-    val originalName = "Miguel Silva"
-    val originalUsername = "@michelangelo"
-    val originalEmail = "mjosea@ipvc.pt"
-    val originalSchool = "IPVC"
-    val originalCourse = "Engenharia Informática"
-    val originalYear = "2025"
-    val originalLanguage = "Inglês"
-    val originalDay = "22"
-    val originalMonth = "June"
-    val originalBirthYear = "1996"
+    var originalName by remember { mutableStateOf(user.name) }
+    var originalUsername by remember { mutableStateOf(user.username) }
+    var originalEmail by remember { mutableStateOf(user.email ?: "") }
+    var originalSchool by remember { mutableStateOf(user.school ?: "") }
+    var originalCourse by remember { mutableStateOf(user.course ?: "") }
+    var originalCountry by remember { mutableStateOf(user.country) }
+    var originalDay by remember { mutableStateOf(user.birth_date.split("-").getOrNull(2) ?: "") }
+    var originalMonth by remember { mutableStateOf(getMonthName(user.birth_date.split("-").getOrNull(1) ?: "")) }
+    var originalBirthYear by remember { mutableStateOf(user.birth_date.split("-").getOrNull(0) ?: "") }
 
     // Estados atuais
     var name by remember { mutableStateOf(originalName) }
@@ -797,8 +915,7 @@ fun IndiceEditProfile(onBack: () -> Unit){
     var email by remember { mutableStateOf(originalEmail) }
     var school by remember { mutableStateOf(originalSchool) }
     var course by remember { mutableStateOf(originalCourse) }
-    var year by remember { mutableStateOf(originalYear) }
-    var selectedLanguage by remember { mutableStateOf(originalLanguage) }
+    var country by remember { mutableStateOf(originalCountry) }
     var selectedDay by remember { mutableStateOf(originalDay) }
     var selectedMonth by remember { mutableStateOf(originalMonth) }
     var selectedBirthYear by remember { mutableStateOf(originalBirthYear) }
@@ -811,8 +928,7 @@ fun IndiceEditProfile(onBack: () -> Unit){
                     email != originalEmail ||
                     school != originalSchool ||
                     course != originalCourse ||
-                    year != originalYear ||
-                    selectedLanguage != originalLanguage ||
+                    country != originalCountry ||
                     selectedDay != originalDay ||
                     selectedMonth != originalMonth ||
                     selectedBirthYear != originalBirthYear
@@ -820,21 +936,20 @@ fun IndiceEditProfile(onBack: () -> Unit){
     }
 
     // Função para limpar os campos (voltar aos valores originais)
-    val resetFields = {
+    fun resetFields() {
         name = originalName
         username = originalUsername
         email = originalEmail
         school = originalSchool
         course = originalCourse
-        year = originalYear
-        selectedLanguage = originalLanguage
+        country = originalCountry
         selectedDay = originalDay
         selectedMonth = originalMonth
         selectedBirthYear = originalBirthYear
     }
 
-    // Estado para controlar o diálogo de alterações não salvas
     var showUnsavedDialog by remember { mutableStateOf(false) }
+    val context = LocalContext.current
 
     // Interceptar o botão de voltar do sistema
     BackHandler(enabled = hasChanges) {
@@ -857,15 +972,18 @@ fun IndiceEditProfile(onBack: () -> Unit){
     )
 
     Column{
-        // CORREÇÃO: Passar hasChanges em vez de false
         TopEditProfileBar(onBack = onBack, hasUnsavedChanges = hasChanges, onShowDialog = { showUnsavedDialog = true })
-        IdentityWithEdit(modifier = Modifier.offset(y = 30.dp))
+        IdentityWithEdit(
+            modifier = Modifier.offset(y = 30.dp),
+            name = name,
+            username = username
+        )
         EditName(name) { name = it }
         EditUsername(username) { username = it }
         EditEmail(email) { email = it }
-        EditLanguage(
-            selectedLanguage = selectedLanguage,
-            onLanguageChange = { selectedLanguage = it }
+        EditCountry(
+            selectedCountry = country,
+            onCountryChange = { country = it }
         )
         EditDate(
             selectedDay = selectedDay,
@@ -877,38 +995,64 @@ fun IndiceEditProfile(onBack: () -> Unit){
         )
         EditSchool(school) { school = it }
         EditCourse(course) { course = it }
-        EditCYear(year) { year = it }
         SaveBtn(
-            enabled = hasChanges
+            enabled = hasChanges,
+            onClick = {
+                // Criar a data de nascimento no formato correto
+                val birthDate = "$selectedBirthYear-${getMonthNumber(selectedMonth)}-$selectedDay"
+                
+                // Criar o objeto User atualizado
+                val updatedUser = user.copy(
+                    name = name,
+                    school = school,
+                    course = course,
+                    country = country,
+                    birth_date = birthDate
+                )
+                
+                // Chamar a função de salvamento
+                onSave(updatedUser)
+                
+                // Atualizar os valores originais com os novos valores
+                originalName = name
+                originalUsername = username
+                originalEmail = email
+                originalSchool = school
+                originalCourse = course
+                originalCountry = country
+                originalDay = selectedDay
+                originalMonth = selectedMonth
+                originalBirthYear = selectedBirthYear
+                
+                // Mostrar Toast de sucesso
+                Toast.makeText(
+                    context,
+                    context.getString(R.string.profile_updated_successfully),
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
         )
         CleanBtn(
             enabled = hasChanges,
-            onClean = resetFields
+            onClean = { resetFields() }
         )
     }
 }
 
-@Composable
-fun EditProfileScreen(navController: NavHostController){
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color.White)
-    ){
-        Column (
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(bottom = 80.dp)
-        ){
-            Column {
-                Circles()
-            }
-            IndiceEditProfile(onBack = {
-                navController.navigate("MainScreen?selectedItem=4") {
-                    popUpTo("settings") { inclusive = true }
-                }
-            })
-        }
+private fun getMonthNumber(month: String): String {
+    return when(month) {
+        "Janeiro" -> "01"
+        "Fevereiro" -> "02"
+        "Março" -> "03"
+        "Abril" -> "04"
+        "Maio" -> "05"
+        "Junho" -> "06"
+        "Julho" -> "07"
+        "Agosto" -> "08"
+        "Setembro" -> "09"
+        "Outubro" -> "10"
+        "Novembro" -> "11"
+        "Dezembro" -> "12"
+        else -> "01"
     }
 }

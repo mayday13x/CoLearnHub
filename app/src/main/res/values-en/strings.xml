@@ -147,6 +147,8 @@
     <string name="unsaved_changes_message">Are you sure you want to leave without saving the changes?</string>
     <string name="discard">Discard</string>
     <string name="cancel">Cancel</string>
+    <string name="profile_updated_successfully">Profile updated successfully</string>
+
 
     <!-- Adicione estas strings ao seu arquivo existente -->
     <string name="unknown_time">Unknown</string>

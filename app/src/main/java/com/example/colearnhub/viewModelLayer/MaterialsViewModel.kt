@@ -1,14 +1,15 @@
 package com.example.colearnhub.viewModelLayer
 
+import android.app.Application
 import android.util.Log
-import androidx.lifecycle.ViewModel
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.colearnhub.modelLayer.LanguageData
 import com.example.colearnhub.modelLayer.Material
 import com.example.colearnhub.repositoryLayer.UserRepository
 import com.example.colearnhub.repositoryLayer.TagRepository
 import com.example.colearnhub.repositoryLayer.LanguageRepository
-import com.example.colearnhub.repositoryLayer.User
+import com.example.colearnhub.modelLayer.User
 import com.example.colearnhub.modelLayer.TagData
 import com.example.colearnhub.repositoryLayer.MaterialsRepository
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -16,10 +17,10 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-class MaterialViewModel : ViewModel() {
+class MaterialViewModel(application: Application) : AndroidViewModel(application) {
 
     private val materialRepository = MaterialsRepository()
-    private val userRepository = UserRepository()
+    private val userRepository = UserRepository(application.applicationContext)
     private val tagRepository = TagRepository()
     private val languageRepository = LanguageRepository()
 
