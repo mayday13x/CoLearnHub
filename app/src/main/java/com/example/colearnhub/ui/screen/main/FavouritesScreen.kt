@@ -1,6 +1,7 @@
 package com.example.colearnhub.ui.screen.main
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -118,8 +119,10 @@ fun FavouritesScreen(navController: NavController) {
                 items(favorites) { material ->
                     MaterialCard(
                         material = material,
-                        onMaterialClick = {
-                            navController.navigate("material_details/${material.id}")
+                        onClick = {
+                            navController.navigate("material_details/${material.id}") {
+                                launchSingleTop = true
+                            }
                         }
                     )
                 }
@@ -131,12 +134,13 @@ fun FavouritesScreen(navController: NavController) {
 @Composable
 fun MaterialCard(
     material: Material,
-    onMaterialClick: () -> Unit
+    onClick: () -> Unit
 ) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 4.dp),
+            .padding(vertical = 4.dp)
+            .clickable(onClick = onClick),
         colors = CardDefaults.cardColors(
             containerColor = Color.White
         ),
