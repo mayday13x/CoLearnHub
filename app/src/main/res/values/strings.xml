@@ -254,4 +254,6 @@
     <string name="no_ratings_yet">Ainda sem avaliações. Seja o primeiro a avaliar!</string>
     <string name="no_rating_available">N/A</string>
 
+    <string name="favourites_title">My Favorites</string>
+
 </resources>

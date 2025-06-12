@@ -11,6 +11,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.colearnhub.ui.screen.main.FavouritesScreen
 import com.example.colearnhub.ui.screen.others.EditProfileScreen
 import com.example.colearnhub.ui.screen.settings.SettingsScreen
 import com.example.colearnhub.ui.utils.SharedPreferenceHelper
@@ -40,5 +41,7 @@ fun NavGraph() {
         settingsRoutes(navController, authViewModel)
         profileRoutes(navController)
         groupRoutes(navController)
+        favouritesRoutes(navController)
+
     }
 }

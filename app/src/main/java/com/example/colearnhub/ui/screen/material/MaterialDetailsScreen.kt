@@ -52,6 +52,7 @@ import java.time.format.DateTimeFormatterBuilder
 import java.util.*
 import com.example.colearnhub.repositoryLayer.RatingRepository
 import com.example.colearnhub.modelLayer.Rating
+import com.example.colearnhub.repositoryLayer.FavouritesRepository
 
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -93,6 +94,9 @@ fun MaterialDetailsScreen(
     var replyingTo by remember { mutableStateOf<Comments?>(null) }
     var userNames by remember { mutableStateOf<Map<String, String>>(emptyMap()) }
 
+    val favouritesRepository = remember { FavouritesRepository() }
+    var isFavourite by remember { mutableStateOf(false) }
+
     // Helper function to count all comments recursively
     fun getTotalCommentCount(commentsList: List<Comments>): Int {
         var count = 0
@@ -121,6 +125,11 @@ fun MaterialDetailsScreen(
         try {
             isLoading = true
             material = materialsRepository.getMaterialByIdWithTags(materialId)
+
+            // Check if material is in favorites
+            currentUserId?.let { userId ->
+                isFavourite = favouritesRepository.isFavourite(userId, materialId.toLong())
+            }
 
             // Fetch author name
             material?.author_id?.let { authorId ->
@@ -248,7 +257,22 @@ fun MaterialDetailsScreen(
                         val activityContext = LocalContext.current
                         ActionButtonsSection(
                             material = material,
-                            context = activityContext
+                            context = activityContext,
+                            isFavourite = isFavourite,
+                            onFavouriteClick = {
+                                scope.launch {
+                                    if (currentUserId != null) {
+                                        if (isFavourite) {
+                                            favouritesRepository.removeFromFavourites(currentUserId, materialId.toLong())
+                                        } else {
+                                            favouritesRepository.addToFavourites(currentUserId, materialId.toLong())
+                                        }
+                                        isFavourite = !isFavourite
+                                    } else {
+                                        Toast.makeText(context, "You must be logged in to add favorites", Toast.LENGTH_SHORT).show()
+                                    }
+                                }
+                            }
                         )
                     }
 
@@ -1052,7 +1076,9 @@ fun RatingDialog(
 @Composable
 fun ActionButtonsSection(
     material: Material,
-    context: Context
+    context: Context,
+    isFavourite: Boolean = false,
+    onFavouriteClick: () -> Unit = {}
 ) {
     Column(
         modifier = Modifier.fillMaxWidth(),
@@ -1060,23 +1086,24 @@ fun ActionButtonsSection(
     ) {
         // Add to Favourites Button
         OutlinedButton(
-            onClick = { },
+            onClick = onFavouriteClick,
             modifier = Modifier
                 .fillMaxWidth()
                 .height(48.dp),
             shape = RoundedCornerShape(8.dp),
             colors = ButtonDefaults.outlinedButtonColors(
-                contentColor = Color(0xFF395174)
+                contentColor = if (isFavourite) Color.Red else Color(0xFF395174)
             )
         ) {
             Icon(
                 imageVector = Icons.Default.Favorite,
                 contentDescription = null,
-                modifier = Modifier.size(20.dp)
+                modifier = Modifier.size(20.dp),
+                tint = if (isFavourite) Color.Red else Color(0xFF395174)
             )
             Spacer(modifier = Modifier.width(8.dp))
             Text(
-                text = "Add to Favourites",
+                text = if (isFavourite) "Remove from Favourites" else "Add to Favourites",
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Medium
             )

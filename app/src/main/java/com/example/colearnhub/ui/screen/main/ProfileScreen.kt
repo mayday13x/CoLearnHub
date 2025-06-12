@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Star
@@ -69,7 +70,7 @@ import java.time.format.FormatStyle
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TopBar2(onSettingsClick: () -> Unit) {
+fun TopBar2(onSettingsClick: () -> Unit, onFavouritesClick: () -> Unit) {
     val logoSize = logoSize()
     val titleFontSize = titleFontSize()
     val paddingValue = logoSize() - 10.dp
@@ -103,6 +104,17 @@ fun TopBar2(onSettingsClick: () -> Unit) {
                 }
 
                 Spacer(modifier = Modifier.weight(1f))
+
+                IconButton(
+                    onClick = onFavouritesClick,
+                    modifier = Modifier.padding(end = 8.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Favorite,
+                        contentDescription = "Favorites",
+                        tint = Color.White
+                    )
+                }
 
                 IconButton(onClick = onSettingsClick) {
                     Icon(
@@ -461,6 +473,12 @@ fun Indice5(navController: NavController? = null,
     TopBar2(
         onSettingsClick = {
             navController?.navigate("settings")
+        },
+        onFavouritesClick = {
+            navController?.navigate("favourites") {
+                launchSingleTop = true
+                restoreState = true
+            }
         }
     )
     Identity(modifier = Modifier.offset(y = (-60).dp)
