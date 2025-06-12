@@ -133,6 +133,8 @@
     <string name="no_group">Não está num grupo ainda!</string>
     <string name="invitation">Aceita um convite ou cria um novo grupo.</string>
     <string name="new_group">Novo Grupo</string>
+    <string name="no_group_yet">Você não faz parte de nenhum grupo ainda.</string>
+    <string name="create_a_new_one">Crie um novo grupo para começar!</string>
     <string name="settings">Definições</string>
     <string name="change_password">Alterar Palavra-passe</string>
     <string name="change_email">Alterar Email</string>

@@ -39,5 +39,6 @@ fun NavGraph() {
         mainRoutes(navController)
         settingsRoutes(navController, authViewModel)
         profileRoutes(navController)
+        groupRoutes(navController)
     }
 }

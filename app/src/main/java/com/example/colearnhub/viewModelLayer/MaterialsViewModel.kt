@@ -1,6 +1,8 @@
 package com.example.colearnhub.viewModelLayer
 
+import android.os.Build
 import android.util.Log
+import androidx.annotation.RequiresApi
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.colearnhub.modelLayer.LanguageData
@@ -15,7 +17,10 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import java.time.LocalDateTime
+import java.time.format.DateTimeParseException
 
+@RequiresApi(Build.VERSION_CODES.O)
 class MaterialViewModel : ViewModel() {
 
     private val materialRepository = MaterialsRepository()
@@ -51,14 +56,29 @@ class MaterialViewModel : ViewModel() {
     private val _languagesCache = MutableStateFlow<Map<Long, LanguageData>>(emptyMap())
     val languagesCache: StateFlow<Map<Long, LanguageData>> = _languagesCache.asStateFlow()
 
+    // Filtros
+    private val _allTags = MutableStateFlow<List<TagData>>(emptyList())
+    val allTags: StateFlow<List<TagData>> = _allTags.asStateFlow()
+
+    private val _selectedFilterTags = MutableStateFlow<List<TagData>>(emptyList())
+    val selectedFilterTags: StateFlow<List<TagData>> = _selectedFilterTags.asStateFlow()
+
+    private val _selectedFilterFileTypes = MutableStateFlow<List<String>>(emptyList())
+    val selectedFilterFileTypes: StateFlow<List<String>> = _selectedFilterFileTypes.asStateFlow()
+
+    private val _currentSearchQuery = MutableStateFlow("")
+    private val _currentFilterTime = MutableStateFlow<String?>(null)
+
     init {
         // Carregar dados iniciais
+        loadAllTags()
         loadPublicMaterials()
     }
 
     /**
      * Cria um novo material
      */
+    @RequiresApi(Build.VERSION_CODES.O)
     fun createMaterial(
         title: String,
         description: String? = null,
@@ -129,67 +149,44 @@ class MaterialViewModel : ViewModel() {
     /**
      * Carrega todos os materiais públicos
      */
+    @RequiresApi(Build.VERSION_CODES.O)
     fun loadPublicMaterials() {
         viewModelScope.launch {
-            _isLoading.value = true
-            _errorMessage.value = null
-
-            val result = materialRepository.getPublicMaterials()
-            _materials.value = result
-
-            // Carregar informações dos autores, tags e languages
-            loadAuthorsInfo(result)
-            loadTagsInfo(result)
-            loadLanguagesInfo(result)
-
-            _isLoading.value = false
+            _currentSearchQuery.value = "" // Reset search query
+            _currentFilterTime.value = null // Reset time filter
+            _selectedFilterTags.value = emptyList() // Reset tag filter
+            _selectedFilterFileTypes.value = emptyList() // Reset file type filter
+            applyAllFilters() // Aplica todos os filtros (sem filtros iniciais = todos os públicos)
         }
     }
 
     /**
      * Carrega materiais por autor
      */
+    @RequiresApi(Build.VERSION_CODES.O)
     fun loadMaterialsByAuthor(author_id: String) {
         viewModelScope.launch {
-            Log.d("MaterialViewModel", "loadMaterialsByAuthor: userId = $author_id")
-            _isLoading.value = true
-            _errorMessage.value = null
-
-            val result = materialRepository.getMaterialsByAuthor(author_id)
-            _userMaterials.value = result
-
-            // Carregar info do autor, tags e languages
-            loadAuthorsInfo(result)
-            loadTagsInfo(result)
-            loadLanguagesInfo(result)
-
-            _isLoading.value = false
+            _currentSearchQuery.value = "" // Reset search query
+            _currentFilterTime.value = null // Reset time filter
+            _selectedFilterTags.value = emptyList() // Reset tag filter
+            _selectedFilterFileTypes.value = emptyList() // Reset file type filter
+            applyAllFilters(author_id) // Aplica todos os filtros para o autor específico
         }
     }
 
     /**
      * Pesquisa materiais por título
      */
+    @RequiresApi(Build.VERSION_CODES.O)
     fun searchMaterials(query: String) {
-        viewModelScope.launch {
-            _isLoading.value = true
-            _errorMessage.value = null
-
-            val result = materialRepository.searchMaterialsByTitle(query)
-            _materials.value = result
-
-            // Carregar informações dos autores, tags e languages
-            loadAuthorsInfo(result)
-            loadTagsInfo(result)
-            loadLanguagesInfo(result)
-
-            _isLoading.value = false
-        }
+        _currentSearchQuery.value = query
+        applyAllFilters()
     }
 
     /**
      * Atualiza um material
      */
+    @RequiresApi(Build.VERSION_CODES.O)
     fun updateMaterial(
         materialId: Long,
         title: String? = null,
@@ -417,5 +414,160 @@ class MaterialViewModel : ViewModel() {
 
     fun getOtherMaterials(): List<Material> {
         return _materials.value.drop(2) // Resto como others
+    }
+
+    /**
+     * Filtra materiais por período de tempo.
+     */
+    @RequiresApi(Build.VERSION_CODES.O)
+    fun filterMaterialsByTime(timeFilter: String?) {
+        _currentFilterTime.value = timeFilter
+        applyAllFilters()
+    }
+
+    /**
+     * Carrega todas as tags disponíveis.
+     */
+    fun loadAllTags() {
+        viewModelScope.launch {
+            _isLoading.value = true
+            try {
+                _allTags.value = tagRepository.getAllTags()
+            } catch (e: Exception) {
+                _errorMessage.value = "Error loading tags: ${e.message}"
+                Log.e("MaterialViewModel", "Error loading tags", e)
+            }
+            _isLoading.value = false
+        }
+    }
+
+    /**
+     * Alterna o estado de seleção de uma tag para filtro.
+     */
+    @RequiresApi(Build.VERSION_CODES.O)
+    fun toggleTagFilter(tag: TagData) {
+        val currentSelected = _selectedFilterTags.value.toMutableList()
+        if (currentSelected.contains(tag)) {
+            currentSelected.remove(tag)
+        } else {
+            currentSelected.add(tag)
+        }
+        _selectedFilterTags.value = currentSelected
+        applyAllFilters()
+    }
+
+    /**
+     * Limpa todas as tags selecionadas.
+     */
+    @RequiresApi(Build.VERSION_CODES.O)
+    fun clearTagFilter() {
+        _selectedFilterTags.value = emptyList()
+        applyAllFilters()
+    }
+
+    /**
+     * Alterna o estado de seleção de um tipo de arquivo para filtro.
+     */
+    @RequiresApi(Build.VERSION_CODES.O)
+    fun toggleFileTypeFilter(fileType: String) {
+        val currentSelected = _selectedFilterFileTypes.value.toMutableList()
+        if (currentSelected.contains(fileType)) {
+            currentSelected.remove(fileType)
+        } else {
+            currentSelected.add(fileType)
+        }
+        _selectedFilterFileTypes.value = currentSelected
+        applyAllFilters()
+    }
+
+    /**
+     * Redefine todos os filtros.
+     */
+    @RequiresApi(Build.VERSION_CODES.O)
+    fun resetAllFilters() {
+        _currentSearchQuery.value = ""
+        _currentFilterTime.value = null
+        _selectedFilterTags.value = emptyList()
+        _selectedFilterFileTypes.value = emptyList()
+        loadPublicMaterials() // Recarrega tudo sem filtros
+    }
+
+    /**
+     * Aplica todos os filtros combinados.
+     */
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun applyAllFilters(authorId: String? = null) {
+        viewModelScope.launch {
+            _isLoading.value = true
+            _errorMessage.value = null
+
+            var filteredMaterials = if (authorId != null) {
+                materialRepository.getMaterialsByAuthor(authorId)
+            } else {
+                materialRepository.getPublicMaterials()
+            }
+
+            // Aplicar filtro de pesquisa por texto
+            if (_currentSearchQuery.value.isNotBlank()) {
+                filteredMaterials = filteredMaterials.filter {
+                    it.title.contains(_currentSearchQuery.value, ignoreCase = true) ||
+                            it.description?.contains(_currentSearchQuery.value, ignoreCase = true) == true
+                }
+            }
+
+            // Aplicar filtro de tempo
+            _currentFilterTime.value?.let { timeFilter ->
+                if (timeFilter != "all") {
+                    val now = LocalDateTime.now()
+                    filteredMaterials = filteredMaterials.filter { material ->
+                        material.created_at?.let { createdAtString ->
+                            try {
+                                val createdAt = LocalDateTime.parse(createdAtString.substringBefore("."))
+                                when (timeFilter) {
+                                    "24h" -> createdAt.isAfter(now.minusHours(24))
+                                    "week" -> createdAt.isAfter(now.minusWeeks(1))
+                                    "month" -> createdAt.isAfter(now.minusMonths(1))
+                                    "year" -> createdAt.isAfter(now.minusYears(1))
+                                    else -> false
+                                }
+                            } catch (e: DateTimeParseException) {
+                                Log.e("MaterialViewModel", "Error parsing date in applyAllFilters: $createdAtString", e)
+                                false
+                            }
+                        } ?: false
+                    }
+                }
+            }
+
+            // Aplicar filtro de tags
+            if (_selectedFilterTags.value.isNotEmpty()) {
+                filteredMaterials = filteredMaterials.filter { material ->
+                    material.tags?.any { tag -> _selectedFilterTags.value.contains(tag) } == true
+                }
+            }
+
+            // Aplicar filtro de tipo de arquivo
+            if (_selectedFilterFileTypes.value.isNotEmpty()) {
+                filteredMaterials = filteredMaterials.filter { material ->
+                    material.file_url?.let { fileUrl ->
+                        val extension = fileUrl.substringAfterLast(".", "").lowercase()
+                        _selectedFilterFileTypes.value.contains(extension)
+                    } ?: false
+                }
+            }
+
+            if (authorId != null) {
+                _userMaterials.value = filteredMaterials
+            } else {
+                _materials.value = filteredMaterials
+            }
+
+            // Carregar informações dos autores, tags e languages para os materiais filtrados
+            loadAuthorsInfo(filteredMaterials)
+            loadTagsInfo(filteredMaterials)
+            loadLanguagesInfo(filteredMaterials)
+
+            _isLoading.value = false
+        }
     }
 }

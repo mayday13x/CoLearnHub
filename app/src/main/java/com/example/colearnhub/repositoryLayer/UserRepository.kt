@@ -105,7 +105,7 @@ class UserRepository {
                 .select {
                     filter {
                         eq("id", userId)
-                    }
+                }
                 }
                 .decodeSingleOrNull<User>()
         } catch (e: Exception) {
@@ -133,6 +133,21 @@ class UserRepository {
         }
     }
 
+    /**
+     * Obtém todos os utilizadores da base de dados
+     * @return Lista de todos os utilizadores
+     */
+    suspend fun getAllUsers(): List<User> = withContext(Dispatchers.IO) {
+        return@withContext try {
+            SupabaseClient.client
+                .from("Users")
+                .select()
+                .decodeList<User>()
+        } catch (e: Exception) {
+            Log.e("UserRepository", "Erro ao buscar todos os utilizadores: ${e.message}")
+            emptyList()
+        }
+    }
     suspend fun getUsersByIds(userIds: List<String>): List<User> = withContext(Dispatchers.IO) {
         try {
             if (userIds.isEmpty()) return@withContext emptyList()

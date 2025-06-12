@@ -1,6 +1,9 @@
 package com.example.colearnhub.ui.screen.main
 
+import android.os.Build
 import android.util.Log
+import androidx.annotation.RequiresApi
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -21,30 +24,44 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -57,22 +74,26 @@ import com.airbnb.lottie.compose.LottieConstants
 import com.airbnb.lottie.compose.rememberLottieComposition
 import com.example.colearnhub.R
 import com.example.colearnhub.modelLayer.Material
+import com.example.colearnhub.ui.components.TagFilterSection
 import com.example.colearnhub.ui.utils.Circles
 import com.example.colearnhub.ui.utils.DateTimeUtils
 import com.example.colearnhub.ui.utils.Nav
 import com.example.colearnhub.ui.utils.SBar
 import com.example.colearnhub.ui.utils.ScreenContent
 import com.example.colearnhub.ui.utils.SearchBar
+import com.example.colearnhub.ui.utils.ScreenSize
 import com.example.colearnhub.ui.utils.animation
 import com.example.colearnhub.ui.utils.btnHeight
 import com.example.colearnhub.ui.utils.dynamicPadding
 import com.example.colearnhub.ui.utils.dynamicWidth
+import com.example.colearnhub.ui.utils.getScreenSize
 import com.example.colearnhub.ui.utils.txtSize
 import com.example.colearnhub.ui.utils.verticalSpacing
 import com.example.colearnhub.viewModelLayer.AuthViewModelFactory
 import com.example.colearnhub.viewModelLayer.MaterialViewModel
 import com.example.colearnhub.viewmodel.AuthViewModel
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun Indice(
     navController: NavController,
@@ -118,6 +139,9 @@ fun Indice(
             } else {
                 Log.e("IndiceScreen", "currentUserId é null ou vazio!")
             }
+        } else if (selectedTab == 0) {
+            // Recarregar materiais públicos sempre que a aba All for selecionada
+            materialViewModel.loadPublicMaterials()
         }
     }
 
@@ -126,6 +150,8 @@ fun Indice(
             .fillMaxSize()
             .padding(20.dp)
     ) {
+        SearchBar(materialViewModel = materialViewModel)
+
         Spacer(modifier = Modifier.height(verticalSpacing))
 
         // Botão Share - posicionado no topo quando há dados
@@ -666,9 +692,6 @@ fun MainScreen(navController: NavController, initialSelectedItem: Int = 0) {
         Column(
             modifier = Modifier.fillMaxSize()
         ) {
-            if(selectedItem == 0){
-                SearchBar()
-            }
             if(selectedItem == 1) {
                 SBar(title = stringResource(R.string.study_session))
             }
@@ -686,6 +709,288 @@ fun MainScreen(navController: NavController, initialSelectedItem: Int = 0) {
                 },
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
+            )
+        }
+    }
+}
+
+@RequiresApi(Build.VERSION_CODES.O)
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun SearchBar(
+    materialViewModel: MaterialViewModel = viewModel()
+) {
+    val screenSize = getScreenSize()
+    val padding = dynamicPadding()
+    val logoSize = when (screenSize) {
+        ScreenSize.SMALL -> 40.dp
+        ScreenSize.MEDIUM -> 50.dp
+        ScreenSize.LARGE -> 60.dp
+    }
+    val titleFontSize = when (screenSize) {
+        ScreenSize.SMALL -> 10.sp
+        ScreenSize.MEDIUM -> 14.sp
+        ScreenSize.LARGE -> 18.sp
+    }
+    val verticalSpacing = when (screenSize) {
+        ScreenSize.SMALL -> 27.dp
+        ScreenSize.MEDIUM -> 35.dp
+        ScreenSize.LARGE -> 47.dp
+    }
+
+    var searchQuery by remember { mutableStateOf("") }
+    var showFilterOptions by remember { mutableStateOf(false) }
+    var showTagFilter by remember { mutableStateOf(false) }
+    var selectedFilterTime by remember { mutableStateOf<String?>(null) }
+
+    // Estados do ViewModel
+    val allTags by materialViewModel.allTags.collectAsState()
+    val selectedTags by materialViewModel.selectedFilterTags.collectAsState()
+
+    Column(
+        modifier = Modifier
+            .padding(padding),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Image(
+            painter = painterResource(id = R.drawable.cubewhite),
+            contentDescription = "Logo",
+            modifier = Modifier.size(logoSize)
+        )
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 5.dp),
+            horizontalArrangement = Arrangement.Center
+        ) {
+            Box {
+                Text(
+                    text = "COLEARNHUB",
+                    fontSize = titleFontSize,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White,
+                    style = TextStyle(
+                        drawStyle = Stroke(width = 2f)
+                    )
+                )
+            }
+        }
+        Spacer(Modifier.height(verticalSpacing))
+        OutlinedTextField(
+            value = searchQuery,
+            onValueChange = {
+                searchQuery = it
+                Log.d("SearchBar", "Search query changed: $it")
+                materialViewModel.searchMaterials(it)
+            },
+            leadingIcon = { Icon(Icons.Default.Search, contentDescription = "Search") },
+            trailingIcon = {
+                IconButton(onClick = {
+                    showFilterOptions = !showFilterOptions
+                    Log.d("SearchBar", "Filter button clicked. showFilterOptions: $showFilterOptions")
+                }) {
+                    Icon(Icons.Default.FilterList, contentDescription = "Filter")
+                }
+            },
+            placeholder = { Text(stringResource(R.string.Search), color = Color.Gray) },
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(Color.White, RoundedCornerShape(10.dp)),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = Color.Transparent,
+                unfocusedBorderColor = Color.Transparent,
+                focusedContainerColor = Color.White,
+                unfocusedContainerColor = Color.White,
+                cursorColor = Color.Black
+            ),
+            singleLine = true
+        )
+
+        // Filter options dropdown
+        if (showFilterOptions) {
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Botões de filtro
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 4.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                // Botão Time Filter
+                Button(
+                    onClick = {
+                        showTagFilter = false
+                        // Manter a lógica do filtro de tempo existente
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = if (!showTagFilter) Color(0xFF395174) else Color.LightGray
+                    ),
+                    shape = RoundedCornerShape(8.dp),
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text(
+                        "Time Filter",
+                        color = if (!showTagFilter) Color.White else Color.Black,
+                        fontSize = 12.sp
+                    )
+                }
+
+                // Botão Tag Filter
+                Button(
+                    onClick = {
+                        showTagFilter = true
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = if (showTagFilter) Color(0xFF395174) else Color.LightGray
+                    ),
+                    shape = RoundedCornerShape(8.dp),
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text(
+                        "Area Filter",
+                        color = if (showTagFilter) Color.White else Color.Black,
+                        fontSize = 12.sp
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            if (showTagFilter) {
+                // Tag Filter Section
+                TagFilterSection(
+                    availableTags = allTags,
+                    selectedTags = selectedTags,
+                    onTagToggle = { tag ->
+                        materialViewModel.toggleTagFilter(tag)
+                    },
+                    onClearAll = {
+                        materialViewModel.clearTagFilter()
+                    }
+                )
+            } else {
+                // Time Filter Section (código existente)
+                val filterOptions = listOf(
+                    "Last 24 hours" to "24h",
+                    "Last week" to "week",
+                    "Last month" to "month",
+                    "Last year" to "year",
+                    "All time" to "all"
+                )
+                val selectedOptionText = filterOptions.find { it.second == selectedFilterTime }?.first ?: "Select a filter"
+
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(Color.White, RoundedCornerShape(10.dp))
+                        .border(1.dp, Color.LightGray, RoundedCornerShape(10.dp))
+                        .padding(16.dp)
+                ) {
+                    Text(
+                        text = "Filter by Time",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 16.sp,
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
+
+                    ExposedDropdownMenuBox(
+                        expanded = false,
+                        onExpandedChange = { }
+                    ) {
+                        OutlinedTextField(
+                            modifier = Modifier
+                                .menuAnchor()
+                                .fillMaxWidth(),
+                            readOnly = true,
+                            value = selectedOptionText,
+                            onValueChange = { },
+                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = false) },
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = Color.Transparent,
+                                unfocusedBorderColor = Color.Transparent,
+                                focusedContainerColor = Color.Transparent,
+                                unfocusedContainerColor = Color.Transparent,
+                                cursorColor = Color.Black
+                            )
+                        )
+                        ExposedDropdownMenu(
+                            expanded = showFilterOptions && !showTagFilter,
+                            onDismissRequest = { showFilterOptions = false }
+                        ) {
+                            filterOptions.forEach { (label, value) ->
+                                DropdownMenuItem(
+                                    text = { Text(label) },
+                                    onClick = {
+                                        selectedFilterTime = value
+                                        showFilterOptions = false
+                                    }
+                                )
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceAround
+                    ) {
+                        Button(
+                            onClick = {
+                                materialViewModel.filterMaterialsByTime(selectedFilterTime)
+                                showFilterOptions = false
+                            },
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF395174)),
+                            shape = RoundedCornerShape(8.dp),
+                            modifier = Modifier.weight(1f).padding(end = 4.dp)
+                        ) {
+                            Text("Apply Filter", color = Color.White)
+                        }
+
+                        Button(
+                            onClick = {
+                                selectedFilterTime = null
+                                materialViewModel.filterMaterialsByTime(null)
+                                showFilterOptions = false
+                                searchQuery = ""
+                                materialViewModel.loadPublicMaterials()
+                            },
+                            colors = ButtonDefaults.buttonColors(containerColor = Color.LightGray),
+                            shape = RoundedCornerShape(8.dp),
+                            modifier = Modifier.weight(1f).padding(start = 4.dp)
+                        ) {
+                            Text("Reset Filter", color = Color.Black)
+                        }
+                    }
+                }
+            }
+
+            // Botão para fechar filtros
+            Spacer(modifier = Modifier.height(8.dp))
+            Button(
+                onClick = {
+                    showFilterOptions = false
+                    showTagFilter = false
+                },
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF6B7280)),
+                shape = RoundedCornerShape(8.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Close Filters", color = Color.White)
+            }
+        }
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 8.dp),
+            horizontalArrangement = Arrangement.Center
+        ) {
+            Text(
+                stringResource(R.string.Knowledge),
+                color = Color.White,
+                fontWeight = FontWeight.Bold
             )
         }
     }

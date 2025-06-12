@@ -1,5 +1,7 @@
 package com.example.colearnhub.ui.utils
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -371,6 +373,7 @@ fun Nav(
     }
 }
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun ScreenContent(selectedItem: Int, navController: NavController) {
     when (selectedItem) {
@@ -380,7 +383,9 @@ fun ScreenContent(selectedItem: Int, navController: NavController) {
         )
         1 -> Indice2()
         2 -> Indice4()
-        3 -> Indice3()
+        3 -> Indice3(
+            navController
+        )
         4 -> Indice5(navController)
     }
 }
