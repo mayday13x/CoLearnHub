@@ -25,55 +25,45 @@ class MaterialsRepository {
         tagIds: List<Long>? = null
     ): Material? = withContext(Dispatchers.IO) {
         return@withContext try {
-            Log.d("MaterialRepository", "=== A criar material ===")
-            Log.d("MaterialRepository", "Title: '$title'")
-            Log.d("MaterialRepository", "Author ID: $author_id")
-            Log.d("MaterialRepository", "Visibility: $visibility")
-            Log.d("MaterialRepository", "Language ID: $language")
-            Log.d("MaterialRepository", "Tag IDs: $tagIds")
-
-            // Criar o material primeiro
-            val materialData = CreateMaterialRequest(
-                title = title,
-                description = description,
-                file_url = file_url,
-                visibility = visibility,
-                language = language,
-                author_id = author_id,
-                tag_ids = tagIds
-            )
-
-            val result = SupabaseClient.client
+            Log.d("MaterialsRepository", "Creating material with title: $title")
+            
+            // First create the material
+            val material = SupabaseClient.client
                 .from("Materials")
-                .insert(materialData) {
+                .insert(CreateMaterialRequest(
+                    title = title,
+                    description = description,
+                    file_url = file_url,
+                    visibility = visibility,
+                    language = language,
+                    author_id = author_id
+                )) {
                     select()
                 }
                 .decodeSingle<Material>()
 
-            // Se temos tags, criar as relações na tabela Material_Tag
-            if (tagIds != null && tagIds.isNotEmpty()) {
-                tagIds.forEach { tagId ->
-                    try {
-                        SupabaseClient.client
-                            .from("Material_Tag")
-                            .insert(mapOf(
-                                "material_id" to result.id,
-                                "tag_id" to tagId
-                            ))
-                        Log.d("MaterialRepository", "Tag $tagId associada ao material ${result.id}")
-                    } catch (e: Exception) {
-                        Log.e("MaterialRepository", "Erro ao associar tag $tagId: ${e.message}")
-                    }
+            // If we have tags, create the Material_Tag relationships
+            if (!tagIds.isNullOrEmpty()) {
+                Log.d("MaterialsRepository", "Creating tag relationships for material ${material.id}")
+                
+                val materialTags = tagIds.map { tagId ->
+                    MaterialTag(
+                        tag_id = tagId,
+                        material_id = material.id
+                    )
                 }
+
+                SupabaseClient.client
+                    .from("Material_Tag")
+                    .insert(materialTags)
+
+                Log.d("MaterialsRepository", "Created ${materialTags.size} tag relationships")
             }
 
-            Log.d("MaterialRepository", "Material criado com sucesso: ID ${result.id}")
-
-            // Retornar o material com as tags carregadas
-            getMaterialByIdWithTags(result.id)
+            // Fetch the complete material with tags
+            getMaterialByIdWithTags(material.id.toString())
         } catch (e: Exception) {
-            Log.e("MaterialRepository", "Erro ao criar material: ${e.message}")
-            e.printStackTrace()
+            Log.e("MaterialsRepository", "Error creating material: ${e.message}")
             null
         }
     }
@@ -114,14 +104,44 @@ class MaterialsRepository {
     /**
      * Busca um material por ID com suas tags
      */
-    suspend fun getMaterialByIdWithTags(materialId: Long): Material? = withContext(Dispatchers.IO) {
+    suspend fun getMaterialByIdWithTags(materialId: String): Material? = withContext(Dispatchers.IO) {
         return@withContext try {
-            val material = getMaterialById(materialId) ?: return@withContext null
-            val tags = getTagsByMaterialId(materialId)
+            Log.d("MaterialsRepository", "Fetching material with ID: $materialId")
 
-            material.copy(tags = tags)
+            val material = SupabaseClient.client
+                .from("Materials")
+                .select {
+                    filter {
+                        eq("id", materialId.toLong())
+                    }
+                }
+                .decodeSingle<Material>()
+
+            // Fetch tags for this material
+            val tags = SupabaseClient.client
+                .from("Material_Tag")
+                .select {
+                    filter {
+                        eq("material_id", materialId.toLong())
+                    }
+                }
+                .decodeList<MaterialTag>()
+
+            // Fetch tag details
+            val tagDetails = tags.mapNotNull { materialTag ->
+                SupabaseClient.client
+                    .from("Tags")
+                    .select {
+                        filter {
+                            eq("id", materialTag.tag_id)
+                        }
+                    }
+                    .decodeSingleOrNull<com.example.colearnhub.modelLayer.TagData>()
+            }
+
+            material.copy(tags = tagDetails)
         } catch (e: Exception) {
-            Log.e("MaterialRepository", "Erro ao buscar material com tags: ${e.message}")
+            Log.e("MaterialsRepository", "Error fetching material: ${e.message}")
             null
         }
     }
@@ -202,7 +222,7 @@ class MaterialsRepository {
 
             if (updateData.isEmpty()) {
                 Log.w("MaterialRepository", "Nenhum campo para atualizar")
-                return@withContext getMaterialByIdWithTags(materialId)
+                return@withContext getMaterialByIdWithTags(materialId.toString())
             }
 
             val result = SupabaseClient.client
@@ -218,7 +238,7 @@ class MaterialsRepository {
             Log.d("MaterialRepository", "Material atualizado: ${result.id}")
 
             // Retornar o material com tags
-            getMaterialByIdWithTags(result.id)
+            getMaterialByIdWithTags(result.id.toString())
         } catch (e: Exception) {
             Log.e("MaterialRepository", "Erro ao atualizar: ${e.message}")
             null

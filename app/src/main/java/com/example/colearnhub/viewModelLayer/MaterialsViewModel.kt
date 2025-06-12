@@ -103,7 +103,7 @@ class MaterialViewModel(application: Application) : AndroidViewModel(application
             _isLoading.value = true
             _errorMessage.value = null
 
-            val result = materialRepository.getMaterialByIdWithTags(materialId)
+            val result = materialRepository.getMaterialByIdWithTags(materialId.toString())
 
             if (result != null) {
                 _selectedMaterial.value = result

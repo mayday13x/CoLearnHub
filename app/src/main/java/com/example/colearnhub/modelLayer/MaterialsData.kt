@@ -23,8 +23,7 @@ data class CreateMaterialRequest(
     val file_url: String? = null,
     val visibility: Boolean = true,
     val language: Long? = null,
-    val author_id: String? = null,
-    val tag_ids: List<Long>? = null // Changed from tag_id to tag_ids for multiple tags
+    val author_id: String? = null
 )
 
 @Serializable

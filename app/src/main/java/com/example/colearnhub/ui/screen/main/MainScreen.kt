@@ -75,6 +75,7 @@ import com.example.colearnhub.viewmodel.AuthViewModel
 
 @Composable
 fun Indice(
+    navController: NavController,
     materialViewModel: MaterialViewModel = viewModel()
 ) {
     // Obter contexto para passar ao factory
@@ -183,12 +184,14 @@ fun Indice(
             0 -> ContentArea(
                 materials = materials,
                 isLoading = isLoading,
-                materialViewModel = materialViewModel
+                materialViewModel = materialViewModel,
+                navController = navController
             )
             1 -> ContentArea(
                 materials = userMaterials,
                 isLoading = isLoading,
-                materialViewModel = materialViewModel
+                materialViewModel = materialViewModel,
+                navController = navController
             )
         }
     }
@@ -228,7 +231,8 @@ fun ShareButton() {
 fun ContentArea(
     materials: List<Material>,
     isLoading: Boolean,
-    materialViewModel: MaterialViewModel
+    materialViewModel: MaterialViewModel,
+    navController: NavController
 ) {
     val padding = dynamicPadding()
     val animationSize = animation()
@@ -314,7 +318,8 @@ fun ContentArea(
             // Lista de materiais
             MaterialsList(
                 materials = materials,
-                materialViewModel = materialViewModel
+                materialViewModel = materialViewModel,
+                navController = navController
             )
         }
 
@@ -325,7 +330,8 @@ fun ContentArea(
 @Composable
 fun MaterialsList(
     materials: List<Material>,
-    materialViewModel: MaterialViewModel
+    materialViewModel: MaterialViewModel,
+    navController: NavController
 ) {
     val highlights = materials.take(2)
     val others = materials.drop(2)
@@ -349,7 +355,8 @@ fun MaterialsList(
                 MaterialCard(
                     material = material,
                     materialViewModel = materialViewModel,
-                    isHighlight = true
+                    isHighlight = true,
+                    navController = navController
                 )
             }
         }
@@ -370,7 +377,8 @@ fun MaterialsList(
                 MaterialCard(
                     material = material,
                     materialViewModel = materialViewModel,
-                    isHighlight = false
+                    isHighlight = false,
+                    navController = navController
                 )
             }
         }
@@ -381,7 +389,8 @@ fun MaterialsList(
 fun MaterialCard(
     material: Material,
     materialViewModel: MaterialViewModel,
-    isHighlight: Boolean
+    isHighlight: Boolean,
+    navController: NavController
 ) {
     val authorName = materialViewModel.getUserName(material.author_id)
     val (languageName, languageFlag) = materialViewModel.getLanguageInfo(material.language)
@@ -402,7 +411,10 @@ fun MaterialCard(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 8.dp)
-            .clickable { /* Navegar para detalhes */ },
+            .clickable {
+                // Navegar para a tela de detalhes do material
+                navController.navigate("material_details/${material.id}")
+            },
         colors = CardDefaults.cardColors(
             containerColor = Color.White
         ),
