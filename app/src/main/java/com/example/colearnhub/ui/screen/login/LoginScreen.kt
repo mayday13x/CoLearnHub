@@ -72,6 +72,7 @@ fun LoginScreen(
         if (authState.isAuthenticated && authState.successMessage != null) {
             navController.navigate("MainScreen") {
                 popUpTo("login") { inclusive = true }
+                popUpTo("colearnhub_onboarding") { inclusive = true }
             }
         }
     }
