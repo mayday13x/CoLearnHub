@@ -7,7 +7,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.colearnhub.modelLayer.*
 import com.example.colearnhub.repositoryLayer.GroupRepository
-import com.example.colearnhub.repositoryLayer.User
+import com.example.colearnhub.modelLayer.User
 import com.example.colearnhub.repositoryLayer.UserRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -134,7 +134,7 @@ class GroupViewModel : ViewModel() {
     /**
      * Remove usuário da lista de convidados
      */
-    fun removeUserFromInvite(user: com.example.colearnhub.repositoryLayer.User) {
+    fun removeUserFromInvite(user: User) {
         val currentInvited = _createGroupUiState.value.invitedUsers.toMutableList()
         currentInvited.removeAll { it.id == user.id }
         _createGroupUiState.value = _createGroupUiState.value.copy(invitedUsers = currentInvited)

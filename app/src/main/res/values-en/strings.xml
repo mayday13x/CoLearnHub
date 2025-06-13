@@ -147,6 +147,8 @@
     <string name="unsaved_changes_message">Are you sure you want to leave without saving the changes?</string>
     <string name="discard">Discard</string>
     <string name="cancel">Cancel</string>
+    <string name="profile_updated_successfully">Profile updated successfully</string>
+
 
     <!-- Adicione estas strings ao seu arquivo existente -->
     <string name="unknown_time">Unknown time</string>
@@ -256,4 +258,14 @@
     <string name="no_ratings_yet">No ratings yet. Be the first to rate!</string>
     <string name="no_rating_available">N/A</string>
 
+    <string name="new_session">New Study Session</string>
+    <string name="session_name">Session Name</string>
+    <string name="session_link">Session Link</string>
+    <string name="date">Date</string>
+    <string name="start_time">Start Time</string>
+    <string name="duration">Duration</string>
+    <string name="tag">Tags</string>
+    <string name="session_details">Study Session Details</string>
+    <string name="edit">Edit</string>
+    <string name="favourites_title">Favorites</string>
 </resources>

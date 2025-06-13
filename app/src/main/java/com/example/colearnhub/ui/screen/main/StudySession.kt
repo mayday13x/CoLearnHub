@@ -1,5 +1,7 @@
 package com.example.colearnhub.ui.screen.main
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -49,7 +51,7 @@ import com.example.colearnhub.ui.utils.txtSize
 import com.example.colearnhub.ui.utils.verticalSpacing
 
 @Composable
-fun Indice2(){
+fun Indice2(navController: NavController? = null){
     var selectedTab by remember { mutableIntStateOf(0) }
     val label1 = stringResource(R.string.All)
     val label2 = stringResource(R.string.Joined)
@@ -67,7 +69,9 @@ fun Indice2(){
             .padding(20.dp)
     ) {
         Spacer(modifier = Modifier.height(verticalSpacing))
-        NewSessionBtn()
+        NewSessionBtn(onSettingsClick = {
+            navController?.navigate("new_session")
+        })
         Spacer(modifier = Modifier.height(verticalSpacing - 10.dp))
         Row(
             modifier = Modifier
@@ -162,7 +166,7 @@ fun ContentArea2() {
 }
 
 @Composable
-fun NewSessionBtn(){
+fun NewSessionBtn(onSettingsClick: () -> Unit){
     val btnHeight = verticalSpacing() + 10.dp
     val titleFontSize = txtSize()
 
@@ -171,7 +175,7 @@ fun NewSessionBtn(){
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Button(
-            onClick = { },
+            onClick = onSettingsClick,
             modifier = Modifier
                 .width(dynamicWidth(maxWidth = 300.dp))
                 .height(btnHeight)
@@ -196,6 +200,7 @@ fun NewSessionBtn(){
     }
 }
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun StudySessionScreen(navController: NavController) {
     var selectedItem by remember { mutableIntStateOf(1) }

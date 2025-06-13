@@ -43,5 +43,6 @@ fun NavGraph() {
         groupRoutes(navController)
         favouritesRoutes(navController)
 
+        sessionRoutes(navController)
     }
 }

@@ -28,7 +28,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.colearnhub.R
-import com.example.colearnhub.repositoryLayer.User
+import com.example.colearnhub.modelLayer.User
 import com.example.colearnhub.viewModelLayer.AuthViewModelFactory
 import com.example.colearnhub.viewModelLayer.GroupViewModel
 import com.example.colearnhub.viewmodel.AuthViewModel
@@ -364,7 +364,7 @@ fun UserSearchItem(
 
 @Composable
 fun InvitedUserItem(
-    user: com.example.colearnhub.repositoryLayer.User,
+    user: User,
     onRemove: () -> Unit
 ) {
     Card(

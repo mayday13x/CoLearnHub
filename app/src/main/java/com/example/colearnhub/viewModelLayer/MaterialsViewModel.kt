@@ -10,7 +10,7 @@ import com.example.colearnhub.modelLayer.Material
 import com.example.colearnhub.repositoryLayer.UserRepository
 import com.example.colearnhub.repositoryLayer.TagRepository
 import com.example.colearnhub.repositoryLayer.LanguageRepository
-import com.example.colearnhub.repositoryLayer.User
+import com.example.colearnhub.modelLayer.User
 import com.example.colearnhub.modelLayer.TagData
 import com.example.colearnhub.repositoryLayer.MaterialsRepository
 import kotlinx.coroutines.flow.MutableStateFlow

@@ -381,7 +381,7 @@ fun ScreenContent(selectedItem: Int, navController: NavController) {
             navController = navController,
             materialViewModel = viewModel()
         )
-        1 -> Indice2()
+        1 -> Indice2(navController)
         2 -> Indice4()
         3 -> Indice3(
             navController

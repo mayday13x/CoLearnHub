@@ -1,5 +1,7 @@
 package com.example.colearnhub.ui.screen.main
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -131,14 +133,17 @@ fun TopBar2(onSettingsClick: () -> Unit, onFavouritesClick: () -> Unit) {
     )
 }
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun Identity(
     modifier: Modifier = Modifier,
     userViewModel: UserViewModel = viewModel()
 ) {
+
     val titleFontSize = (txtSize().value + 2).sp
     val sizeValue = logoSize()
     val user by userViewModel.user.collectAsState()
+
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -354,13 +359,13 @@ fun ProfileDetailsSection(
             ProfileDetailRow(
                 label1 = stringResource(R.string.country),
                 value1 = countryName ?: "Not defined",
-                label2 = stringResource(R.string.curricular_year_label),
-                value2 = user?.curricularYear?.toString() ?: "Not defined"
+                label2 = stringResource(R.string.birthdate),
+                value2 = user?.birth_date ?: "Not defined"
             )
 
-            Spacer(modifier = Modifier.height(spacer))
+           // Spacer(modifier = Modifier.height(spacer))
 
-            Row {
+        /*    Row {
                 Column(modifier = Modifier.weight(1f)
                     .offset(x = -(20).dp)) {
                     Text(
@@ -377,7 +382,7 @@ fun ProfileDetailsSection(
                     )
                 }
                 Spacer(modifier = Modifier.weight(1f))
-            }
+            }*/
         }
     }
 }
@@ -462,12 +467,13 @@ fun EditProfileBtn(onSettingsClick: () -> Unit){
     }
 }
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun Indice5(navController: NavController? = null,
             userViewModel: UserViewModel = viewModel()){
 
     LaunchedEffect(Unit) {
-        userViewModel.getCurrentUser()
+        userViewModel.loadCurrentUser()
     }
 
     TopBar2(
@@ -491,6 +497,7 @@ fun Indice5(navController: NavController? = null,
     })
 }
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun ProfileScreen(navController: NavController){
     var selectedItem by remember { mutableIntStateOf(4) }

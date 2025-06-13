@@ -1,5 +1,6 @@
 package com.example.colearnhub.ui.screen.group
 
+import android.app.Application
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -52,6 +53,8 @@ import com.example.colearnhub.ui.utils.spacer3
 import com.example.colearnhub.ui.utils.txtSize
 import com.example.colearnhub.viewModelLayer.GroupViewModel
 import com.example.colearnhub.repositoryLayer.UserRepository
+import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.viewmodel.compose.viewModel
 
 @Composable
 fun GDTopBar(onBack: () -> Unit){
@@ -356,6 +359,7 @@ fun GroupDetailsScreen(
     groupId: Long,
     viewModel: GroupViewModel = remember { GroupViewModel() }
 ){
+    val context = LocalContext.current.applicationContext
     val groupDetailsState by viewModel.groupDetailsUiState.collectAsState()
     val userRepository = remember { UserRepository() }
     var ownerUsername by remember { mutableStateOf<String?>(null) }
