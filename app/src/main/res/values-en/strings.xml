@@ -169,4 +169,8 @@
     <string name="duration">Duration</string>
     <string name="tag">Tags</string>
     <string name="create">Create</string>
+
+    <string name="session_details">Study Session Details</string>
+    <string name="remove">Remove</string>
+    <string name="edit">Edit</string>
 </resources>

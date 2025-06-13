@@ -199,7 +199,6 @@ fun NSSLink(title: String, onTitleChange: (String) -> Unit) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NSSDate(selectedDate: String, onDateChange: (String) -> Unit) {
-    val textFieldHeight = textFieldHeight()
     val paddingValue = logoSize() + 10.dp
     val titleFontSize = (txtSize().value + 1).sp
 
@@ -537,7 +536,7 @@ fun NSSIndice(onBack: () -> Unit){
     var startMinute by remember { mutableStateOf("") }
     var duration by remember { mutableStateOf("") }
     var isPrivate by remember { mutableStateOf(false) }
-    var isCreatingMaterial by remember { mutableStateOf(false) }
+    val isCreatingMaterial by remember { mutableStateOf(false) }
 
     val isCreateEnabled = name.isNotBlank() && link.isNotBlank() && selectedDate.isNotBlank() && startHour.isNotBlank() && startMinute.isNotBlank() && duration.isNotBlank()
 
