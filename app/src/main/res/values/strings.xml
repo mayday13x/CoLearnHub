@@ -265,5 +265,40 @@
     <string name="no_rating_available">N/A</string>
 
     <string name="favourites_title">Favoritos</string>
+    <string name="dep1">Deve estar logado para poder adicionar aos favoritos</string>
+    <string name="log_com">Faça login para comentar</string>
+    <string name="delete_comment">Apagar Comentário</string>
+    <string name="confirm_delete_comment">Tens a certeza de que pretendes eliminar este comentário?</string>
+    <string name="delete">Eliminar</string>
+    <string name="comments">Comentários</string>
+    <string name="sort">Ordenar por</string>
+    <string name="desc">Utilizador Desconhecido</string>
+    <string name="resp">Responder a:</string>
+    <string name="resp2">Responder a:</string>
+    <string name="collapse">Minimizar</string>
+    <string name="expand">Expandir</string>
+    <string name="author">Autor</string>
+    <string name="desc2">Desconhecido</string>
+    <string name="average_rating">Avaliação Média</string>
+    <string name="update_rating">Atualizar Avaliação</string>
+    <string name="rate_now">Avaliar Agora</string>
+    <string name="your_rating">Sua avaliação:</string>
+    <string name="created3">Criado</string>
+    <string name="rate_this">Avalia este Material</string>
+    <string name="how_rates">Como classificarias este material?</string>
+    <string name="poor">Muito Fraco</string>
+    <string name="bad">Fraco</string>
+    <string name="average">Médio</string>
+    <string name="good">Bom</string>
+    <string name="excellent">Muito Bom</string>
+    <string name="submit">Submeter</string>
+    <string name="remove_fav">Remover dos Favoritos</string>
+    <string name="add_fav">Adicionar aos Favoritos</string>
+    <string name="download">Transferir</string>
+    <string name="preview">Pré-visualizar</string>
+    <string name="no_tags">Sem tags disponíveis</string>
+    <string name="leave_comment">Deixe um comentário</string>
+    <string name="comment">Comentar</string>
+    <string name="response">Responder</string>
 
 </resources>
