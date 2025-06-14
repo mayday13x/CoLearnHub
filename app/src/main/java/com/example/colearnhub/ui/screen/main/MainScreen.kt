@@ -985,7 +985,7 @@ fun SearchBar(
                                     var showStartDatePicker by remember { mutableStateOf(false) }
                                     var showEndDatePicker by remember { mutableStateOf(false) }
 
-                                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                    Column(modifier = Modifier.fillMaxWidth()) {
                                         // Start Date Picker
                                         OutlinedTextField(
                                             value = startDateFilter?.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")) ?: "",
@@ -997,7 +997,9 @@ fun SearchBar(
                                                 }
                                             },
                                             placeholder = { Text("Start Date") },
-                                            modifier = Modifier.weight(1f).padding(end = 8.dp),
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .clickable { showStartDatePicker = true },
                                             colors = OutlinedTextFieldDefaults.colors(
                                                 focusedBorderColor = Color.LightGray,
                                                 unfocusedBorderColor = Color.LightGray,
@@ -1007,6 +1009,7 @@ fun SearchBar(
                                             ),
                                             shape = RoundedCornerShape(8.dp)
                                         )
+                                        Spacer(modifier = Modifier.height(8.dp)) // Add vertical spacing
 
                                         // End Date Picker
                                         OutlinedTextField(
@@ -1019,7 +1022,9 @@ fun SearchBar(
                                                 }
                                             },
                                             placeholder = { Text("End Date") },
-                                            modifier = Modifier.weight(1f).padding(start = 8.dp),
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .clickable { showEndDatePicker = true },
                                             colors = OutlinedTextFieldDefaults.colors(
                                                 focusedBorderColor = Color.LightGray,
                                                 unfocusedBorderColor = Color.LightGray,
