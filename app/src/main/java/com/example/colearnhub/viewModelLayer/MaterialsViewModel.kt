@@ -74,6 +74,7 @@ class MaterialViewModel : ViewModel() {
     val selectedFilterFileTypes: StateFlow<List<String>> = _selectedFilterFileTypes.asStateFlow()
 
     private val _currentSearchQuery = MutableStateFlow("")
+    val currentSearchQuery: StateFlow<String> = _currentSearchQuery.asStateFlow()
 
     // Novos estados para filtros de data
     private val _startDateFilter = MutableStateFlow<LocalDateTime?>(null)

@@ -798,8 +798,16 @@ fun SearchBar(
         ScreenSize.LARGE -> 47.dp
     }
 
-    var searchQuery by remember { mutableStateOf("") }
-    var showFilterModal by remember { mutableStateOf(false) } // Control modal visibility
+    // Obter o valor atual da pesquisa do ViewModel
+    val currentSearchQuery by materialViewModel.currentSearchQuery.collectAsState()
+    var searchQuery by remember { mutableStateOf(currentSearchQuery) }
+    
+    // Atualizar o searchQuery local quando o currentSearchQuery mudar
+    LaunchedEffect(currentSearchQuery) {
+        searchQuery = currentSearchQuery
+    }
+
+    var showFilterModal by remember { mutableStateOf(false) }
     var showTagFilter by remember { mutableStateOf(false) }
     var selectedFilterTime by remember { mutableStateOf<String?>(null) }
 
@@ -848,7 +856,7 @@ fun SearchBar(
             leadingIcon = { Icon(Icons.Default.Search, contentDescription = "Search") },
             trailingIcon = {
                 IconButton(onClick = {
-                    showFilterModal = !showFilterModal // Toggle modal visibility
+                    showFilterModal = !showFilterModal
                     Log.d("SearchBar", "Filter button clicked. showFilterModal: $showFilterModal")
                 }) {
                     Icon(Icons.Default.FilterList, contentDescription = "Filter")
