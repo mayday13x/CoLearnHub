@@ -145,15 +145,18 @@ fun Indice(
     val isLoading by materialViewModel.isLoading.collectAsState()
 
     // Forçar loading state inicial
-    var isInitialLoad by remember { mutableStateOf(true) }
+   // var isInitialLoad by remember { mutableStateOf(true) }
 
     // Carregar materiais públicos na inicialização
     LaunchedEffect(Unit) {
         Log.d("IndiceScreen", "Carregando materiais públicos")
         materialViewModel.loadPublicMaterials()
-        // Dar um pequeno delay para garantir que o loading seja visível
-        kotlinx.coroutines.delay(2000)
-        isInitialLoad = false
+        // Observar o estado de loading do ViewModel
+       /* materialViewModel.isLoading.collect { isLoading ->
+            if (!isLoading) {
+                isInitialLoad = false
+            }
+        }*/
     }
 
     LaunchedEffect(selectedTab, currentUserId) {
@@ -236,14 +239,14 @@ fun Indice(
         when (selectedTab) {
             0 -> ContentArea(
                 materials = materials,
-                isLoading = isLoading || isInitialLoad,
+                isLoading = isLoading,
                 materialViewModel = materialViewModel,
                 navController = navController,
                 isAllTab = true
             )
             1 -> ContentArea(
                 materials = userMaterials,
-                isLoading = isLoading || isInitialLoad,
+                isLoading = isLoading,
                 materialViewModel = materialViewModel,
                 navController = navController,
                 isAllTab = false
@@ -317,9 +320,9 @@ fun ContentArea(
                         color = Color(0xFF395174),
                         strokeWidth = 4.dp
                     )
-                    
+
                     Spacer(modifier = Modifier.height(16.dp))
-                    
+
                     Text(
                         text = stringResource(R.string.loading_materials),
                         fontSize = titleFontSize,

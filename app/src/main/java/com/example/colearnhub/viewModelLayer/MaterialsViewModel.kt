@@ -84,7 +84,7 @@ class MaterialViewModel : ViewModel() {
 
     init {
         // Carregar dados iniciais
-        loadAllTags()
+        //loadAllTags()
         loadAllMaterials()
     }
 
@@ -172,7 +172,7 @@ class MaterialViewModel : ViewModel() {
                 // Carregar todos os materiais públicos
                 val publicMaterials = materialRepository.getPublicMaterials()
                 _allMaterials.value = publicMaterials
-                
+
                 // Carregar informações dos autores, tags e languages para todos os materiais
                 loadAuthorsInfo(publicMaterials)
                 loadTagsInfo(publicMaterials)
@@ -180,13 +180,44 @@ class MaterialViewModel : ViewModel() {
 
                 // Aplicar filtros iniciais
                 applyAllFilters()
+
+                // Garantir que todos os dados relacionados foram carregados
+                val allAuthorsLoaded = publicMaterials.all { material ->
+                    material.author_id?.let { authorId ->
+                        _usersCache.value.containsKey(authorId)
+                    } ?: true
+                }
+
+                val allTagsLoaded = publicMaterials.all { material ->
+                    material.tags?.all { tag ->
+                        _tagsCache.value.containsKey(tag.id)
+                    } ?: true
+                }
+
+                val allLanguagesLoaded = publicMaterials.all { material ->
+                    material.language?.let { languageId ->
+                        _languagesCache.value.containsKey(languageId)
+                    } ?: true
+                }
+
+                // Só finaliza o loading quando todos os dados estiverem carregados
+                if (allAuthorsLoaded && allTagsLoaded && allLanguagesLoaded) {
+                    _isLoading.value = false
+                } else {
+                    // Se algum dado não foi carregado, tenta carregar novamente
+                    loadAuthorsInfo(publicMaterials)
+                    loadTagsInfo(publicMaterials)
+                    loadLanguagesInfo(publicMaterials)
+                    _isLoading.value = false
+                }
+
             } catch (e: Exception) {
                 _errorMessage.value = "Error loading materials: ${e.message}"
                 Log.e("MaterialViewModel", "Error loading materials", e)
+                _isLoading.value = false
             }
-
-            _isLoading.value = false
         }
+
     }
 
     /**
@@ -194,11 +225,6 @@ class MaterialViewModel : ViewModel() {
      */
     @RequiresApi(Build.VERSION_CODES.O)
     fun loadPublicMaterials() {
-        /*_currentSearchQuery.value = "" // Reset search query
-        _selectedFilterTags.value = emptyList() // Reset tag filter
-        _selectedFilterFileTypes.value = emptyList() // Reset file type filter
-        _startDateFilter.value = null // Reset start date filter
-        _endDateFilter.value = null // Reset end date filter*/
         applyAllFilters() // Aplica todos os filtros (sem filtros iniciais = todos os públicos)
     }
 
@@ -207,11 +233,6 @@ class MaterialViewModel : ViewModel() {
      */
     @RequiresApi(Build.VERSION_CODES.O)
     fun loadMaterialsByAuthor(author_id: String) {
-       /* _currentSearchQuery.value = "" // Reset search query
-        _selectedFilterTags.value = emptyList() // Reset tag filter
-        _selectedFilterFileTypes.value = emptyList() // Reset file type filter
-        _startDateFilter.value = null // Reset start date filter
-        _endDateFilter.value = null // Reset end date filter*/
         applyAllFilters(author_id) // Aplica todos os filtros para o autor específico
     }
 
@@ -557,7 +578,7 @@ class MaterialViewModel : ViewModel() {
         _selectedFilterFileTypes.value = emptyList()
         _startDateFilter.value = null
         _endDateFilter.value = null
-        loadAllMaterials() // Recarrega tudo sem filtros
+        //loadAllMaterials() // Recarrega tudo sem filtros
     }
 
     /**
@@ -566,7 +587,7 @@ class MaterialViewModel : ViewModel() {
     @RequiresApi(Build.VERSION_CODES.O)
     fun applyAllFilters(authorId: String? = null) {
         viewModelScope.launch {
-            _isLoading.value = true
+            //_isLoading.value = true
             _errorMessage.value = null
 
             try {
@@ -631,7 +652,7 @@ class MaterialViewModel : ViewModel() {
                 Log.e("MaterialViewModel", "Error applying filters", e)
             }
 
-            _isLoading.value = false
+            //_isLoading.value = false
         }
     }
 }

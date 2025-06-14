@@ -1,6 +1,8 @@
 package com.example.colearnhub.repositoryLayer
 
+import android.os.Build
 import android.util.Log
+import androidx.annotation.RequiresApi
 import com.example.colearnhub.modelLayer.CreateMaterialRequest
 import com.example.colearnhub.modelLayer.Material
 import com.example.colearnhub.modelLayer.MaterialTag
@@ -167,6 +169,7 @@ class MaterialsRepository {
     /**
      * Busca materiais públicos (visibility = true) com filtros
      */
+    @RequiresApi(Build.VERSION_CODES.O)
     suspend fun getPublicMaterials(
         searchQuery: String? = null,
         startDate: LocalDateTime? = null,
@@ -276,6 +279,7 @@ class MaterialsRepository {
     /**
      * Obtém materiais por autor com filtros
      */
+    @RequiresApi(Build.VERSION_CODES.O)
     suspend fun getMaterialsByAuthor(
         authorId: String,
         searchQuery: String? = null,
