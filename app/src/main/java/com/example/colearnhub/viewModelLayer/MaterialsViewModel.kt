@@ -33,6 +33,9 @@ class MaterialViewModel : ViewModel() {
     private val languageRepository = LanguageRepository()
 
     // Estados para UI
+    private val _allMaterials = MutableStateFlow<List<Material>>(emptyList())
+    val allMaterials: StateFlow<List<Material>> = _allMaterials.asStateFlow()
+
     private val _materials = MutableStateFlow<List<Material>>(emptyList())
     val materials: StateFlow<List<Material>> = _materials.asStateFlow()
 
@@ -82,7 +85,7 @@ class MaterialViewModel : ViewModel() {
     init {
         // Carregar dados iniciais
         loadAllTags()
-        loadPublicMaterials()
+        loadAllMaterials()
     }
 
     /**
@@ -115,7 +118,7 @@ class MaterialViewModel : ViewModel() {
             if (result != null) {
                 _selectedMaterial.value = result
                 // Atualizar lista se necessário
-                loadPublicMaterials()
+                loadAllMaterials()
             } else {
                 _errorMessage.value = "Erro ao criar material"
             }
@@ -157,18 +160,46 @@ class MaterialViewModel : ViewModel() {
     }
 
     /**
-     * Carrega todos os materiais públicos
+     * Carrega todos os materiais na memória
+     */
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun loadAllMaterials() {    // public materials
+        viewModelScope.launch {
+            _isLoading.value = true
+            _errorMessage.value = null
+
+            try {
+                // Carregar todos os materiais públicos
+                val publicMaterials = materialRepository.getPublicMaterials()
+                _allMaterials.value = publicMaterials
+                
+                // Carregar informações dos autores, tags e languages para todos os materiais
+                loadAuthorsInfo(publicMaterials)
+                loadTagsInfo(publicMaterials)
+                loadLanguagesInfo(publicMaterials)
+
+                // Aplicar filtros iniciais
+                applyAllFilters()
+            } catch (e: Exception) {
+                _errorMessage.value = "Error loading materials: ${e.message}"
+                Log.e("MaterialViewModel", "Error loading materials", e)
+            }
+
+            _isLoading.value = false
+        }
+    }
+
+    /**
+     * Carrega materiais públicos
      */
     @RequiresApi(Build.VERSION_CODES.O)
     fun loadPublicMaterials() {
-        viewModelScope.launch {
-            _currentSearchQuery.value = "" // Reset search query
-            _selectedFilterTags.value = emptyList() // Reset tag filter
-            _selectedFilterFileTypes.value = emptyList() // Reset file type filter
-            _startDateFilter.value = null // Reset start date filter
-            _endDateFilter.value = null // Reset end date filter
-            applyAllFilters() // Aplica todos os filtros (sem filtros iniciais = todos os públicos)
-        }
+        /*_currentSearchQuery.value = "" // Reset search query
+        _selectedFilterTags.value = emptyList() // Reset tag filter
+        _selectedFilterFileTypes.value = emptyList() // Reset file type filter
+        _startDateFilter.value = null // Reset start date filter
+        _endDateFilter.value = null // Reset end date filter*/
+        applyAllFilters() // Aplica todos os filtros (sem filtros iniciais = todos os públicos)
     }
 
     /**
@@ -176,14 +207,12 @@ class MaterialViewModel : ViewModel() {
      */
     @RequiresApi(Build.VERSION_CODES.O)
     fun loadMaterialsByAuthor(author_id: String) {
-        viewModelScope.launch {
-            _currentSearchQuery.value = "" // Reset search query
-            _selectedFilterTags.value = emptyList() // Reset tag filter
-            _selectedFilterFileTypes.value = emptyList() // Reset file type filter
-            _startDateFilter.value = null // Reset start date filter
-            _endDateFilter.value = null // Reset end date filter
-            applyAllFilters(author_id) // Aplica todos os filtros para o autor específico
-        }
+       /* _currentSearchQuery.value = "" // Reset search query
+        _selectedFilterTags.value = emptyList() // Reset tag filter
+        _selectedFilterFileTypes.value = emptyList() // Reset file type filter
+        _startDateFilter.value = null // Reset start date filter
+        _endDateFilter.value = null // Reset end date filter*/
+        applyAllFilters(author_id) // Aplica todos os filtros para o autor específico
     }
 
     /**
@@ -221,7 +250,7 @@ class MaterialViewModel : ViewModel() {
             if (result != null) {
                 _selectedMaterial.value = result
                 // Atualizar lista se necessário
-                loadPublicMaterials()
+                loadAllMaterials()
             } else {
                 _errorMessage.value = "Erro ao atualizar material"
             }
@@ -528,58 +557,79 @@ class MaterialViewModel : ViewModel() {
         _selectedFilterFileTypes.value = emptyList()
         _startDateFilter.value = null
         _endDateFilter.value = null
-        loadPublicMaterials() // Recarrega tudo sem filtros
+        loadAllMaterials() // Recarrega tudo sem filtros
     }
 
     /**
      * Aplica todos os filtros combinados.
      */
     @RequiresApi(Build.VERSION_CODES.O)
-     fun applyAllFilters(authorId: String? = null) {
+    fun applyAllFilters(authorId: String? = null) {
         viewModelScope.launch {
             _isLoading.value = true
             _errorMessage.value = null
 
-            var filteredMaterials = if (authorId != null) {
-                materialRepository.getMaterialsByAuthor(
-                    authorId = authorId,
-                    searchQuery = _currentSearchQuery.value.ifBlank { null },
-                    startDate = _startDateFilter.value,
-                    endDate = _endDateFilter.value,
-                    tagIds = _selectedFilterTags.value.map { it.id }.ifEmpty { null }
-                )
-            } else {
-                materialRepository.getPublicMaterials(
-                    searchQuery = _currentSearchQuery.value.ifBlank { null },
-                    startDate = _startDateFilter.value,
-                    endDate = _endDateFilter.value,
-                    tagIds = _selectedFilterTags.value.map { it.id }.ifEmpty { null }
-                )
-            }
+            try {
+                var filteredMaterials = _allMaterials.value
 
-            // Remove client-side filtering for search query, time, and tags
-            // as it's now handled by the repository
-
-            // Aplicar filtro de tipo de arquivo (ainda client-side)
-            if (_selectedFilterFileTypes.value.isNotEmpty()) {
-                filteredMaterials = filteredMaterials.filter { material ->
-                    material.file_url?.let { fileUrl ->
-                        val extension = fileUrl.substringAfterLast(".", "").lowercase()
-                        _selectedFilterFileTypes.value.contains(extension)
-                    } ?: false
+                // Aplicar filtro de busca
+                if (_currentSearchQuery.value.isNotBlank()) {
+                    filteredMaterials = filteredMaterials.filter { material ->
+                        material.title.contains(_currentSearchQuery.value, ignoreCase = true) ||
+                        (material.description?.contains(_currentSearchQuery.value, ignoreCase = true) == true)
+                    }
                 }
-            }
 
-            if (authorId != null) {
-                _userMaterials.value = filteredMaterials
-            } else {
-                _materials.value = filteredMaterials
-            }
+                // Aplicar filtro de data
+                _startDateFilter.value?.let { startDate ->
+                    filteredMaterials = filteredMaterials.filter { material ->
+                        material.created_at?.let { created ->
+                            val materialDate = LocalDateTime.parse(created)
+                            !materialDate.isBefore(startDate)
+                        } ?: false
+                    }
+                }
 
-            // Carregar informações dos autores, tags e languages para os materiais filtrados
-            loadAuthorsInfo(filteredMaterials)
-            loadTagsInfo(filteredMaterials)
-            loadLanguagesInfo(filteredMaterials)
+                _endDateFilter.value?.let { endDate ->
+                    filteredMaterials = filteredMaterials.filter { material ->
+                        material.created_at?.let { created ->
+                            val materialDate = LocalDateTime.parse(created)
+                            !materialDate.isAfter(endDate)
+                        } ?: false
+                    }
+                }
+
+                // Aplicar filtro de tags
+                if (_selectedFilterTags.value.isNotEmpty()) {
+                    filteredMaterials = filteredMaterials.filter { material ->
+                        material.tags?.any { tag ->
+                            _selectedFilterTags.value.any { selectedTag -> selectedTag.id == tag.id }
+                        } == true
+                    }
+                }
+
+                // Aplicar filtro de tipo de arquivo
+                if (_selectedFilterFileTypes.value.isNotEmpty()) {
+                    filteredMaterials = filteredMaterials.filter { material ->
+                        material.file_url?.let { fileUrl ->
+                            val extension = fileUrl.substringAfterLast(".", "").lowercase()
+                            _selectedFilterFileTypes.value.contains(extension)
+                        } ?: false
+                    }
+                }
+
+                // Separar materiais por autor se necessário
+                if (authorId != null) {
+                    filteredMaterials = filteredMaterials.filter { it.author_id == authorId }
+                    _userMaterials.value = filteredMaterials
+                } else {
+                    _materials.value = filteredMaterials
+                }
+
+            } catch (e: Exception) {
+                _errorMessage.value = "Error applying filters: ${e.message}"
+                Log.e("MaterialViewModel", "Error applying filters", e)
+            }
 
             _isLoading.value = false
         }

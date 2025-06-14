@@ -152,7 +152,7 @@ fun Indice(
         Log.d("IndiceScreen", "Carregando materiais públicos")
         materialViewModel.loadPublicMaterials()
         // Dar um pequeno delay para garantir que o loading seja visível
-        kotlinx.coroutines.delay(500)
+        kotlinx.coroutines.delay(2000)
         isInitialLoad = false
     }
 

@@ -190,10 +190,10 @@ class MaterialsRepository {
                         }
 
                         startDate?.let {
-                            gte("created_at", it.toInstant(ZoneOffset.UTC).toKotlinInstant().toString())
+                            gte("created_at", it.toInstant(ZoneOffset.UTC).toString())
                         }
                         endDate?.let {
-                            lte("created_at", it.toInstant(ZoneOffset.UTC).toKotlinInstant().toString())
+                            lte("created_at", it.toInstant(ZoneOffset.UTC).toString())
                         }
                     }
                 }
@@ -299,10 +299,10 @@ class MaterialsRepository {
                         }
 
                         startDate?.let {
-                            gte("created_at", it.toInstant(ZoneOffset.UTC).toKotlinInstant().toString())
+                            gte("created_at", it.toInstant(ZoneOffset.UTC).toString())
                         }
                         endDate?.let {
-                            lte("created_at", it.toInstant(ZoneOffset.UTC).toKotlinInstant().toString())
+                            lte("created_at", it.toInstant(ZoneOffset.UTC).toString())
                         }
                     }
                 }
