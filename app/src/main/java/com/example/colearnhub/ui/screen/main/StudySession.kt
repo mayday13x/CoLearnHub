@@ -404,7 +404,7 @@ fun StudySessionCard(session: StudySession) {
                         tint = Color.Gray
                     )
                     Text(
-                        text = session.startTime,
+                        text = formatTime(session.startTime),
                         fontSize = 12.sp,
                         color = Color.Gray
                     )
@@ -421,7 +421,7 @@ fun StudySessionCard(session: StudySession) {
                         tint = Color.Gray
                     )
                     Text(
-                        text = "${session.duration}min",
+                        text = "${session.duration} min",
                         fontSize = 12.sp,
                         color = Color.Gray
                     )
@@ -462,6 +462,17 @@ fun formatDate(dateString: String): String {
         date.format(formatter)
     } catch (e: Exception) {
         dateString
+    }
+}
+
+@RequiresApi(Build.VERSION_CODES.O)
+fun formatTime(timeString: String): String {
+    return try {
+        val timeFormatter = DateTimeFormatter.ofPattern("HH:mm:ssX")
+        val time = OffsetTime.parse(timeString, timeFormatter)
+        time.format(DateTimeFormatter.ofPattern("HH:mm"))
+    } catch (e: Exception) {
+        timeString
     }
 }
 
