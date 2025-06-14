@@ -42,6 +42,15 @@ class StudySessionViewModel : ViewModel() {
     private val _createdStudySessions = MutableStateFlow<List<StudySession>>(emptyList())
     val createdStudySessions: StateFlow<List<StudySession>> = _createdStudySessions.asStateFlow()
 
+    private val _selectedStudySession = MutableStateFlow<StudySession?>(null)
+    val selectedStudySession: StateFlow<StudySession?> = _selectedStudySession.asStateFlow()
+
+    private val _isUserParticipating = MutableStateFlow(false)
+    val isUserParticipating: StateFlow<Boolean> = _isUserParticipating.asStateFlow()
+
+    private val _isLoadingDetails = MutableStateFlow(false)
+    val isLoadingDetails: StateFlow<Boolean> = _isLoadingDetails.asStateFlow()
+
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error.asStateFlow()
 
@@ -63,6 +72,7 @@ class StudySessionViewModel : ViewModel() {
         }
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     fun loadFutureStudySessions() {
         viewModelScope.launch {
             _isLoading.value = true
@@ -80,6 +90,7 @@ class StudySessionViewModel : ViewModel() {
         }
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     fun loadJoinedStudySessions() {
         viewModelScope.launch {
             _isLoading.value = true
@@ -100,6 +111,7 @@ class StudySessionViewModel : ViewModel() {
         }
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     fun loadCreatedStudySessions() {
         viewModelScope.launch {
             _isLoading.value = true
@@ -129,7 +141,8 @@ class StudySessionViewModel : ViewModel() {
         date: String,
         startTime: String,
         duration: Long,
-        tagId: Long?
+        tagId: Long?,
+        sessionLink: String?
     ) {
         viewModelScope.launch {
             _isCreating.value = true
@@ -145,7 +158,8 @@ class StudySessionViewModel : ViewModel() {
                         date = date,
                         startTime = startTime,
                         duration = duration,
-                        tag = tagId
+                        tag = tagId,
+                        session_link = sessionLink
                     )
                     val session = studySessionRepository.createStudySession(request, currentUser.id)
                     if (session != null) {
@@ -164,6 +178,88 @@ class StudySessionViewModel : ViewModel() {
                 _error.value = e.message ?: "Failed to create study session"
             } finally {
                 _isCreating.value = false
+            }
+        }
+    }
+
+    fun loadStudySessionDetails(sessionId: String) {
+        viewModelScope.launch {
+            _isLoadingDetails.value = true
+            _error.value = null
+            try {
+                val currentUser = authRepository.getCurrentUser()
+                val session = studySessionRepository.getStudySessionDetails(sessionId, currentUser?.id)
+                _selectedStudySession.value = session
+                if (currentUser != null && session != null) {
+                    _isUserParticipating.value = studySessionRepository.isUserJoined(sessionId, currentUser.id)
+                } else {
+                    _isUserParticipating.value = false
+                }
+            } catch (e: Exception) {
+                Log.e("StudySessionViewModel", "Error loading session details: ${e.message}")
+                _error.value = "Failed to load session details"
+                _selectedStudySession.value = null
+                _isUserParticipating.value = false
+            } finally {
+                _isLoadingDetails.value = false
+            }
+        }
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    fun joinSession(sessionId: String) {
+        viewModelScope.launch {
+            _isLoadingDetails.value = true // Show loading while joining
+            _error.value = null
+            try {
+                val currentUser = authRepository.getCurrentUser()
+                if (currentUser != null) {
+                    // Convert sessionId to Long for the repository call, if repository still expects Long
+                    val success = studySessionRepository.joinStudySession(sessionId.toLong(), currentUser.id)
+                    if (success) {
+                        loadStudySessionDetails(sessionId) // Refresh details
+                        // Also refresh joined sessions list on main screen
+                        loadJoinedStudySessions()
+                    } else {
+                        _error.value = "Failed to join session"
+                    }
+                } else {
+                    _error.value = "User not authenticated"
+                }
+            } catch (e: Exception) {
+                Log.e("StudySessionViewModel", "Error joining session: ${e.message}")
+                _error.value = e.message ?: "Failed to join session"
+            } finally {
+                _isLoadingDetails.value = false
+            }
+        }
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    fun leaveSession(sessionId: String) {
+        viewModelScope.launch {
+            _isLoadingDetails.value = true // Show loading while leaving
+            _error.value = null
+            try {
+                val currentUser = authRepository.getCurrentUser()
+                if (currentUser != null) {
+                    // Convert sessionId to Long for the repository call, if repository still expects Long
+                    val success = studySessionRepository.leaveStudySession(sessionId.toLong(), currentUser.id)
+                    if (success) {
+                        loadStudySessionDetails(sessionId) // Refresh details
+                        // Also refresh joined sessions list on main screen
+                        loadJoinedStudySessions()
+                    } else {
+                        _error.value = "Failed to leave session"
+                    }
+                } else {
+                    _error.value = "User not authenticated"
+                }
+            } catch (e: Exception) {
+                Log.e("StudySessionViewModel", "Error leaving session: ${e.message}")
+                _error.value = e.message ?: "Failed to leave session"
+            } finally {
+                _isLoadingDetails.value = false
             }
         }
     }

@@ -17,7 +17,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -25,7 +24,6 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -37,7 +35,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -77,6 +74,7 @@ import com.example.colearnhub.modelLayer.TagData
 import androidx.compose.ui.platform.LocalContext
 import com.example.colearnhub.viewModelLayer.AuthViewModelFactory
 import com.example.colearnhub.viewmodel.AuthViewModel
+import androidx.compose.foundation.clickable
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
@@ -188,17 +186,20 @@ fun Indice2(navController: NavController? = null, viewModel: StudySessionViewMod
             0 -> ContentArea2(
                 sessions = futureStudySessions,
                 isLoading = isLoading,
-                emptyMessage = stringResource(R.string.not_found2)
+                emptyMessage = stringResource(R.string.not_found2),
+                navController = navController
             )
             1 -> ContentArea2(
                 sessions = combinedJoinedSessions,
                 isLoading = isLoading,
-                emptyMessage = "You haven't joined or created any study sessions yet"
+                emptyMessage = "You haven't joined or created any study sessions yet",
+                navController = navController
             )
             2 -> ContentArea2(
                 sessions = createdStudySessions,
                 isLoading = isLoading,
-                emptyMessage = "You haven't created any study sessions yet"
+                emptyMessage = "You haven't created any study sessions yet",
+                navController = navController
             )
         }
     }
@@ -209,12 +210,16 @@ fun Indice2(navController: NavController? = null, viewModel: StudySessionViewMod
 fun ContentArea2(
     sessions: List<StudySession> = emptyList(),
     isLoading: Boolean = false,
-    emptyMessage: String = "No sessions found"
+    emptyMessage: String = "No sessions found",
+    navController: NavController?
 ) {
     val padding = dynamicPadding()
     val animationSize = animation()
     val titleFontSize = txtSize()
     val verticalSpacing = verticalSpacing()
+
+    // Filter out past sessions
+    val filteredSessions = sessions.filter { !isSessionPast(it) }
 
     if (isLoading) {
         Box(
@@ -226,7 +231,7 @@ fun ContentArea2(
                 modifier = Modifier.size(40.dp)
             )
         }
-    } else if (sessions.isEmpty()) {
+    } else if (filteredSessions.isEmpty()) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -272,8 +277,8 @@ fun ContentArea2(
                 .padding(bottom = 80.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            items(sessions) { session ->
-                StudySessionCard(session = session)
+            items(filteredSessions) { session ->
+                StudySessionCard(session = session, navController = navController)
             }
         }
     }
@@ -281,7 +286,7 @@ fun ContentArea2(
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun StudySessionCard(session: StudySession) {
+fun StudySessionCard(session: StudySession, navController: NavController?) {
     val isLive = isSessionLive(session)
     val context = LocalContext.current
     val authViewModel: AuthViewModel = viewModel(
@@ -300,7 +305,10 @@ fun StudySessionCard(session: StudySession) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 4.dp),
+            .padding(vertical = 4.dp)
+            .clickable {
+                navController?.navigate("study_session_details/${session.id}")
+            },
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
@@ -474,6 +482,29 @@ fun formatTime(timeString: String): String {
     } catch (e: Exception) {
         timeString
     }
+}
+
+@RequiresApi(Build.VERSION_CODES.O)
+fun isSessionPast(session: StudySession): Boolean {
+    val currentDate = LocalDate.now()
+    val currentTime = LocalTime.now()
+    val sessionDate = LocalDate.parse(session.date)
+    
+    // If session date is before today, it's past
+    if (sessionDate.isBefore(currentDate)) {
+        return true
+    }
+    
+    // If session is today, check if the time has passed
+    if (sessionDate == currentDate) {
+        val timeFormatter = DateTimeFormatter.ofPattern("HH:mm:ssX")
+        val sessionStartTime = OffsetTime.parse(session.startTime, timeFormatter).toLocalTime()
+        val sessionEndTime = sessionStartTime.plusMinutes(session.duration)
+        
+        return currentTime.isAfter(sessionEndTime)
+    }
+    
+    return false
 }
 
 @Composable

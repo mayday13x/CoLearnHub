@@ -879,7 +879,8 @@ fun NSSIndice(
                     date = selectedDate,
                     startTime = "$startHour:$startMinute",
                     duration = duration.toLongOrNull() ?: 0L,
-                    tagId = selectedTagId
+                    tagId = selectedTagId,
+                    sessionLink = link
                 )
             }
         )

@@ -22,7 +22,13 @@ data class StudySession(
     val startTime: String,
     val duration: Long,
     @SerialName("Tags")
-    val embeddedTag: TagData?
+    val embeddedTag: TagData?,
+    @SerialName("session_link")
+    val sessionLink: String? = null,
+    @SerialName("num_participants")
+    val numParticipants: Int = 0,
+    @SerialName("Session_participants")
+    val sessionParticipants: List<Map<String, String>>? = null
 )
 
 @Serializable
@@ -36,7 +42,9 @@ data class CreateStudySessionRequest(
     @SerialName("start_time")
     val startTime: String,
     val duration: Long,
-    val tag: Long?
+    val tag: Long?,
+    @SerialName("session_link")
+    val session_link: String?
 )
 
 @Serializable
@@ -52,5 +60,7 @@ data class StudySessionInsert(
     @SerialName("start_time")
     val startTime: String,
     val duration: Long,
-    val tag: Long?
+    val tag: Long?,
+    @SerialName("session_link")
+    val session_link: String?
 ) 

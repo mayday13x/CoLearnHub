@@ -268,4 +268,8 @@
     <string name="session_details">Study Session Details</string>
     <string name="edit">Edit</string>
     <string name="favourites_title">Favorites</string>
+    <string name="going">Going</string>
+    <string name="session_s_link">Session\'s Link</string>
+    <string name="join">Join</string>
+    <string name="study_session_details">Study Session Details</string>
 </resources>

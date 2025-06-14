@@ -38,7 +38,8 @@ class StudySessionRepository {
                 date = date,
                 startTime = request.startTime,
                 duration = request.duration,
-                tag = request.tag
+                tag = request.tag,
+                session_link = request.session_link
             )
 
             val session = SupabaseClient.client
@@ -139,6 +140,88 @@ class StudySessionRepository {
             Log.e("StudySessionRepository", "Error fetching created study sessions: ${e.message}")
             Log.e("StudySessionRepository", "Stack trace: ${e.stackTraceToString()}")
             emptyList()
+        }
+    }
+
+    /**
+     * Gets the details of a single study session by ID, including participant count
+     */
+    suspend fun getStudySessionDetails(sessionId: String, currentUserId: String?): StudySession? = withContext(Dispatchers.IO) {
+        return@withContext try {
+            val session = SupabaseClient.client
+                .from("Study_sessions")
+                .select(
+                    columns = Columns.raw("*, Tags(*), Session_participants(user_id)")
+                ) {
+                    filter {
+                        eq("id", sessionId.toLong())
+                    }
+                }
+                .decodeSingleOrNull<StudySession>()
+
+            session?.copy(numParticipants = session.sessionParticipants?.size ?: 0)
+        } catch (e: Exception) {
+            Log.e("StudySessionRepository", "Error fetching study session details: ${e.message}")
+            Log.e("StudySessionRepository", "Stack trace: ${e.stackTraceToString()}")
+            null
+        }
+    }
+
+    /**
+     * Checks if a user has joined a specific study session
+     */
+    suspend fun isUserJoined(sessionId: String, userId: String): Boolean = withContext(Dispatchers.IO) {
+        return@withContext try {
+            val participants = SupabaseClient.client
+                .from("Session_participants")
+                .select {
+                    filter {
+                        eq("session_id", sessionId.toLong())
+                        eq("user_id", userId)
+                    }
+                }
+                .decodeList<Map<String, String>>()
+            participants.isNotEmpty()
+        } catch (e: Exception) {
+            Log.e("StudySessionRepository", "Error checking if user joined session: ${e.message}")
+            false
+        }
+    }
+
+    /**
+     * Allows a user to join a study session
+     */
+    suspend fun joinStudySession(sessionId: Long, userId: String): Boolean = withContext(Dispatchers.IO) {
+        return@withContext try {
+            SupabaseClient.client
+                .from("Session_participants")
+                .insert(mapOf("session_id" to sessionId, "user_id" to userId))
+            true
+        } catch (e: Exception) {
+            Log.e("StudySessionRepository", "Error joining session: ${e.message}")
+            Log.e("StudySessionRepository", "Stack trace: ${e.stackTraceToString()}")
+            false
+        }
+    }
+
+    /**
+     * Allows a user to leave a study session
+     */
+    suspend fun leaveStudySession(sessionId: Long, userId: String): Boolean = withContext(Dispatchers.IO) {
+        return@withContext try {
+            SupabaseClient.client
+                .from("Session_participants")
+                .delete {
+                    filter {
+                        eq("session_id", sessionId)
+                        eq("user_id", userId)
+                    }
+                }
+            true
+        } catch (e: Exception) {
+            Log.e("StudySessionRepository", "Error leaving session: ${e.message}")
+            Log.e("StudySessionRepository", "Stack trace: ${e.stackTraceToString()}")
+            false
         }
     }
 
