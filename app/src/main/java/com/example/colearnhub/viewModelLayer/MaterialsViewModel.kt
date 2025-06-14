@@ -84,7 +84,7 @@ class MaterialViewModel : ViewModel() {
 
     init {
         // Carregar dados iniciais
-        //loadAllTags()
+        loadAllTags()
         loadAllMaterials()
     }
 
@@ -517,14 +517,14 @@ class MaterialViewModel : ViewModel() {
      */
     fun loadAllTags() {
         viewModelScope.launch {
-            _isLoading.value = true
+            //_isLoading.value = true
             try {
                 _allTags.value = tagRepository.getAllTags()
             } catch (e: Exception) {
                 _errorMessage.value = "Error loading tags: ${e.message}"
                 Log.e("MaterialViewModel", "Error loading tags", e)
             }
-            _isLoading.value = false
+            //_isLoading.value = false
         }
     }
 
