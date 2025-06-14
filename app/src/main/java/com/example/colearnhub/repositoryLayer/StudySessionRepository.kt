@@ -9,6 +9,8 @@ import com.example.colearnhub.modelLayer.StudySessionInsert
 import com.example.colearnhub.modelLayer.SupabaseClient
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.postgrest.from
+import io.github.jan.supabase.postgrest.query.Columns
+import io.github.jan.supabase.postgrest.query.Order
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.time.LocalDate
@@ -51,6 +53,92 @@ class StudySessionRepository {
             Log.e("StudySessionRepository", "Error creating study session: ${e.message}")
             Log.e("StudySessionRepository", "Stack trace: ${e.stackTraceToString()}")
             null
+        }
+    }
+
+    /**
+     * Gets all future study sessions (from today onwards)
+     */
+    @RequiresApi(Build.VERSION_CODES.O)
+    suspend fun getFutureStudySessions(): List<StudySession> = withContext(Dispatchers.IO) {
+        return@withContext try {
+            val today = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+
+            SupabaseClient.client
+                .from("Study_sessions")
+                .select(
+                    columns = Columns.raw("*, Tags(*)")
+                ) {
+                    filter {
+                        gte("date", today)
+                    }
+                    order("date", Order.ASCENDING)
+                    order("start_time", Order.ASCENDING)
+                }
+                .decodeList<StudySession>()
+        } catch (e: Exception) {
+            Log.e("StudySessionRepository", "Error fetching future study sessions: ${e.message}")
+            Log.e("StudySessionRepository", "Stack trace: ${e.stackTraceToString()}")
+            emptyList()
+        }
+    }
+
+    /**
+     * Gets study sessions that the user has joined (from today onwards)
+     */
+    @RequiresApi(Build.VERSION_CODES.O)
+    suspend fun getJoinedStudySessions(userId: String): List<StudySession> = withContext(Dispatchers.IO) {
+        return@withContext try {
+            val today = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+
+            // This assumes you have a junction table called "Session_participants"
+            // or similar to track which users have joined which sessions
+            // You might need to adjust this query based on your database structure
+            SupabaseClient.client
+                .from("Study_sessions")
+                .select(
+                    columns = Columns.raw("*, Session_participants!inner(*), Tags(*)")
+                ) {
+                    filter {
+                        eq("Session_participants.user_id", userId)
+                        gte("date", today)
+                    }
+                    order("date", Order.ASCENDING)
+                    order("start_time", Order.ASCENDING)
+                }
+                .decodeList<StudySession>()
+        } catch (e: Exception) {
+            Log.e("StudySessionRepository", "Error fetching joined study sessions: ${e.message}")
+            Log.e("StudySessionRepository", "Stack trace: ${e.stackTraceToString()}")
+            emptyList()
+        }
+    }
+
+    /**
+     * Gets study sessions created by the user (from today onwards)
+     */
+    @RequiresApi(Build.VERSION_CODES.O)
+    suspend fun getCreatedStudySessions(userId: String): List<StudySession> = withContext(Dispatchers.IO) {
+        return@withContext try {
+            val today = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+
+            SupabaseClient.client
+                .from("Study_sessions")
+                .select(
+                    columns = Columns.raw("*, Tags(*)")
+                ) {
+                    filter {
+                        eq("creator_id", userId)
+                        gte("date", today)
+                    }
+                    order("date", Order.ASCENDING)
+                    order("start_time", Order.ASCENDING)
+                }
+                .decodeList<StudySession>()
+        } catch (e: Exception) {
+            Log.e("StudySessionRepository", "Error fetching created study sessions: ${e.message}")
+            Log.e("StudySessionRepository", "Stack trace: ${e.stackTraceToString()}")
+            emptyList()
         }
     }
 

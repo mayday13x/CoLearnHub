@@ -3,6 +3,7 @@ package com.example.colearnhub.modelLayer
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerialName
+import com.example.colearnhub.modelLayer.TagData
 
 @Serializable
 data class StudySession(
@@ -20,7 +21,8 @@ data class StudySession(
     @SerialName("start_time")
     val startTime: String,
     val duration: Long,
-    val tag: Long?
+    @SerialName("Tags")
+    val embeddedTag: TagData?
 )
 
 @Serializable

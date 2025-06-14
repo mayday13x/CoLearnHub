@@ -15,11 +15,21 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
@@ -27,17 +37,20 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.airbnb.lottie.compose.LottieAnimation
 import com.airbnb.lottie.compose.LottieCompositionSpec
 import com.airbnb.lottie.compose.LottieConstants
 import com.airbnb.lottie.compose.rememberLottieComposition
 import com.example.colearnhub.R
+import com.example.colearnhub.modelLayer.StudySession
 import com.example.colearnhub.ui.utils.Circles
 import com.example.colearnhub.ui.utils.Nav
 import com.example.colearnhub.ui.utils.SBar
@@ -49,14 +62,45 @@ import com.example.colearnhub.ui.utils.dynamicPadding
 import com.example.colearnhub.ui.utils.dynamicWidth
 import com.example.colearnhub.ui.utils.txtSize
 import com.example.colearnhub.ui.utils.verticalSpacing
+import com.example.colearnhub.viewModelLayer.StudySessionViewModel
+import java.time.LocalDate
+import java.time.LocalTime
+import java.time.format.DateTimeFormatter
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.Schedule
+import androidx.compose.material.icons.filled.HourglassEmpty
+import androidx.compose.material.icons.filled.RssFeed
+import android.util.Log
+import java.time.OffsetTime
+import com.example.colearnhub.modelLayer.TagData
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun Indice2(navController: NavController? = null){
+fun Indice2(navController: NavController? = null, viewModel: StudySessionViewModel = viewModel()){
     var selectedTab by remember { mutableIntStateOf(0) }
     val label1 = stringResource(R.string.All)
     val label2 = stringResource(R.string.Joined)
     val label3 = stringResource(R.string.Created2)
     val tabs = listOf(label1, label2, label3)
+
+    val futureStudySessions by viewModel.futureStudySessions.collectAsState()
+    val joinedStudySessions by viewModel.joinedStudySessions.collectAsState()
+    val createdStudySessions by viewModel.createdStudySessions.collectAsState()
+    val isLoading by viewModel.isLoading.collectAsState()
+    val error by viewModel.error.collectAsState()
+
+    // Log current state for debugging
+    LaunchedEffect(futureStudySessions, isLoading, error) {
+        Log.d("StudySessionUI", "futureStudySessions size: ${futureStudySessions.size}, isLoading: $isLoading, error: $error")
+    }
+
+    // Load sessions when component mounts
+    LaunchedEffect(Unit) {
+        viewModel.loadFutureStudySessions()
+        viewModel.loadJoinedStudySessions()
+        viewModel.loadCreatedStudySessions()
+    }
 
     dynamicPadding()
     val verticalSpacing = verticalSpacing()
@@ -115,53 +159,277 @@ fun Indice2(navController: NavController? = null){
             }
         }
         Spacer(modifier = Modifier.height(verticalSpacing - 30.dp))
-        ContentArea2()
+
+        error?.let { errorMessage ->
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = errorMessage,
+                    color = Color.Red,
+                    fontSize = txtSize,
+                    textAlign = TextAlign.Center
+                )
+            }
+        }
+
+        when (selectedTab) {
+            0 -> ContentArea2(
+                sessions = futureStudySessions,
+                isLoading = isLoading,
+                emptyMessage = stringResource(R.string.not_found2)
+            )
+            1 -> ContentArea2(
+                sessions = joinedStudySessions,
+                isLoading = isLoading,
+                emptyMessage = "No joined sessions found"
+            )
+            2 -> ContentArea2(
+                sessions = createdStudySessions,
+                isLoading = isLoading,
+                emptyMessage = "No created sessions found"
+            )
+        }
     }
 }
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun ContentArea2() {
+fun ContentArea2(
+    sessions: List<StudySession> = emptyList(),
+    isLoading: Boolean = false,
+    emptyMessage: String = "No sessions found"
+) {
     val padding = dynamicPadding()
     val animationSize = animation()
     val titleFontSize = txtSize()
     val verticalSpacing = verticalSpacing()
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(horizontal = padding)
-    ) {
-        Spacer(modifier = Modifier.height(verticalSpacing - 10.dp))
-
-        Column(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalAlignment = Alignment.CenterHorizontally
+    if (isLoading) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
         ) {
-            val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.animation))
-
-            LottieAnimation(
-                composition = composition,
-                modifier = Modifier.size(animationSize),
-                iterations = LottieConstants.IterateForever
-            )
-
-            Spacer(modifier = Modifier.height(verticalSpacing - 16.dp))
-
-            Text(
-                text = stringResource(R.string.not_found2),
-                fontSize = titleFontSize,
-                color = Color.Black,
-            )
-
-            Text(
-                text = stringResource(R.string.Knowledge2),
-                fontSize = (titleFontSize.value - 2).sp,
-                color = Color.Black,
-                modifier = Modifier.padding(top = 4.dp),
-                textAlign = TextAlign.Center
+            CircularProgressIndicator(
+                color = Color(0xFF395174),
+                modifier = Modifier.size(40.dp)
             )
         }
-        Spacer(modifier = Modifier.weight(1f))
+    } else if (sessions.isEmpty()) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = padding)
+        ) {
+            Spacer(modifier = Modifier.height(verticalSpacing - 10.dp))
+
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.animation))
+
+                LottieAnimation(
+                    composition = composition,
+                    modifier = Modifier.size(animationSize),
+                    iterations = LottieConstants.IterateForever
+                )
+
+                Spacer(modifier = Modifier.height(verticalSpacing - 16.dp))
+
+                Text(
+                    text = emptyMessage,
+                    fontSize = titleFontSize,
+                    color = Color.Black,
+                )
+
+                Text(
+                    text = stringResource(R.string.Knowledge2),
+                    fontSize = (titleFontSize.value - 2).sp,
+                    color = Color.Black,
+                    modifier = Modifier.padding(top = 4.dp),
+                    textAlign = TextAlign.Center
+                )
+            }
+            Spacer(modifier = Modifier.weight(1f))
+        }
+    } else {
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = padding),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            items(sessions) { session ->
+                StudySessionCard(session = session)
+            }
+        }
+    }
+}
+
+@RequiresApi(Build.VERSION_CODES.O)
+@Composable
+fun StudySessionCard(session: StudySession) {
+    val isLive = isSessionLive(session)
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.Top
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = session.name,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.Black
+                    )
+
+                    if (session.description.isNotEmpty()) {
+                        Text(
+                            text = session.description,
+                            fontSize = 14.sp,
+                            color = Color.Gray,
+                            modifier = Modifier.padding(top = 4.dp)
+                        )
+                    }
+                }
+
+                if (isLive) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.RssFeed,
+                            contentDescription = "LIVE",
+                            modifier = Modifier.size(16.dp),
+                            tint = Color.Red
+                        )
+                        Text(
+                            text = "LIVE",
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.Red
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Display Tag if available, using the same color logic as MainScreen.kt
+            session.embeddedTag?.let { tag ->
+                StudySessionTag(tag = tag)
+                Spacer(modifier = Modifier.height(8.dp))
+            }
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.DateRange,
+                        contentDescription = "Date",
+                        modifier = Modifier.size(16.dp),
+                        tint = Color.Gray
+                    )
+                    Text(
+                        text = formatDate(session.date),
+                        fontSize = 12.sp,
+                        color = Color.Gray
+                    )
+                }
+
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Schedule,
+                        contentDescription = "Time",
+                        modifier = Modifier.size(16.dp),
+                        tint = Color.Gray
+                    )
+                    Text(
+                        text = session.startTime,
+                        fontSize = 12.sp,
+                        color = Color.Gray
+                    )
+                }
+
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.HourglassEmpty,
+                        contentDescription = "Duration",
+                        modifier = Modifier.size(16.dp),
+                        tint = Color.Gray
+                    )
+                    Text(
+                        text = "${session.duration}min",
+                        fontSize = 12.sp,
+                        color = Color.Gray
+                    )
+                }
+            }
+        }
+    }
+}
+
+@RequiresApi(Build.VERSION_CODES.O)
+fun isSessionLive(session: StudySession): Boolean {
+    val currentDate = LocalDate.now()
+    val currentTime = LocalTime.now()
+
+    // Parse session date
+    val sessionDate = LocalDate.parse(session.date)
+
+    // Define a formatter for the expected startTime format (e.g., "HH:mm:ss+00")
+    val timeFormatter = DateTimeFormatter.ofPattern("HH:mm:ssX")
+
+    // Parse session start time using the defined formatter, then convert to LocalTime
+    val sessionStartTime = OffsetTime.parse(session.startTime, timeFormatter).toLocalTime()
+
+    // Calculate session end time
+    val sessionEndTime = sessionStartTime.plusMinutes(session.duration)
+
+    // Check if session is today and currently running
+    return sessionDate == currentDate &&
+            currentTime.isAfter(sessionStartTime) &&
+            currentTime.isBefore(sessionEndTime)
+}
+
+@RequiresApi(Build.VERSION_CODES.O)
+fun formatDate(dateString: String): String {
+    return try {
+        val date = LocalDate.parse(dateString)
+        val formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")
+        date.format(formatter)
+    } catch (e: Exception) {
+        dateString
     }
 }
 
@@ -213,8 +481,11 @@ fun StudySessionScreen(navController: NavController) {
             Circles()
         }
 
+        // Main content column that takes space above the nav bar
         Column(
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(bottom = 80.dp) // Adjust this padding based on actual Nav bar height
         ) {
             if(selectedItem == 0){
                 SearchBar()
@@ -228,6 +499,7 @@ fun StudySessionScreen(navController: NavController) {
             ScreenContent(selectedItem, navController)
         }
 
+        // Nav bar, aligned to the bottom of the outer Box
         if (selectedItem == 0 || selectedItem == 1 || selectedItem == 2 || selectedItem == 3 || selectedItem == 4) {
             Nav(
                 selectedItem = selectedItem,
@@ -238,5 +510,41 @@ fun StudySessionScreen(navController: NavController) {
                     .align(Alignment.BottomCenter)
             )
         }
+    }
+}
+
+@Composable
+fun StudySessionTag(
+    tag: TagData
+) {
+    // Map of tag descriptions to specific colors
+    val tagColorMap = mapOf(
+        "Math" to Color(0xFF4A90E2),      // Azul
+        "Physics" to Color(0xFF50C878),    // Verde
+        "Chemistry" to Color(0xFFFFA500),  // Laranja
+        "Biology" to Color(0xFFE91E63),    // Rosa
+        "Computer Science" to Color(0xFF9C27B0), // Roxo
+        "Languages" to Color(0xFF00BCD4),  // Ciano
+        "History" to Color(0xFFFF6B6B),    // Vermelho
+        "Geography" to Color(0xFF795548)   // Marrom
+    )
+
+    // Get color from map or use a default color if tag not found
+    val tagColor = tagColorMap[tag.description] ?: Color(0xFF4A90E2)
+
+    Box(
+        modifier = Modifier
+            .background(
+                color = tagColor,
+                shape = RoundedCornerShape(4.dp)
+            )
+            .padding(horizontal = 6.dp, vertical = 2.dp)
+    ) {
+        Text(
+            text = tag.description,
+            fontSize = 10.sp,
+            color = Color.White,
+            fontWeight = FontWeight.Medium
+        )
     }
 }
