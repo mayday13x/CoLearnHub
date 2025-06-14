@@ -824,7 +824,7 @@ fun Indice4(){
     val coroutineScope = rememberCoroutineScope()
 
     // Condição para habilitar o botão de compartilhar
-    val isShareEnabled = title.isNotBlank() && uploadedFileUrl != null
+    val isShareEnabled = title.isNotBlank() && uploadedFileUrl != null && selectedTags.isNotEmpty()
 
     // Função para converter idioma para ID
     fun getLanguageId(language: String): Long {
