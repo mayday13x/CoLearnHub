@@ -131,6 +131,11 @@ fun Indice(
     val currentUser by authViewModel.currentUser.collectAsState()
     val currentUserId = currentUser?.id
 
+    // Atualizar o ID do usuário atual no ViewModel
+    LaunchedEffect(currentUserId) {
+        materialViewModel.setCurrentUserId(currentUserId)
+    }
+
     var selectedTab by remember { mutableIntStateOf(0) }
     val label1 = stringResource(id = R.string.All)
     val label2 = stringResource(id = R.string.Created)

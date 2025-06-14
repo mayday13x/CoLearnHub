@@ -603,8 +603,10 @@ fun Language(
 
     fun getFlagEmoji(language: String): String {
         return when (language) {
-            "Inglês" -> "\uD83C\uDDFA\uD83C\uDDF8"
+            "Inglês" -> "\uD83C\uDDEC\uD83C\uDDE7"
             "Português" -> "\uD83C\uDDF5\uD83C\uDDF9"
+            "English" -> "\uD83C\uDDEC\uD83C\uDDE7"
+            "Portuguese" -> "\uD83C\uDDF5\uD83C\uDDF9"
             else -> ""
         }
     }

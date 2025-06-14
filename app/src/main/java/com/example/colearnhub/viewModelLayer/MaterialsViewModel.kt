@@ -83,10 +83,21 @@ class MaterialViewModel : ViewModel() {
     private val _endDateFilter = MutableStateFlow<LocalDateTime?>(null)
     val endDateFilter: StateFlow<LocalDateTime?> = _endDateFilter.asStateFlow()
 
+    // Estado do usuário atual
+    private val _currentUserId = MutableStateFlow<String?>(null)
+    val currentUserId: StateFlow<String?> = _currentUserId.asStateFlow()
+
     init {
         // Carregar dados iniciais
         loadAllTags()
         loadAllMaterials()
+    }
+
+    /**
+     * Define o ID do usuário atual
+     */
+    fun setCurrentUserId(userId: String?) {
+        _currentUserId.value = userId
     }
 
     /**
@@ -642,10 +653,17 @@ class MaterialViewModel : ViewModel() {
 
                 // Separar materiais por autor se necessário
                 if (authorId != null) {
-                    filteredMaterials = filteredMaterials.filter { it.author_id == authorId }
-                    _userMaterials.value = filteredMaterials
+                    // Primeiro filtrar por autor
+                    val authorMaterials = filteredMaterials.filter { it.author_id == authorId }
+                    _userMaterials.value = authorMaterials
+                    // Também atualizar a lista geral para manter a consistência
+                    _materials.value = filteredMaterials
                 } else {
                     _materials.value = filteredMaterials
+                    // Manter a lista de materiais do usuário atualizada também
+                    _currentUserId.value?.let { userId ->
+                        _userMaterials.value = filteredMaterials.filter { it.author_id == userId }
+                    }
                 }
 
             } catch (e: Exception) {
