@@ -4,9 +4,11 @@ import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
 import com.example.colearnhub.modelLayer.CreateStudySessionRequest
+import com.example.colearnhub.modelLayer.SessionParticipant
 import com.example.colearnhub.modelLayer.StudySession
 import com.example.colearnhub.modelLayer.StudySessionInsert
 import com.example.colearnhub.modelLayer.SupabaseClient
+import com.example.colearnhub.modelLayer.SessionParticipantInsert
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.postgrest.from
 import io.github.jan.supabase.postgrest.query.Columns
@@ -45,7 +47,7 @@ class StudySessionRepository {
             val session = SupabaseClient.client
                 .from("Study_sessions")
                 .insert(insertData) {
-                    select()
+                    select(columns = Columns.raw("*, Tags(*)"))
                 }
                 .decodeSingle<StudySession>()
 
@@ -151,7 +153,7 @@ class StudySessionRepository {
             val session = SupabaseClient.client
                 .from("Study_sessions")
                 .select(
-                    columns = Columns.raw("*, Tags(*), Session_participants(user_id)")
+                    columns = Columns.raw("*, Tags(*), Session_participants(user_id, session_id), creator_id")
                 ) {
                     filter {
                         eq("id", sessionId.toLong())
@@ -180,7 +182,7 @@ class StudySessionRepository {
                         eq("user_id", userId)
                     }
                 }
-                .decodeList<Map<String, String>>()
+                .decodeList<SessionParticipant>()
             participants.isNotEmpty()
         } catch (e: Exception) {
             Log.e("StudySessionRepository", "Error checking if user joined session: ${e.message}")
@@ -193,9 +195,10 @@ class StudySessionRepository {
      */
     suspend fun joinStudySession(sessionId: Long, userId: String): Boolean = withContext(Dispatchers.IO) {
         return@withContext try {
+            val participantInsert = SessionParticipantInsert(userId = userId, sessionId = sessionId)
             SupabaseClient.client
                 .from("Session_participants")
-                .insert(mapOf("session_id" to sessionId, "user_id" to userId))
+                .insert(participantInsert)
             true
         } catch (e: Exception) {
             Log.e("StudySessionRepository", "Error joining session: ${e.message}")
@@ -234,6 +237,36 @@ class StudySessionRepository {
         } catch (e: Exception) {
             Log.e("StudySessionRepository", "Error getting current user ID: ${e.message}")
             null
+        }
+    }
+
+    /**
+     * Deletes a study session and its participants (cascading delete)
+     */
+    suspend fun deleteStudySession(sessionId: Long): Boolean = withContext(Dispatchers.IO) {
+        return@withContext try {
+            // Delete participants first if your database doesn't automatically cascade
+            SupabaseClient.client
+                .from("Session_participants")
+                .delete {
+                    filter {
+                        eq("session_id", sessionId)
+                    }
+                }
+            
+            // Then delete the study session
+            SupabaseClient.client
+                .from("Study_sessions")
+                .delete {
+                    filter {
+                        eq("id", sessionId)
+                    }
+                }
+            true
+        } catch (e: Exception) {
+            Log.e("StudySessionRepository", "Error deleting session: ${e.message}")
+            Log.e("StudySessionRepository", "Stack trace: ${e.stackTraceToString()}")
+            false
         }
     }
 } 

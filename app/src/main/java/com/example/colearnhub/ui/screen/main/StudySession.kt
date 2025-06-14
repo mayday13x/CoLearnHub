@@ -217,9 +217,23 @@ fun ContentArea2(
     val animationSize = animation()
     val titleFontSize = txtSize()
     val verticalSpacing = verticalSpacing()
+    val context = LocalContext.current
+    val authViewModel: AuthViewModel = viewModel(
+        factory = AuthViewModelFactory(context)
+    )
+    val currentUser by authViewModel.currentUser.collectAsState()
 
-    // Filter out past sessions
-    val filteredSessions = sessions.filter { !isSessionPast(it) }
+    // Filter out past sessions and private sessions that the user shouldn't see
+    val filteredSessions = sessions.filter { session ->
+        !isSessionPast(session) && (
+            // Show if session is public
+            session.visibility ||
+            // Or if user is the owner
+            session.creatorId == currentUser?.id ||
+            // Or if user is in the group (for private sessions)
+            (session.groupId != null && session.sessionParticipants?.any { it.userId == currentUser?.id } == true)
+        )
+    }
 
     if (isLoading) {
         Box(
@@ -457,9 +471,18 @@ fun isSessionLive(session: StudySession): Boolean {
     val sessionEndTime = sessionStartTime.plusMinutes(session.duration)
 
     // Check if session is today and currently running
-    return sessionDate == currentDate &&
-            currentTime.isAfter(sessionStartTime) &&
-            currentTime.isBefore(sessionEndTime)
+    if (sessionDate == currentDate) {
+        // If session ends after midnight
+        if (sessionEndTime.isBefore(sessionStartTime)) {
+            // Session is live if current time is after start time
+            return currentTime.isAfter(sessionStartTime)
+        } else {
+            // Normal case: session ends on the same day
+            return currentTime.isAfter(sessionStartTime) && currentTime.isBefore(sessionEndTime)
+        }
+    }
+    
+    return false
 }
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -500,6 +523,12 @@ fun isSessionPast(session: StudySession): Boolean {
         val timeFormatter = DateTimeFormatter.ofPattern("HH:mm:ssX")
         val sessionStartTime = OffsetTime.parse(session.startTime, timeFormatter).toLocalTime()
         val sessionEndTime = sessionStartTime.plusMinutes(session.duration)
+        
+        // If session ends after midnight, it's not past until the next day
+        if (sessionEndTime.isBefore(sessionStartTime)) {
+            // Session ends after midnight, so it's only past if we're past the end time on the next day
+            return false
+        }
         
         return currentTime.isAfter(sessionEndTime)
     }
@@ -591,20 +620,21 @@ fun StudySessionScreen(navController: NavController) {
 fun StudySessionTag(
     tag: TagData
 ) {
-    // Map of tag descriptions to specific colors
-    val tagColorMap = mapOf(
-        "Math" to Color(0xFF4A90E2),      // Azul
-        "Physics" to Color(0xFF50C878),    // Verde
-        "Chemistry" to Color(0xFFFFA500),  // Laranja
-        "Biology" to Color(0xFFE91E63),    // Rosa
-        "Computer Science" to Color(0xFF9C27B0), // Roxo
-        "Languages" to Color(0xFF00BCD4),  // Ciano
-        "History" to Color(0xFFFF6B6B),    // Vermelho
-        "Geography" to Color(0xFF795548)   // Marrom
+    // Lista de cores para as tags (igual ao MainScreen.kt)
+    val tagColors = listOf(
+        Color(0xFF4A90E2), // Azul
+        Color(0xFF50C878), // Verde
+        Color(0xFFFFA500), // Laranja
+        Color(0xFFE91E63), // Rosa
+        Color(0xFF9C27B0), // Roxo
+        Color(0xFF00BCD4), // Ciano
+        Color(0xFFFF6B6B), // Vermelho
+        Color(0xFF795548)  // Marrom
     )
 
-    // Get color from map or use a default color if tag not found
-    val tagColor = tagColorMap[tag.description] ?: Color(0xFF4A90E2)
+    // Usar o índice do hash da descrição da tag para escolher uma cor consistente
+    val colorIndex = tag.description.hashCode().absoluteValue() % tagColors.size
+    val tagColor = tagColors[colorIndex]
 
     Box(
         modifier = Modifier
@@ -622,3 +652,6 @@ fun StudySessionTag(
         )
     }
 }
+
+// Extensão para obter o valor absoluto de um Int
+private fun Int.absoluteValue(): Int = if (this < 0) -this else this

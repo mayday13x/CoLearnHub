@@ -11,6 +11,7 @@ import androidx.navigation.navArgument
 import com.example.colearnhub.ui.screen.session.DetailsOwnerScreen
 import com.example.colearnhub.ui.screen.session.NSSScreen
 import com.example.colearnhub.ui.screen.session.StudySessionDetailsScreen
+import com.example.colearnhub.ui.screen.session.StudySessionParticipantsScreen
 
 @RequiresApi(Build.VERSION_CODES.O)
 fun NavGraphBuilder.sessionRoutes(
@@ -29,6 +30,15 @@ fun NavGraphBuilder.sessionRoutes(
         val sessionId = backStackEntry.arguments?.getString("sessionId")
         if (sessionId != null) {
             StudySessionDetailsScreen(navController = navController, viewModel = viewModel())
+        }
+    }
+    composable(
+        "study_session_participants/{sessionId}",
+        arguments = listOf(navArgument("sessionId") { type = NavType.StringType })
+    ) { backStackEntry ->
+        val sessionId = backStackEntry.arguments?.getString("sessionId")
+        if (sessionId != null) {
+            StudySessionParticipantsScreen(navController = navController, sessionId = sessionId, viewModel = viewModel())
         }
     }
 }

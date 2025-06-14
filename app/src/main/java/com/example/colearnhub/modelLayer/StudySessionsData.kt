@@ -28,7 +28,7 @@ data class StudySession(
     @SerialName("num_participants")
     val numParticipants: Int = 0,
     @SerialName("Session_participants")
-    val sessionParticipants: List<Map<String, String>>? = null
+    val sessionParticipants: List<SessionParticipant>? = null
 )
 
 @Serializable
@@ -63,4 +63,20 @@ data class StudySessionInsert(
     val tag: Long?,
     @SerialName("session_link")
     val session_link: String?
+)
+
+@Serializable
+data class SessionParticipantInsert(
+    @SerialName("user_id")
+    val userId: String,
+    @SerialName("session_id")
+    val sessionId: Long
+)
+
+@Serializable
+data class SessionParticipant(
+    @SerialName("user_id")
+    val userId: String,
+    @SerialName("session_id")
+    val sessionId: Long
 ) 

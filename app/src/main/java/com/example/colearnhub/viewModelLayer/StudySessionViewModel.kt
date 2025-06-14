@@ -54,6 +54,18 @@ class StudySessionViewModel : ViewModel() {
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error.asStateFlow()
 
+    private val _isUserInGroup = MutableStateFlow(false)
+    val isUserInGroup: StateFlow<Boolean> = _isUserInGroup.asStateFlow()
+
+    private val _isUserOwner = MutableStateFlow(false)
+    val isUserOwner: StateFlow<Boolean> = _isUserOwner.asStateFlow()
+
+    private val _displayParticipantsCount = MutableStateFlow(0)
+    val displayParticipantsCount: StateFlow<Int> = _displayParticipantsCount.asStateFlow()
+
+    private val _isRemoving = MutableStateFlow(false)
+    val isRemoving: StateFlow<Boolean> = _isRemoving.asStateFlow()
+
     init {
         loadUserGroups()
     }
@@ -192,14 +204,55 @@ class StudySessionViewModel : ViewModel() {
                 _selectedStudySession.value = session
                 if (currentUser != null && session != null) {
                     _isUserParticipating.value = studySessionRepository.isUserJoined(sessionId, currentUser.id)
+                    
+                    // Debug logs for owner check
+                    Log.d("StudySessionViewModel", "Current user ID: ${currentUser.id}")
+                    Log.d("StudySessionViewModel", "Session creator ID: ${session.creatorId}")
+                    _isUserOwner.value = session.creatorId == currentUser.id
+                    Log.d("StudySessionViewModel", "Is user owner: ${_isUserOwner.value}")
+                    
+                    // Check if user is in the same group as the session
+                    if (session.groupId != null) {
+                        val userGroups = groupRepository.getUserAcceptedGroups(currentUser.id)
+                        _isUserInGroup.value = userGroups.any { it.group.id == session.groupId }
+
+                        // Calculate combined participant count
+                        val uniqueParticipants = mutableSetOf<String>()
+                        uniqueParticipants.add(session.creatorId) // Add owner
+                        session.sessionParticipants?.forEach { participant ->
+                            uniqueParticipants.add(participant.userId)
+                        }
+
+                        val groupDetails = groupRepository.getGroupDetails(session.groupId) // Fetch group details
+                        groupDetails?.members?.filter { it.accept == true }?.forEach { member ->
+                            uniqueParticipants.add(member.user_id)
+                        }
+                        _displayParticipantsCount.value = uniqueParticipants.size
+
+                    } else {
+                        _isUserInGroup.value = false
+                        // Calculate participant count without group members
+                        val uniqueParticipants = mutableSetOf<String>()
+                        uniqueParticipants.add(session.creatorId) // Add owner
+                        session.sessionParticipants?.forEach { participant ->
+                            uniqueParticipants.add(participant.userId)
+                        }
+                        _displayParticipantsCount.value = uniqueParticipants.size
+                    }
                 } else {
                     _isUserParticipating.value = false
+                    _isUserOwner.value = false
+                    _isUserInGroup.value = false
+                    _displayParticipantsCount.value = 0
                 }
             } catch (e: Exception) {
                 Log.e("StudySessionViewModel", "Error loading session details: ${e.message}")
                 _error.value = "Failed to load session details"
                 _selectedStudySession.value = null
                 _isUserParticipating.value = false
+                _isUserOwner.value = false
+                _isUserInGroup.value = false
+                _displayParticipantsCount.value = 0
             } finally {
                 _isLoadingDetails.value = false
             }
@@ -243,16 +296,20 @@ class StudySessionViewModel : ViewModel() {
             try {
                 val currentUser = authRepository.getCurrentUser()
                 if (currentUser != null) {
+                    Log.d("StudySessionViewModel", "Attempting to leave session. Session ID: $sessionId, User ID: ${currentUser.id}")
                     // Convert sessionId to Long for the repository call, if repository still expects Long
                     val success = studySessionRepository.leaveStudySession(sessionId.toLong(), currentUser.id)
                     if (success) {
+                        Log.d("StudySessionViewModel", "Successfully left session. Refreshing details.")
                         loadStudySessionDetails(sessionId) // Refresh details
                         // Also refresh joined sessions list on main screen
                         loadJoinedStudySessions()
                     } else {
+                        Log.e("StudySessionViewModel", "Failed to leave session from repository.")
                         _error.value = "Failed to leave session"
                     }
                 } else {
+                    Log.e("StudySessionViewModel", "User not authenticated to leave session.")
                     _error.value = "User not authenticated"
                 }
             } catch (e: Exception) {
@@ -260,6 +317,29 @@ class StudySessionViewModel : ViewModel() {
                 _error.value = e.message ?: "Failed to leave session"
             } finally {
                 _isLoadingDetails.value = false
+                Log.d("StudySessionViewModel", "Finished leaving session operation. isLoadingDetails: ${_isLoadingDetails.value}")
+            }
+        }
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    fun removeStudySession(sessionId: String) {
+        viewModelScope.launch {
+            _isRemoving.value = true
+            _error.value = null
+            try {
+                val success = studySessionRepository.deleteStudySession(sessionId.toLong()) // Convert to Long for repo
+                if (success) {
+                    Log.d("StudySessionViewModel", "Successfully removed session: $sessionId")
+                    // Optionally, navigate back or refresh a list after successful removal
+                } else {
+                    _error.value = "Failed to remove session"
+                }
+            } catch (e: Exception) {
+                Log.e("StudySessionViewModel", "Error removing session: ${e.message}")
+                _error.value = e.message ?: "Failed to remove session"
+            } finally {
+                _isRemoving.value = false
             }
         }
     }

@@ -236,6 +236,9 @@
     <string name="create">Criar</string>
     <string name="new_group_title">Novo Grupo</string>
 
+    <string name="confirm_remove_session">Confirmar remoção da sessão</string>
+    <string name="remove_session_confirmation">Tem a certeza que deseja remover esta sessão? Esta ação não pode ser desfeita e irá apagar todos os dados associados.</string>
+
     <!-- Group Participants Screen -->
     <string name="participants">Participantes</string>
     <string name="search_participants">Procurar participantes...</string>

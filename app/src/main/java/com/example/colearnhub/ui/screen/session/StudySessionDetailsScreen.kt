@@ -28,6 +28,9 @@ import androidx.compose.material.icons.filled.HourglassEmpty
 import androidx.compose.material.icons.filled.People
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.OpenInNew
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -35,14 +38,20 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -62,11 +71,14 @@ import com.example.colearnhub.ui.screen.main.formatTime
 import com.example.colearnhub.ui.utils.dynamicPadding
 import com.example.colearnhub.ui.utils.txtSize
 import com.example.colearnhub.ui.utils.verticalSpacing
+import com.example.colearnhub.viewModelLayer.AuthViewModelFactory
 import com.example.colearnhub.viewModelLayer.StudySessionViewModel
+import com.example.colearnhub.viewmodel.AuthViewModel
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun StudySessionDetailsTopBar(navController: NavController) {
+fun StudySessionDetailsTopBar(onBack: () -> Unit) {
     CenterAlignedTopAppBar(
         title = {
             Text(
@@ -76,7 +88,7 @@ fun StudySessionDetailsTopBar(navController: NavController) {
             )
         },
         navigationIcon = {
-            IconButton(onClick = { navController.popBackStack() }) {
+            IconButton(onClick = onBack) {
                 Icon(
                     imageVector = Icons.Default.ArrowBack,
                     contentDescription = "Back",
@@ -98,9 +110,20 @@ fun StudySessionDetailsScreen(
 ) {
     val selectedStudySession by viewModel.selectedStudySession.collectAsState()
     val isUserParticipating by viewModel.isUserParticipating.collectAsState()
+    val isUserOwner by viewModel.isUserOwner.collectAsState()
+    val isUserInGroup by viewModel.isUserInGroup.collectAsState()
     val isLoading by viewModel.isLoadingDetails.collectAsState()
     val error by viewModel.error.collectAsState()
     val context = LocalContext.current
+    val authViewModel: AuthViewModel = viewModel(factory = AuthViewModelFactory(context))
+    val currentUser by authViewModel.currentUser.collectAsState()
+
+    val navigateBackToSessions = {
+        navController.navigate("MainScreen?selectedItem=1") {
+            popUpTo("study_sessions_route") { inclusive = false }
+            launchSingleTop = true
+        }
+    }
 
     LaunchedEffect(Unit) {
         val sessionId = navController.currentBackStackEntry?.arguments?.getString("sessionId")
@@ -123,7 +146,7 @@ fun StudySessionDetailsScreen(
     Column(
         modifier = Modifier.fillMaxSize()
     ) {
-        StudySessionDetailsTopBar(navController = navController)
+        StudySessionDetailsTopBar(onBack = navigateBackToSessions)
 
         if (isLoading) {
             Box(
@@ -272,7 +295,9 @@ fun StudySessionDetailsScreen(
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .clickable { /* Navigate to participants list */ }
+                                .clickable { 
+                                    navController.navigate("study_session_participants/${selectedStudySession!!.id}")
+                                }
                                 .background(Color.LightGray.copy(alpha = 0.2f), RoundedCornerShape(8.dp))
                                 .padding(12.dp),
                             verticalAlignment = Alignment.CenterVertically,
@@ -281,15 +306,15 @@ fun StudySessionDetailsScreen(
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Icon(Icons.Filled.People, contentDescription = "Participants", tint = MaterialTheme.colorScheme.primary)
                                 Spacer(modifier = Modifier.width(8.dp))
-                                Text(text = stringResource(R.string.participants_count, selectedStudySession!!.numParticipants))
+                                Text(text = stringResource(R.string.participants_count, viewModel.displayParticipantsCount.collectAsState().value))
                             }
-                            Icon(Icons.Filled.Share, contentDescription = "Share") // Placeholder for navigation arrow
+                            Icon(Icons.Filled.ChevronRight, contentDescription = "View participants")
                         }
 
                         Spacer(modifier = Modifier.height(verticalSpacing()))
 
                         // Session Link (conditional visibility)
-                        if (isUserParticipating) {
+                        if (isUserOwner || isUserInGroup || isUserParticipating) {
                             selectedStudySession!!.sessionLink?.let { link ->
                                 Text(
                                     text = stringResource(R.string.session_s_link),
@@ -297,37 +322,115 @@ fun StudySessionDetailsScreen(
                                     fontWeight = FontWeight.SemiBold,
                                     color = MaterialTheme.colorScheme.primary
                                 )
-                                Text(
-                                    text = link,
-                                    fontSize = 16.sp,
-                                    color = MaterialTheme.colorScheme.primary,
+                                OutlinedTextField(
+                                    value = link,
+                                    onValueChange = {},
+                                    readOnly = true,
+                                    enabled = false,
                                     modifier = Modifier
-                                        .clickable { val intent = Intent(Intent.ACTION_VIEW, Uri.parse(link)); context.startActivity(intent) }
-                                        .padding(top = 4.dp)
+                                        .fillMaxWidth()
+                                        .padding(top = 4.dp),
+                                    colors = OutlinedTextFieldDefaults.colors(
+                                        disabledTextColor = Color.Black,
+                                        disabledBorderColor = Color(0xFF395174),
+                                        disabledTrailingIconColor = Color(0xFF395174)
+                                    ),
+                                    shape = RoundedCornerShape(8.dp),
+                                    trailingIcon = {
+                                        IconButton(onClick = { val intent = Intent(Intent.ACTION_VIEW, Uri.parse(link)); context.startActivity(intent) }) {
+                                            Icon(Icons.Filled.OpenInNew, contentDescription = "Open Link", tint = Color(0xFF395174))
+                                        }
+                                    }
                                 )
                             }
                         }
 
                         Spacer(modifier = Modifier.height(verticalSpacing() * 2))
 
-                        // Join/Leave Button
-                        Button(
-                            onClick = {
-                                if (isUserParticipating) {
-                                    viewModel.leaveSession(selectedStudySession!!.id.toString())
-                                } else {
-                                    viewModel.joinSession(selectedStudySession!!.id.toString())
-                                }
-                            },
-                            modifier = Modifier.fillMaxWidth().height(50.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
-                            shape = RoundedCornerShape(12.dp)
-                        ) {
-                            Text(
-                                text = if (isUserParticipating) stringResource(R.string.leave) else stringResource(R.string.join),
-                                color = Color.White,
-                                fontSize = 18.sp,
-                                fontWeight = FontWeight.Bold
+                        // Join/Leave/Remove Button
+                        val sessionId = selectedStudySession!!.id.toString()
+                        var showRemoveDialog by remember { mutableStateOf(false) }
+
+                        if (isUserOwner) {
+                            Button(
+                                onClick = { showRemoveDialog = true },
+                                modifier = Modifier.fillMaxWidth().height(50.dp),
+                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE53E3E)), // Red for Remove
+                                shape = RoundedCornerShape(12.dp)
+                            ) {
+                                Text(
+                                    text = stringResource(R.string.remove),
+                                    color = Color.White,
+                                    fontSize = 18.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                        } else {
+                            Button(
+                                onClick = {
+                                    if (isUserParticipating) {
+                                        viewModel.leaveSession(sessionId)
+                                    } else {
+                                        viewModel.joinSession(sessionId)
+                                    }
+                                },
+                                modifier = Modifier.fillMaxWidth().height(50.dp),
+                                colors = ButtonDefaults.buttonColors(containerColor = if (isUserParticipating) Color(0xFFE53E3E) else MaterialTheme.colorScheme.primary),
+                                shape = RoundedCornerShape(12.dp)
+                            ) {
+                                Text(
+                                    text = if (isUserParticipating) stringResource(R.string.leave) else stringResource(R.string.join),
+                                    color = Color.White,
+                                    fontSize = 18.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                        }
+
+                        // Remove Confirmation Dialog
+                        if (showRemoveDialog) {
+                            AlertDialog(
+                                onDismissRequest = { showRemoveDialog = false },
+                                title = {
+                                    Text(
+                                        text = stringResource(R.string.confirm_remove_session),
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color.Black
+                                    )
+                                },
+                                text = {
+                                    Text(
+                                        text = stringResource(R.string.remove_session_confirmation),
+                                        lineHeight = 20.sp,
+                                        color = Color.Black
+                                    )
+                                },
+                                confirmButton = {
+                                    TextButton(
+                                        onClick = {
+                                            showRemoveDialog = false
+                                            viewModel.removeStudySession(sessionId) // Call new ViewModel function
+                                            navigateBackToSessions()
+                                        },
+                                        colors = ButtonDefaults.textButtonColors(
+                                            contentColor = Color(0xFFE53E3E)
+                                        )
+                                    ) {
+                                        Text(
+                                            text = stringResource(R.string.remove),
+                                            fontWeight = FontWeight.Medium
+                                        )
+                                    }
+                                },
+                                dismissButton = {
+                                    TextButton(onClick = { showRemoveDialog = false }) {
+                                        Text(
+                                            text = stringResource(R.string.cancel),
+                                            color = Color.Black
+                                        )
+                                    }
+                                },
+                                containerColor = Color.White
                             )
                         }
                     }
