@@ -74,6 +74,9 @@ import androidx.compose.material.icons.filled.RssFeed
 import android.util.Log
 import java.time.OffsetTime
 import com.example.colearnhub.modelLayer.TagData
+import androidx.compose.ui.platform.LocalContext
+import com.example.colearnhub.viewModelLayer.AuthViewModelFactory
+import com.example.colearnhub.viewmodel.AuthViewModel
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
@@ -89,6 +92,11 @@ fun Indice2(navController: NavController? = null, viewModel: StudySessionViewMod
     val createdStudySessions by viewModel.createdStudySessions.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
     val error by viewModel.error.collectAsState()
+
+    // Combine joined and created sessions for the Joined tab
+    val combinedJoinedSessions = remember(joinedStudySessions, createdStudySessions) {
+        (joinedStudySessions + createdStudySessions).distinctBy { it.id }
+    }
 
     // Log current state for debugging
     LaunchedEffect(futureStudySessions, isLoading, error) {
@@ -183,14 +191,14 @@ fun Indice2(navController: NavController? = null, viewModel: StudySessionViewMod
                 emptyMessage = stringResource(R.string.not_found2)
             )
             1 -> ContentArea2(
-                sessions = joinedStudySessions,
+                sessions = combinedJoinedSessions,
                 isLoading = isLoading,
-                emptyMessage = "No joined sessions found"
+                emptyMessage = "You haven't joined or created any study sessions yet"
             )
             2 -> ContentArea2(
                 sessions = createdStudySessions,
                 isLoading = isLoading,
-                emptyMessage = "No created sessions found"
+                emptyMessage = "You haven't created any study sessions yet"
             )
         }
     }
@@ -260,7 +268,8 @@ fun ContentArea2(
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = padding),
+                .padding(horizontal = padding)
+                .padding(bottom = 80.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             items(sessions) { session ->
@@ -274,6 +283,19 @@ fun ContentArea2(
 @Composable
 fun StudySessionCard(session: StudySession) {
     val isLive = isSessionLive(session)
+    val context = LocalContext.current
+    val authViewModel: AuthViewModel = viewModel(
+        factory = AuthViewModelFactory(context)
+    )
+    val currentUser by authViewModel.currentUser.collectAsState()
+    val isOwner = session.creatorId == currentUser?.id
+
+    // Debug logs
+    LaunchedEffect(session, currentUser) {
+        Log.d("StudySessionCard", "Session creatorId: ${session.creatorId}")
+        Log.d("StudySessionCard", "Current user id: ${currentUser?.id}")
+        Log.d("StudySessionCard", "Is owner: $isOwner")
+    }
 
     Card(
         modifier = Modifier
@@ -311,11 +333,21 @@ fun StudySessionCard(session: StudySession) {
                     }
                 }
 
-                if (isLive) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
-                    ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    if (isOwner) {
+                        Text(
+                            text = "Owner 👑",
+                            fontSize = 12.sp,
+                            color = Color(0xFF395174),
+                            fontWeight = FontWeight.Medium
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                    }
+
+                    if (isLive) {
                         Icon(
                             imageVector = Icons.Filled.RssFeed,
                             contentDescription = "LIVE",
@@ -334,7 +366,7 @@ fun StudySessionCard(session: StudySession) {
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Display Tag if available, using the same color logic as MainScreen.kt
+            // Display Tag if available
             session.embeddedTag?.let { tag ->
                 StudySessionTag(tag = tag)
                 Spacer(modifier = Modifier.height(8.dp))
