@@ -300,5 +300,9 @@
     <string name="leave_comment">Deixe um comentário</string>
     <string name="comment">Comentar</string>
     <string name="response">Responder</string>
+    <string name="select">Selecione as áreas</string>
+    <string name="desconhecido">Erro desconhecido</string>
+    <string name="confirm">Confirmar</string>
+    <string name="success_material">Material criado com sucesso!</string>
 
 </resources>

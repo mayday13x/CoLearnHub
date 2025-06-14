@@ -303,5 +303,9 @@
     <string name="leave_comment">Leave a comment</string>
     <string name="comment">Comment</string>
     <string name="response">Reply</string>
+    <string name="select">Select the areas</string>
+    <string name="desconhecido">Unknown error</string>
+    <string name="confirm">Confirm</string>
+    <string name="success_material">Material created successfully!</string>
 
 </resources>

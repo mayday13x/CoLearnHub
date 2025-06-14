@@ -30,6 +30,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Upload
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.AlertDialogDefaults.containerColor
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CardDefaults
@@ -200,7 +201,6 @@ fun TagSelectionDialog(
     var tags by remember { mutableStateOf(listOf<String>()) }
     var isLoading by remember { mutableStateOf(true) }
     var error by remember { mutableStateOf<String?>(null) }
-    val coroutineScope = rememberCoroutineScope()
 
     // Carregar tags quando o diálogo é aberto
     LaunchedEffect(showDialog) {
@@ -225,7 +225,7 @@ fun TagSelectionDialog(
             onDismissRequest = onDismiss,
             title = {
                 Text(
-                    text = "Selecione as áreas",
+                    text = stringResource(R.string.select),
                     color = Color(0xFF395174),
                     fontSize = 18.sp
                 )
@@ -234,7 +234,8 @@ fun TagSelectionDialog(
                 Surface(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(300.dp)
+                        .height(300.dp),
+                    color = Color.White
                 ) {
                     if (isLoading) {
                         Box(
@@ -252,7 +253,7 @@ fun TagSelectionDialog(
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
-                                text = error ?: "Erro desconhecido",
+                                text = error ?: stringResource(R.string.desconhecido),
                                 color = Color.Red,
                                 textAlign = TextAlign.Center,
                                 modifier = Modifier.padding(16.dp)
@@ -272,7 +273,7 @@ fun TagSelectionDialog(
                                             }
                                         }
                                         .padding(vertical = 8.dp, horizontal = 16.dp),
-                                    verticalAlignment = Alignment.CenterVertically
+                                    verticalAlignment = Alignment.CenterVertically,
                                 ) {
                                     Checkbox(
                                         checked = selectedTags.contains(tag),
@@ -303,22 +304,23 @@ fun TagSelectionDialog(
                         onDismiss()
                     },
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFF395174)
+                        containerColor = Color.White
                     )
                 ) {
-                    Text("Confirmar")
+                    Text(text = stringResource(R.string.confirm))
                 }
             },
             dismissButton = {
                 Button(
                     onClick = onDismiss,
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = Color.Gray
+                        containerColor = Color.White
                     )
                 ) {
-                    Text("Cancelar")
+                    Text(text = stringResource(R.string.cancel))
                 }
-            }
+            },
+            containerColor = Color.White
         )
     }
 }
@@ -603,7 +605,7 @@ fun Language(
 
     fun getFlagEmoji(language: String): String {
         return when (language) {
-            "Inglês" -> "\uD83C\uDDFA\uD83C\uDDF8"
+            "Inglês" -> "\uD83C\uDDEC\uD83C\uDDE7"
             "Português" -> "\uD83C\uDDF5\uD83C\uDDF9"
             else -> ""
         }
@@ -947,7 +949,7 @@ fun Indice4(){
             onClick = { createMaterial() }
         )
 
-        // Mostrar tags selecionadas para debug
+        /* Mostrar tags selecionadas para debug
         if (selectedTags.isNotEmpty()) {
             Text(
                 text = "Tags selecionadas: ${selectedTags.joinToString(", ")}",
@@ -955,7 +957,7 @@ fun Indice4(){
                 fontSize = 12.sp,
                 modifier = Modifier.padding(horizontal = 32.dp, vertical = 4.dp)
             )
-        }
+        }*/
 
         // Mostrar mensagens de erro ou sucesso
         createError?.let { error ->
@@ -969,7 +971,7 @@ fun Indice4(){
 
         if (createSuccess) {
             Text(
-                text = "Material criado com sucesso!",
+                text = stringResource(R.string.success_material),
                 color = Color.Green,
                 fontSize = 14.sp,
                 modifier = Modifier.padding(horizontal = 32.dp, vertical = 8.dp)
