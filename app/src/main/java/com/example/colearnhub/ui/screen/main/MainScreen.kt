@@ -3,6 +3,7 @@ package com.example.colearnhub.ui.screen.main
 import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -92,6 +93,26 @@ import com.example.colearnhub.ui.utils.verticalSpacing
 import com.example.colearnhub.viewModelLayer.AuthViewModelFactory
 import com.example.colearnhub.viewModelLayer.MaterialViewModel
 import com.example.colearnhub.viewmodel.AuthViewModel
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.rememberDatePickerState
+import java.time.Instant
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+import java.util.Date
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.LocalTime
+import java.time.ZoneOffset
+import androidx.compose.material3.SelectableDates
+import androidx.compose.material3.rememberDateRangePickerState
+import androidx.compose.material3.ButtonColors
+import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.SheetState
+import androidx.compose.material3.rememberStandardBottomSheetState
+import androidx.compose.material3.DateRangePicker
+import androidx.compose.material3.DateRangePickerState
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
@@ -775,13 +796,15 @@ fun SearchBar(
     }
 
     var searchQuery by remember { mutableStateOf("") }
-    var showFilterOptions by remember { mutableStateOf(false) }
+    var showFilterModal by remember { mutableStateOf(false) } // Control modal visibility
     var showTagFilter by remember { mutableStateOf(false) }
     var selectedFilterTime by remember { mutableStateOf<String?>(null) }
 
     // Estados do ViewModel
     val allTags by materialViewModel.allTags.collectAsState()
     val selectedTags by materialViewModel.selectedFilterTags.collectAsState()
+    val startDateFilter by materialViewModel.startDateFilter.collectAsState()
+    val endDateFilter by materialViewModel.endDateFilter.collectAsState()
 
     Column(
         modifier = Modifier
@@ -822,8 +845,8 @@ fun SearchBar(
             leadingIcon = { Icon(Icons.Default.Search, contentDescription = "Search") },
             trailingIcon = {
                 IconButton(onClick = {
-                    showFilterOptions = !showFilterOptions
-                    Log.d("SearchBar", "Filter button clicked. showFilterOptions: $showFilterOptions")
+                    showFilterModal = !showFilterModal // Toggle modal visibility
+                    Log.d("SearchBar", "Filter button clicked. showFilterModal: $showFilterModal")
                 }) {
                     Icon(Icons.Default.FilterList, contentDescription = "Filter")
                 }
@@ -842,178 +865,243 @@ fun SearchBar(
             singleLine = true
         )
 
-        // Filter options dropdown
-        if (showFilterOptions) {
-            Spacer(modifier = Modifier.height(8.dp))
-
-            // Botões de filtro
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 4.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+        // Filter Modal
+        if (showFilterModal) {
+            val sheetState = rememberModalBottomSheetState()
+            ModalBottomSheet(
+                onDismissRequest = { showFilterModal = false },
+                sheetState = sheetState,
+                modifier = Modifier.fillMaxWidth()
             ) {
-                // Botão Time Filter
-                Button(
-                    onClick = {
-                        showTagFilter = false
-                        // Manter a lógica do filtro de tempo existente
-                    },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = if (!showTagFilter) Color(0xFF395174) else Color.LightGray
-                    ),
-                    shape = RoundedCornerShape(8.dp),
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Text(
-                        "Time Filter",
-                        color = if (!showTagFilter) Color.White else Color.Black,
-                        fontSize = 12.sp
-                    )
-                }
-
-                // Botão Tag Filter
-                Button(
-                    onClick = {
-                        showTagFilter = true
-                    },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = if (showTagFilter) Color(0xFF395174) else Color.LightGray
-                    ),
-                    shape = RoundedCornerShape(8.dp),
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Text(
-                        "Area Filter",
-                        color = if (showTagFilter) Color.White else Color.Black,
-                        fontSize = 12.sp
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            if (showTagFilter) {
-                // Tag Filter Section
-                TagFilterSection(
-                    availableTags = allTags,
-                    selectedTags = selectedTags,
-                    onTagToggle = { tag ->
-                        materialViewModel.toggleTagFilter(tag)
-                    },
-                    onClearAll = {
-                        materialViewModel.clearTagFilter()
-                    }
-                )
-            } else {
-                // Time Filter Section (código existente)
-                val filterOptions = listOf(
-                    "Last 24 hours" to "24h",
-                    "Last week" to "week",
-                    "Last month" to "month",
-                    "Last year" to "year",
-                    "All time" to "all"
-                )
-                val selectedOptionText = filterOptions.find { it.second == selectedFilterTime }?.first ?: "Select a filter"
-
                 Column(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .background(Color.White, RoundedCornerShape(10.dp))
-                        .border(1.dp, Color.LightGray, RoundedCornerShape(10.dp))
                         .padding(16.dp)
+                        .fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
-                        text = "Filter by Time",
+                        text = "Filter Options",
+                        fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
-                        fontSize = 16.sp,
-                        modifier = Modifier.padding(bottom = 8.dp)
+                        color = Color(0xFF395174),
+                        modifier = Modifier.padding(bottom = 16.dp)
                     )
 
-                    ExposedDropdownMenuBox(
-                        expanded = false,
-                        onExpandedChange = { }
+                    // Filter type selection buttons (Time Filter / Area Filter)
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 4.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        OutlinedTextField(
-                            modifier = Modifier
-                                .menuAnchor()
-                                .fillMaxWidth(),
-                            readOnly = true,
-                            value = selectedOptionText,
-                            onValueChange = { },
-                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = false) },
-                            colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = Color.Transparent,
-                                unfocusedBorderColor = Color.Transparent,
-                                focusedContainerColor = Color.Transparent,
-                                unfocusedContainerColor = Color.Transparent,
-                                cursorColor = Color.Black
-                            )
-                        )
-                        ExposedDropdownMenu(
-                            expanded = showFilterOptions && !showTagFilter,
-                            onDismissRequest = { showFilterOptions = false }
+                        Button(
+                            onClick = { showTagFilter = false },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = if (!showTagFilter) Color(0xFF395174) else Color.LightGray
+                            ),
+                            shape = RoundedCornerShape(8.dp),
+                            modifier = Modifier.weight(1f)
                         ) {
-                            filterOptions.forEach { (label, value) ->
-                                DropdownMenuItem(
-                                    text = { Text(label) },
-                                    onClick = {
-                                        selectedFilterTime = value
-                                        showFilterOptions = false
-                                    }
-                                )
-                            }
+                            Text(
+                                "Time Filter",
+                                color = if (!showTagFilter) Color.White else Color.Black,
+                                fontSize = 12.sp
+                            )
+                        }
+
+                        Button(
+                            onClick = { showTagFilter = true },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = if (showTagFilter) Color(0xFF395174) else Color.LightGray
+                            ),
+                            shape = RoundedCornerShape(8.dp),
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text(
+                                "Area Filter",
+                                color = if (showTagFilter) Color.White else Color.Black,
+                                fontSize = 12.sp
+                            )
                         }
                     }
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceAround
-                    ) {
-                        Button(
-                            onClick = {
-                                materialViewModel.filterMaterialsByTime(selectedFilterTime)
-                                showFilterOptions = false
+                    if (showTagFilter) {
+                        // Tag Filter Section
+                        TagFilterSection(
+                            availableTags = allTags,
+                            selectedTags = selectedTags,
+                            onTagToggle = { tag ->
+                                materialViewModel.toggleTagFilter(tag)
                             },
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF395174)),
-                            shape = RoundedCornerShape(8.dp),
-                            modifier = Modifier.weight(1f).padding(end = 4.dp)
+                            onClearAll = {
+                                materialViewModel.clearTagFilter()
+                            }
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        // Apply and Reset buttons for Tag Filter
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceAround
                         ) {
-                            Text("Apply Filter", color = Color.White)
+                            Button(
+                                onClick = {
+                                    materialViewModel.applyAllFilters() // Re-apply all filters including tags
+                                    showFilterModal = false
+                                },
+                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF395174)),
+                                shape = RoundedCornerShape(8.dp),
+                                modifier = Modifier.weight(1f).padding(end = 4.dp)
+                            ) {
+                                Text("Apply", color = Color.White)
+                            }
+
+                            Button(
+                                onClick = {
+                                    materialViewModel.clearTagFilter()
+                                    showFilterModal = false
+                                },
+                                colors = ButtonDefaults.buttonColors(containerColor = Color.LightGray),
+                                shape = RoundedCornerShape(8.dp),
+                                modifier = Modifier.weight(1f).padding(start = 4.dp)
+                            ) {
+                                Text("Reset Tags", color = Color.Black)
+                            }
                         }
 
-                        Button(
-                            onClick = {
-                                selectedFilterTime = null
-                                materialViewModel.filterMaterialsByTime(null)
-                                showFilterOptions = false
-                                searchQuery = ""
-                                materialViewModel.loadPublicMaterials()
-                            },
-                            colors = ButtonDefaults.buttonColors(containerColor = Color.LightGray),
-                            shape = RoundedCornerShape(8.dp),
-                            modifier = Modifier.weight(1f).padding(start = 4.dp)
+                    } else {
+                        // Time Filter Section
+                        val datePickerState = rememberDatePickerState(selectableDates = object : SelectableDates {
+                            fun isSelectable(utcTimeMillis: Long): Boolean {
+                                return true
+                            }
+                        })
+
+                        var showStartDatePicker by remember { mutableStateOf(false) }
+                        var showEndDatePicker by remember { mutableStateOf(false) }
+
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .background(Color.White, RoundedCornerShape(10.dp))
+                                .border(1.dp, Color.LightGray, RoundedCornerShape(10.dp))
+                                .padding(16.dp)
                         ) {
-                            Text("Reset Filter", color = Color.Black)
+                            Text(
+                                text = "Date Range",
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 16.sp,
+                                modifier = Modifier.padding(bottom = 8.dp)
+                            )
+
+                            // Start Date Picker
+                            Button(
+                                onClick = { showStartDatePicker = true },
+                                modifier = Modifier.fillMaxWidth(),
+                                colors = ButtonDefaults.buttonColors(containerColor = Color.White),
+                                border = BorderStroke(1.dp, Color.LightGray),
+                                shape = RoundedCornerShape(8.dp)
+                            ) {
+                                Text(
+                                    text = startDateFilter?.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")) ?: "Start Date",
+                                    color = Color.Black
+                                )
+                            }
+
+                            if (showStartDatePicker) {
+                                DatePickerDialog(
+                                    onDismissRequest = { showStartDatePicker = false },
+                                    confirmButton = {
+                                        Button(onClick = {
+                                            datePickerState.selectedDateMillis?.let { millis ->
+                                                val localDateTime = Instant.ofEpochMilli(millis).atZone(ZoneId.systemDefault()).toLocalDateTime()
+                                                materialViewModel.setStartDateFilter(localDateTime)
+                                            }
+                                            showStartDatePicker = false
+                                        }) { Text("Select") }
+                                    },
+                                    dismissButton = {
+                                        Button(onClick = { showStartDatePicker = false }) { Text("Cancel") }
+                                    }
+                                ) {
+                                    DatePicker(state = datePickerState)
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(8.dp))
+
+                            // End Date Picker
+                            Button(
+                                onClick = { showEndDatePicker = true },
+                                modifier = Modifier.fillMaxWidth(),
+                                colors = ButtonDefaults.buttonColors(containerColor = Color.White),
+                                border = BorderStroke(1.dp, Color.LightGray),
+                                shape = RoundedCornerShape(8.dp)
+                            ) {
+                                Text(
+                                    text = endDateFilter?.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")) ?: "End Date",
+                                    color = Color.Black
+                                )
+                            }
+
+                            if (showEndDatePicker) {
+                                DatePickerDialog(
+                                    onDismissRequest = { showEndDatePicker = false },
+                                    confirmButton = {
+                                        Button(onClick = {
+                                            datePickerState.selectedDateMillis?.let { millis ->
+                                                val localDateTime = Instant.ofEpochMilli(millis).atZone(ZoneId.systemDefault()).toLocalDateTime()
+                                                materialViewModel.setEndDateFilter(localDateTime)
+                                            }
+                                            showEndDatePicker = false
+                                        }) { Text("Select") }
+                                    },
+                                    dismissButton = {
+                                        Button(onClick = { showEndDatePicker = false }) { Text("Cancel") }
+                                    }
+                                ) {
+                                    DatePicker(state = datePickerState)
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(16.dp))
+
+                            // Apply and Reset buttons for Time Filter
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceAround
+                            ) {
+                                Button(
+                                    onClick = {
+                                        materialViewModel.applyAllFilters() // Re-apply all filters including dates
+                                        showFilterModal = false
+                                    },
+                                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF395174)),
+                                    shape = RoundedCornerShape(8.dp),
+                                    modifier = Modifier.weight(1f).padding(end = 4.dp)
+                                ) {
+                                    Text("Apply", color = Color.White)
+                                }
+
+                                Button(
+                                    onClick = {
+                                        materialViewModel.setStartDateFilter(null)
+                                        materialViewModel.setEndDateFilter(null)
+                                        materialViewModel.applyAllFilters() // Re-apply all filters with dates cleared
+                                        showFilterModal = false
+                                    },
+                                    colors = ButtonDefaults.buttonColors(containerColor = Color.LightGray),
+                                    shape = RoundedCornerShape(8.dp),
+                                    modifier = Modifier.weight(1f).padding(start = 4.dp)
+                                ) {
+                                    Text("Reset Dates", color = Color.Black)
+                                }
+                            }
                         }
                     }
                 }
-            }
-
-            // Botão para fechar filtros
-            Spacer(modifier = Modifier.height(8.dp))
-            Button(
-                onClick = {
-                    showFilterOptions = false
-                    showTagFilter = false
-                },
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF6B7280)),
-                shape = RoundedCornerShape(8.dp),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text("Close Filters", color = Color.White)
             }
         }
 

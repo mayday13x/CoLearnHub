@@ -19,6 +19,10 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import java.time.LocalDateTime
 import java.time.format.DateTimeParseException
+import java.time.ZoneOffset
+import kotlinx.datetime.toJavaLocalDateTime
+import kotlinx.datetime.toKotlinLocalDateTime
+import kotlinx.datetime.toInstant
 
 @RequiresApi(Build.VERSION_CODES.O)
 class MaterialViewModel : ViewModel() {
@@ -67,7 +71,13 @@ class MaterialViewModel : ViewModel() {
     val selectedFilterFileTypes: StateFlow<List<String>> = _selectedFilterFileTypes.asStateFlow()
 
     private val _currentSearchQuery = MutableStateFlow("")
-    private val _currentFilterTime = MutableStateFlow<String?>(null)
+
+    // Novos estados para filtros de data
+    private val _startDateFilter = MutableStateFlow<LocalDateTime?>(null)
+    val startDateFilter: StateFlow<LocalDateTime?> = _startDateFilter.asStateFlow()
+
+    private val _endDateFilter = MutableStateFlow<LocalDateTime?>(null)
+    val endDateFilter: StateFlow<LocalDateTime?> = _endDateFilter.asStateFlow()
 
     init {
         // Carregar dados iniciais
@@ -153,9 +163,10 @@ class MaterialViewModel : ViewModel() {
     fun loadPublicMaterials() {
         viewModelScope.launch {
             _currentSearchQuery.value = "" // Reset search query
-            _currentFilterTime.value = null // Reset time filter
             _selectedFilterTags.value = emptyList() // Reset tag filter
             _selectedFilterFileTypes.value = emptyList() // Reset file type filter
+            _startDateFilter.value = null // Reset start date filter
+            _endDateFilter.value = null // Reset end date filter
             applyAllFilters() // Aplica todos os filtros (sem filtros iniciais = todos os públicos)
         }
     }
@@ -167,9 +178,10 @@ class MaterialViewModel : ViewModel() {
     fun loadMaterialsByAuthor(author_id: String) {
         viewModelScope.launch {
             _currentSearchQuery.value = "" // Reset search query
-            _currentFilterTime.value = null // Reset time filter
             _selectedFilterTags.value = emptyList() // Reset tag filter
             _selectedFilterFileTypes.value = emptyList() // Reset file type filter
+            _startDateFilter.value = null // Reset start date filter
+            _endDateFilter.value = null // Reset end date filter
             applyAllFilters(author_id) // Aplica todos os filtros para o autor específico
         }
     }
@@ -421,7 +433,32 @@ class MaterialViewModel : ViewModel() {
      */
     @RequiresApi(Build.VERSION_CODES.O)
     fun filterMaterialsByTime(timeFilter: String?) {
-        _currentFilterTime.value = timeFilter
+        // _currentFilterTime.value = timeFilter
+        // Reset date pickers if time filter is selected
+        // _startDateFilter.value = null
+        // _endDateFilter.value = null
+        // applyAllFilters()
+    }
+
+    /**
+     * Define a data de início para o filtro.
+     */
+    @RequiresApi(Build.VERSION_CODES.O)
+    fun setStartDateFilter(date: LocalDateTime?) {
+        _startDateFilter.value = date
+        // Reset time filter if date picker is used
+        // _currentFilterTime.value = null
+        applyAllFilters()
+    }
+
+    /**
+     * Define a data de fim para o filtro.
+     */
+    @RequiresApi(Build.VERSION_CODES.O)
+    fun setEndDateFilter(date: LocalDateTime?) {
+        _endDateFilter.value = date
+        // Reset time filter if date picker is used
+        // _currentFilterTime.value = null
         applyAllFilters()
     }
 
@@ -486,9 +523,11 @@ class MaterialViewModel : ViewModel() {
     @RequiresApi(Build.VERSION_CODES.O)
     fun resetAllFilters() {
         _currentSearchQuery.value = ""
-        _currentFilterTime.value = null
+        // _currentFilterTime.value = null // Removed
         _selectedFilterTags.value = emptyList()
         _selectedFilterFileTypes.value = emptyList()
+        _startDateFilter.value = null
+        _endDateFilter.value = null
         loadPublicMaterials() // Recarrega tudo sem filtros
     }
 
@@ -496,57 +535,32 @@ class MaterialViewModel : ViewModel() {
      * Aplica todos os filtros combinados.
      */
     @RequiresApi(Build.VERSION_CODES.O)
-    private fun applyAllFilters(authorId: String? = null) {
+     fun applyAllFilters(authorId: String? = null) {
         viewModelScope.launch {
             _isLoading.value = true
             _errorMessage.value = null
 
             var filteredMaterials = if (authorId != null) {
-                materialRepository.getMaterialsByAuthor(authorId)
+                materialRepository.getMaterialsByAuthor(
+                    authorId = authorId,
+                    searchQuery = _currentSearchQuery.value.ifBlank { null },
+                    startDate = _startDateFilter.value,
+                    endDate = _endDateFilter.value,
+                    tagIds = _selectedFilterTags.value.map { it.id }.ifEmpty { null }
+                )
             } else {
-                materialRepository.getPublicMaterials()
+                materialRepository.getPublicMaterials(
+                    searchQuery = _currentSearchQuery.value.ifBlank { null },
+                    startDate = _startDateFilter.value,
+                    endDate = _endDateFilter.value,
+                    tagIds = _selectedFilterTags.value.map { it.id }.ifEmpty { null }
+                )
             }
 
-            // Aplicar filtro de pesquisa por texto
-            if (_currentSearchQuery.value.isNotBlank()) {
-                filteredMaterials = filteredMaterials.filter {
-                    it.title.contains(_currentSearchQuery.value, ignoreCase = true) ||
-                            it.description?.contains(_currentSearchQuery.value, ignoreCase = true) == true
-                }
-            }
+            // Remove client-side filtering for search query, time, and tags
+            // as it's now handled by the repository
 
-            // Aplicar filtro de tempo
-            _currentFilterTime.value?.let { timeFilter ->
-                if (timeFilter != "all") {
-                    val now = LocalDateTime.now()
-                    filteredMaterials = filteredMaterials.filter { material ->
-                        material.created_at?.let { createdAtString ->
-                            try {
-                                val createdAt = LocalDateTime.parse(createdAtString.substringBefore("."))
-                                when (timeFilter) {
-                                    "24h" -> createdAt.isAfter(now.minusHours(24))
-                                    "week" -> createdAt.isAfter(now.minusWeeks(1))
-                                    "month" -> createdAt.isAfter(now.minusMonths(1))
-                                    "year" -> createdAt.isAfter(now.minusYears(1))
-                                    else -> false
-                                }
-                            } catch (e: DateTimeParseException) {
-                                Log.e("MaterialViewModel", "Error parsing date in applyAllFilters: $createdAtString", e)
-                                false
-                            }
-                        } ?: false
-                    }
-                }
-            }
-
-            // Aplicar filtro de tags
-            if (_selectedFilterTags.value.isNotEmpty()) {
-                filteredMaterials = filteredMaterials.filter { material ->
-                    material.tags?.any { tag -> _selectedFilterTags.value.contains(tag) } == true
-                }
-            }
-
-            // Aplicar filtro de tipo de arquivo
+            // Aplicar filtro de tipo de arquivo (ainda client-side)
             if (_selectedFilterFileTypes.value.isNotEmpty()) {
                 filteredMaterials = filteredMaterials.filter { material ->
                     material.file_url?.let { fileUrl ->
