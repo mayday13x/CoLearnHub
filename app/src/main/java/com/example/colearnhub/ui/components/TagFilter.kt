@@ -35,31 +35,23 @@ fun TagFilterSection(
             .fillMaxWidth()
             .padding(vertical = 8.dp)
     ) {
-        // Selected Tags
-        if (selectedTags.isNotEmpty()) {
-            FlowRow(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                modifier = Modifier.padding(bottom = 12.dp)
-            ) {
-                selectedTags.forEach { tag ->
-                    SelectedTagChip(
-                        tag = tag,
-                        onRemove = { onTagToggle(tag) }
-                    )
-                }
-            }
-        }
-
-        // Available Tags
+        // All Tags
         FlowRow(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            availableTags.filter { !selectedTags.contains(it) }.forEach { tag ->
-                AvailableTagChip(
-                    tag = tag,
-                    onSelect = { onTagToggle(tag) }
-                )
+            availableTags.forEach { tag ->
+                if (selectedTags.contains(tag)) {
+                    SelectedTagChip(
+                        tag = tag,
+                        onRemove = { onTagToggle(tag) }
+                    )
+                } else {
+                    AvailableTagChip(
+                        tag = tag,
+                        onSelect = { onTagToggle(tag) }
+                    )
+                }
             }
         }
     }
@@ -90,6 +82,7 @@ fun SelectedTagChip(
                 color = tagColor,
                 shape = RoundedCornerShape(20.dp)
             )
+            .clickable { onRemove() }
             .padding(horizontal = 12.dp, vertical = 6.dp)
     ) {
         Row(
@@ -107,9 +100,7 @@ fun SelectedTagChip(
                 imageVector = Icons.Default.Close,
                 contentDescription = "Remove ${tag.description}",
                 tint = Color.White,
-                modifier = Modifier
-                    .size(16.dp)
-                    .clickable { onRemove() }
+                modifier = Modifier.size(16.dp)
             )
         }
     }

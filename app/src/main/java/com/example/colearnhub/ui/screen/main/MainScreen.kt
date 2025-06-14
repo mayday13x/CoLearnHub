@@ -812,7 +812,7 @@ fun SearchBar(
     // Obter o valor atual da pesquisa do ViewModel
     val currentSearchQuery by materialViewModel.currentSearchQuery.collectAsState()
     var searchQuery by remember { mutableStateOf(currentSearchQuery) }
-    
+
     // Atualizar o searchQuery local quando o currentSearchQuery mudar
     LaunchedEffect(currentSearchQuery) {
         searchQuery = currentSearchQuery
@@ -887,7 +887,7 @@ fun SearchBar(
             singleLine = true
         )
 
-        // Filter Modal
+        // Filter Modal - FIXED VERSION
         if (showFilterModal) {
             Dialog(
                 onDismissRequest = { showFilterModal = false }
@@ -895,30 +895,27 @@ fun SearchBar(
                 Card(
                     modifier = Modifier
                         .fillMaxWidth(1f)
-                        .fillMaxHeight(0.7f)
-                        .padding(1.dp),
+                        .fillMaxHeight(0.7f),
                     shape = RoundedCornerShape(16.dp),
                     colors = CardDefaults.cardColors(
                         containerColor = Color.White
                     )
                 ) {
-                    Column(
-                        modifier = Modifier
-                            .padding(24.dp)
-                            .fillMaxWidth()
-                            .verticalScroll(rememberScrollState()),
-                        horizontalAlignment = Alignment.CenterHorizontally
+                    // Use Box instead of nested Columns for proper positioning
+                    Box(
+                        modifier = Modifier.fillMaxSize()
                     ) {
-                        // Header with title and close button
+                        // Header - Fixed at top
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(bottom = 16.dp),
+                                .padding(24.dp)
+                                .align(Alignment.TopCenter), // This works in Box scope
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                text = "Filter Options",
+                                text = "Filters",
                                 fontSize = 20.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = Color(0xFF395174)
@@ -934,229 +931,228 @@ fun SearchBar(
                             }
                         }
 
-                        // Date Filter Section (Collapsible)
-                        var isDateFilterExpanded by remember { mutableStateOf(false) }
+                        // Scrollable content
                         Column(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(vertical = 8.dp)
+                                .padding(top = 80.dp) // Space for header
+                                .padding(horizontal = 24.dp)
+                                .padding(bottom = 80.dp) // Space for buttons
+                                .verticalScroll(rememberScrollState()),
+                            horizontalAlignment = Alignment.CenterHorizontally
                         ) {
-                            // Date Filter Header
-                            Row(
+                            // Date Filter Section
+                            var isDateFilterExpanded by remember { mutableStateOf(true) }
+                            Column(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .clickable { isDateFilterExpanded = !isDateFilterExpanded }
-                                    .padding(vertical = 8.dp),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
+                                    .padding(vertical = 8.dp)
                             ) {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Icon(
-                                        imageVector = Icons.Default.CalendarMonth,
-                                        contentDescription = "Date Filter",
-                                        tint = Color.Gray,
-                                        modifier = Modifier.size(24.dp).padding(end = 8.dp)
-                                    )
-                                    Text(
-                                        text = "Date",
-                                        fontWeight = FontWeight.Bold,
-                                        fontSize = 16.sp
-                                    )
-                                }
-                                Icon(
-                                    imageVector = if (isDateFilterExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
-                                    contentDescription = if (isDateFilterExpanded) "Collapse" else "Expand"
-                                )
-                            }
-
-                            // Date Filter Content
-                            if (isDateFilterExpanded) {
-                                Column(
+                                // Date Filter Header
+                                Row(
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .padding(horizontal = 16.dp, vertical = 8.dp)
+                                        .clickable { isDateFilterExpanded = !isDateFilterExpanded }
+                                        .padding(vertical = 8.dp),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    val datePickerState = rememberDatePickerState(selectableDates = object : SelectableDates {
-                                         fun isSelectable(utcTimeMillis: Long): Boolean {
-                                            return true
-                                        }
-                                    })
-
-                                    var showStartDatePicker by remember { mutableStateOf(false) }
-                                    var showEndDatePicker by remember { mutableStateOf(false) }
-
-                                    Column(modifier = Modifier.fillMaxWidth()) {
-                                        // Start Date Picker
-                                        OutlinedTextField(
-                                            value = startDateFilter?.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")) ?: "",
-                                            onValueChange = { /* Não permite edição direta */ },
-                                            readOnly = true,
-                                            trailingIcon = {
-                                                IconButton(onClick = { showStartDatePicker = true }) {
-                                                    Icon(Icons.Default.DateRange, contentDescription = "Select Start Date")
-                                                }
-                                            },
-                                            placeholder = { Text("Start Date") },
-                                            modifier = Modifier
-                                                .fillMaxWidth()
-                                                .clickable { showStartDatePicker = true },
-                                            colors = OutlinedTextFieldDefaults.colors(
-                                                focusedBorderColor = Color.LightGray,
-                                                unfocusedBorderColor = Color.LightGray,
-                                                focusedContainerColor = Color.White,
-                                                unfocusedContainerColor = Color.White,
-                                                cursorColor = Color.Black
-                                            ),
-                                            shape = RoundedCornerShape(8.dp)
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Icon(
+                                            imageVector = Icons.Default.CalendarMonth,
+                                            contentDescription = "Date Filter",
+                                            tint = Color.Gray,
+                                            modifier = Modifier.size(24.dp).padding(end = 8.dp)
                                         )
-                                        Spacer(modifier = Modifier.height(8.dp)) // Add vertical spacing
-
-                                        // End Date Picker
-                                        OutlinedTextField(
-                                            value = endDateFilter?.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")) ?: "",
-                                            onValueChange = { /* Não permite edição direta */ },
-                                            readOnly = true,
-                                            trailingIcon = {
-                                                IconButton(onClick = { showEndDatePicker = true }) {
-                                                    Icon(Icons.Default.DateRange, contentDescription = "Select End Date")
-                                                }
-                                            },
-                                            placeholder = { Text("End Date") },
-                                            modifier = Modifier
-                                                .fillMaxWidth()
-                                                .clickable { showEndDatePicker = true },
-                                            colors = OutlinedTextFieldDefaults.colors(
-                                                focusedBorderColor = Color.LightGray,
-                                                unfocusedBorderColor = Color.LightGray,
-                                                focusedContainerColor = Color.White,
-                                                unfocusedContainerColor = Color.White,
-                                                cursorColor = Color.Black
-                                            ),
-                                            shape = RoundedCornerShape(8.dp)
+                                        Text(
+                                            text = "Date",
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = 16.sp
                                         )
                                     }
+                                    Icon(
+                                        imageVector = if (isDateFilterExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                                        contentDescription = if (isDateFilterExpanded) "Collapse" else "Expand"
+                                    )
+                                }
 
-                                    if (showStartDatePicker) {
-                                        DatePickerDialog(
-                                            onDismissRequest = { showStartDatePicker = false },
-                                            confirmButton = {
-                                                Button(onClick = {
-                                                    datePickerState.selectedDateMillis?.let { millis ->
-                                                        val localDateTime = Instant.ofEpochMilli(millis).atZone(ZoneId.systemDefault()).toLocalDateTime()
-                                                        materialViewModel.setStartDateFilter(localDateTime)
-                                                    }
-                                                    showStartDatePicker = false
-                                                }) { Text("Select") }
-                                            },
-                                            dismissButton = {
-                                                Button(onClick = { showStartDatePicker = false }) { Text("Cancel") }
+                                // Date Filter Content
+                                if (isDateFilterExpanded) {
+                                    Column(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(horizontal = 16.dp, vertical = 8.dp)
+                                    ) {
+                                        val datePickerState = rememberDatePickerState(selectableDates = object : SelectableDates {
+                                            override fun isSelectableDate(utcTimeMillis: Long): Boolean {
+                                                return true
                                             }
-                                        ) {
-                                            DatePicker(state = datePickerState)
+                                        })
+
+                                        var showStartDatePicker by remember { mutableStateOf(false) }
+                                        var showEndDatePicker by remember { mutableStateOf(false) }
+
+                                        Column(modifier = Modifier.fillMaxWidth()) {
+                                            // Start Date Picker
+                                            OutlinedTextField(
+                                                value = startDateFilter?.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")) ?: "",
+                                                onValueChange = { /* Não permite edição direta */ },
+                                                readOnly = true,
+                                                trailingIcon = {
+                                                    IconButton(onClick = { showStartDatePicker = true }) {
+                                                        Icon(Icons.Default.DateRange, contentDescription = "Select Start Date")
+                                                    }
+                                                },
+                                                placeholder = { Text("Start Date") },
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .clickable { showStartDatePicker = true },
+                                                colors = OutlinedTextFieldDefaults.colors(
+                                                    focusedBorderColor = Color.LightGray,
+                                                    unfocusedBorderColor = Color.LightGray,
+                                                    focusedContainerColor = Color.White,
+                                                    unfocusedContainerColor = Color.White,
+                                                    cursorColor = Color.Black
+                                                ),
+                                                shape = RoundedCornerShape(8.dp)
+                                            )
+                                            Spacer(modifier = Modifier.height(8.dp))
+
+                                            // End Date Picker
+                                            OutlinedTextField(
+                                                value = endDateFilter?.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")) ?: "",
+                                                onValueChange = { /* Não permite edição direta */ },
+                                                readOnly = true,
+                                                trailingIcon = {
+                                                    IconButton(onClick = { showEndDatePicker = true }) {
+                                                        Icon(Icons.Default.DateRange, contentDescription = "Select End Date")
+                                                    }
+                                                },
+                                                placeholder = { Text("End Date") },
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .clickable { showEndDatePicker = true },
+                                                colors = OutlinedTextFieldDefaults.colors(
+                                                    focusedBorderColor = Color.LightGray,
+                                                    unfocusedBorderColor = Color.LightGray,
+                                                    focusedContainerColor = Color.White,
+                                                    unfocusedContainerColor = Color.White,
+                                                    cursorColor = Color.Black
+                                                ),
+                                                shape = RoundedCornerShape(8.dp)
+                                            )
+                                        }
+
+                                        if (showStartDatePicker) {
+                                            DatePickerDialog(
+                                                onDismissRequest = { showStartDatePicker = false },
+                                                confirmButton = {
+                                                    Button(onClick = {
+                                                        datePickerState.selectedDateMillis?.let { millis ->
+                                                            val localDateTime = Instant.ofEpochMilli(millis).atZone(ZoneId.systemDefault()).toLocalDateTime()
+                                                            materialViewModel.setStartDateFilter(localDateTime)
+                                                        }
+                                                        showStartDatePicker = false
+                                                    }) { Text("Select") }
+                                                },
+                                                dismissButton = {
+                                                    Button(onClick = { showStartDatePicker = false }) { Text("Cancel") }
+                                                }
+                                            ) {
+                                                DatePicker(state = datePickerState)
+                                            }
+                                        }
+
+                                        if (showEndDatePicker) {
+                                            DatePickerDialog(
+                                                onDismissRequest = { showEndDatePicker = false },
+                                                confirmButton = {
+                                                    Button(onClick = {
+                                                        datePickerState.selectedDateMillis?.let { millis ->
+                                                            val localDateTime = Instant.ofEpochMilli(millis).atZone(ZoneId.systemDefault()).toLocalDateTime()
+                                                            materialViewModel.setEndDateFilter(localDateTime)
+                                                        }
+                                                        showEndDatePicker = false
+                                                    }) { Text("Select") }
+                                                },
+                                                dismissButton = {
+                                                    Button(onClick = { showEndDatePicker = false }) { Text("Cancel") }
+                                                }
+                                            ) {
+                                                DatePicker(state = datePickerState)
+                                            }
                                         }
                                     }
+                                }
+                            }
 
-                                    if (showEndDatePicker) {
-                                        DatePickerDialog(
-                                            onDismissRequest = { showEndDatePicker = false },
-                                            confirmButton = {
-                                                Button(onClick = {
-                                                    datePickerState.selectedDateMillis?.let { millis ->
-                                                        val localDateTime = Instant.ofEpochMilli(millis).atZone(ZoneId.systemDefault()).toLocalDateTime()
-                                                        materialViewModel.setEndDateFilter(localDateTime)
-                                                    }
-                                                    showEndDatePicker = false
-                                                }) { Text("Select") }
+                            Spacer(modifier = Modifier.height(16.dp))
+
+                            // Tag Filter Section
+                            var isTagFilterExpanded by remember { mutableStateOf(true) }
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 8.dp)
+                            ) {
+                                // Tag Filter Header
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clickable { isTagFilterExpanded = !isTagFilterExpanded }
+                                        .padding(vertical = 8.dp),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Icon(
+                                            imageVector = Icons.Default.Bookmark,
+                                            contentDescription = "Area Filter",
+                                            tint = Color.Gray,
+                                            modifier = Modifier.size(24.dp).padding(end = 8.dp)
+                                        )
+                                        Text(
+                                            text = "Area",
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = 16.sp
+                                        )
+                                    }
+                                    Icon(
+                                        imageVector = if (isTagFilterExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                                        contentDescription = if (isTagFilterExpanded) "Collapse" else "Expand"
+                                    )
+                                }
+
+                                // Tag Filter Content
+                                if (isTagFilterExpanded) {
+                                    Column(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(horizontal = 16.dp, vertical = 8.dp)
+                                    ) {
+                                        TagFilterSection(
+                                            availableTags = allTags,
+                                            selectedTags = selectedTags,
+                                            onTagToggle = { tag ->
+                                                materialViewModel.toggleTagFilter(tag)
                                             },
-                                            dismissButton = {
-                                                Button(onClick = { showEndDatePicker = false }) { Text("Cancel") }
+                                            onClearAll = {
+                                                materialViewModel.clearTagFilter()
                                             }
-                                        ) {
-                                            DatePicker(state = datePickerState)
-                                        }
+                                        )
                                     }
                                 }
                             }
                         }
 
-                        Spacer(modifier = Modifier.height(16.dp))
-
-                        // Tag Filter Section (Collapsible)
-                        var isTagFilterExpanded by remember { mutableStateOf(false) }
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 8.dp)
-                        ) {
-                            // Tag Filter Header
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clickable { isTagFilterExpanded = !isTagFilterExpanded }
-                                    .padding(vertical = 8.dp),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Icon(
-                                        imageVector = Icons.Default.Bookmark,
-                                        contentDescription = "Area Filter",
-                                        tint = Color.Gray,
-                                        modifier = Modifier.size(24.dp).padding(end = 8.dp)
-                                    )
-                                    Text(
-                                        text = "Area",
-                                        fontWeight = FontWeight.Bold,
-                                        fontSize = 16.sp
-                                    )
-                                }
-                                Icon(
-                                    imageVector = if (isTagFilterExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
-                                    contentDescription = if (isTagFilterExpanded) "Collapse" else "Expand"
-                                )
-                            }
-
-                            // Tag Filter Content
-                            if (isTagFilterExpanded) {
-                                Column(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(horizontal = 16.dp, vertical = 8.dp)
-                                ) {
-                                    TagFilterSection(
-                                        availableTags = allTags,
-                                        selectedTags = selectedTags,
-                                        onTagToggle = { tag ->
-                                            materialViewModel.toggleTagFilter(tag)
-                                        },
-                                        onClearAll = {
-                                            materialViewModel.clearTagFilter()
-                                        }
-                                    )
-                                }
-                            }
-                        }
-
-                        Spacer(modifier = Modifier.height(24.dp))
-
-                        // Action Buttons
+                        // Action Buttons - Fixed at bottom
                         Row(
-                            modifier = Modifier.fillMaxWidth(),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(24.dp)
+                                .align(Alignment.BottomCenter), // This works in Box scope
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
-                            // Apply Button
-                            Button(
-                                onClick = {
-                                    materialViewModel.applyAllFilters()
-                                    showFilterModal = false
-                                },
-                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF395174)),
-                                shape = RoundedCornerShape(8.dp),
-                                modifier = Modifier.weight(1f).padding(end = 8.dp)
-                            ) {
-                                Text("Apply", color = Color.White)
-                            }
-
                             // Reset Button
                             Button(
                                 onClick = {
@@ -1165,9 +1161,22 @@ fun SearchBar(
                                 },
                                 colors = ButtonDefaults.buttonColors(containerColor = Color.LightGray),
                                 shape = RoundedCornerShape(8.dp),
-                                modifier = Modifier.weight(1f).padding(start = 8.dp)
+                                modifier = Modifier.weight(1f).padding(end = 8.dp)
                             ) {
                                 Text("Reset", color = Color.Black)
+                            }
+
+                            // Apply Button
+                            Button(
+                                onClick = {
+                                    materialViewModel.applyAllFilters()
+                                    showFilterModal = false
+                                },
+                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF395174)),
+                                shape = RoundedCornerShape(8.dp),
+                                modifier = Modifier.weight(1f).padding(start = 8.dp)
+                            ) {
+                                Text("Apply", color = Color.White)
                             }
                         }
                     }
