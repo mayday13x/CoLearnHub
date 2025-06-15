@@ -73,13 +73,11 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.NavController
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
 import com.airbnb.lottie.compose.LottieAnimation
 import com.airbnb.lottie.compose.LottieCompositionSpec
 import com.airbnb.lottie.compose.LottieConstants
@@ -92,7 +90,6 @@ import com.example.colearnhub.ui.utils.DateTimeUtils
 import com.example.colearnhub.ui.utils.Nav
 import com.example.colearnhub.ui.utils.SBar
 import com.example.colearnhub.ui.utils.ScreenContent
-import com.example.colearnhub.ui.utils.SearchBar
 import com.example.colearnhub.ui.utils.ScreenSize
 import com.example.colearnhub.ui.utils.animation
 import com.example.colearnhub.ui.utils.btnHeight

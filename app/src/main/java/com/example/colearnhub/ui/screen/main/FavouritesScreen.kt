@@ -1,5 +1,6 @@
 package com.example.colearnhub.ui.screen.main
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -23,6 +24,9 @@ import androidx.navigation.NavController
 import com.example.colearnhub.R
 import com.example.colearnhub.modelLayer.Material
 import com.example.colearnhub.repositoryLayer.FavouritesRepository
+import com.example.colearnhub.ui.utils.logoSize
+import com.example.colearnhub.ui.utils.spacer3
+import com.example.colearnhub.ui.utils.txtSize
 import com.example.colearnhub.viewmodel.AuthViewModel
 import com.example.colearnhub.viewModelLayer.AuthViewModelFactory
 import kotlinx.coroutines.launch
@@ -37,7 +41,10 @@ fun FavouritesScreen(navController: NavController) {
     var favorites by remember { mutableStateOf<List<Material>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
     var error by remember { mutableStateOf<String?>(null) }
-    val scope = rememberCoroutineScope()
+
+    val txtSize = (txtSize().value + 4).sp
+    val barSize = spacer3()
+    val logoSize = logoSize() - 13.dp
 
     LaunchedEffect(currentUser) {
         try {
@@ -53,33 +60,52 @@ fun FavouritesScreen(navController: NavController) {
         }
     }
 
+    BackHandler {
+        navController.navigate("MainScreen?selectedItem=4") {
+            popUpTo("MainScreen") { inclusive = true }
+            launchSingleTop = true
+        }
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(Color.White)
     ) {
         // Header
-        TopAppBar(
-            title = {
-                Text(
-                    text = stringResource(R.string.favourites_title),
-                    color = Color.White,
-                    fontWeight = FontWeight.Bold
-                )
-            },
-            navigationIcon = {
-                IconButton(onClick = { navController.popBackStack() }) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(barSize)
+                .background(Color(0xFF395174)),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = stringResource(R.string.favourites_title),
+                color = Color.White,
+                fontSize = txtSize,
+                fontWeight = FontWeight.Medium
+            )
+
+            Row(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(start = 10.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                IconButton(onClick = {navController.navigate("MainScreen?selectedItem=4") {
+                    popUpTo("MainScreen") { inclusive = true }
+                    launchSingleTop = true}})
+                    {
                     Icon(
                         imageVector = Icons.Default.ArrowBack,
                         contentDescription = "Back",
-                        tint = Color.White
+                        tint = Color.White,
+                        modifier = Modifier.size(logoSize)
                     )
                 }
-            },
-            colors = TopAppBarDefaults.topAppBarColors(
-                containerColor = Color(0xFF395174)
-            )
-        )
+            }
+        }
 
         if (isLoading) {
             Box(
@@ -104,9 +130,9 @@ fun FavouritesScreen(navController: NavController) {
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = "No favorite materials yet",
+                    text = stringResource(R.string.no_favourite),
                     color = Color.Gray,
-                    fontSize = 16.sp
+                    fontSize = txtSize()
                 )
             }
         } else {
@@ -153,7 +179,7 @@ fun MaterialCard(
         ) {
             Text(
                 text = material.title,
-                fontSize = 16.sp,
+                fontSize = txtSize(),
                 fontWeight = FontWeight.Bold,
                 color = Color.Black
             )
@@ -162,7 +188,7 @@ fun MaterialCard(
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
                     text = material.description,
-                    fontSize = 14.sp,
+                    fontSize = (txtSize().value - 2).sp,
                     color = Color.Gray,
                     maxLines = 2
                 )
@@ -182,7 +208,7 @@ fun MaterialCard(
                             Text(
                                 text = tag.description,
                                 color = Color.White,
-                                fontSize = 12.sp,
+                                fontSize = (txtSize().value - 4).sp,
                                 modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                             )
                         }

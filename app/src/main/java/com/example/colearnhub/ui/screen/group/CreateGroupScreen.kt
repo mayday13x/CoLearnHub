@@ -1,6 +1,7 @@
 package com.example.colearnhub.ui.screen.group
 
 import android.os.Build
+import androidx.activity.compose.BackHandler
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -20,6 +21,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -28,10 +30,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.colearnhub.R
+import com.example.colearnhub.modelLayer.Comments
 import com.example.colearnhub.modelLayer.User
+import com.example.colearnhub.ui.utils.logoSize
+import com.example.colearnhub.ui.utils.txtSize
 import com.example.colearnhub.viewModelLayer.AuthViewModelFactory
 import com.example.colearnhub.viewModelLayer.GroupViewModel
 import com.example.colearnhub.viewmodel.AuthViewModel
+import kotlinx.coroutines.launch
 
 @RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
@@ -43,6 +49,10 @@ fun CreateGroupScreen(
 ) {
     val uiState by viewModel.createGroupUiState.collectAsState()
     val context = LocalContext.current
+    val paddingValue = logoSize() - 14.dp
+    val paddingValue2 = logoSize() - 20.dp
+    val titleFontSize = (txtSize().value + 1).sp
+    val txtSize = txtSize()
 
     // Observar quando o grupo é criado
     LaunchedEffect(uiState.isCreated) {
@@ -55,9 +65,12 @@ fun CreateGroupScreen(
     // Mostrar mensagens de erro
     uiState.errorMessage?.let { error ->
         LaunchedEffect(error) {
-            // Aqui você pode mostrar um Snackbar ou Toast
             viewModel.clearErrorMessage()
         }
+    }
+
+    BackHandler {
+        onNavigateBack()
     }
 
     Column(
@@ -68,17 +81,26 @@ fun CreateGroupScreen(
         // Top Bar
         TopAppBar(
             title = {
-                Text(
-                    text = stringResource(R.string.new_group_title),
-                    fontWeight = FontWeight.Medium,
-                    fontSize = 18.sp
-                )
+                Box(
+                    modifier = Modifier.fillMaxWidth()
+                        .padding(end = logoSize() - 10.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = stringResource(R.string.new_group_title),
+                        color = Color.White,
+                        fontWeight = FontWeight.Medium,
+                        fontSize = (txtSize().value + 4).sp,
+                        maxLines = 1
+                    )
+                }
             },
             navigationIcon = {
-                IconButton(onClick = onNavigateBack) {
+                IconButton(onClick = {onNavigateBack()}) {
                     Icon(
                         imageVector = Icons.Default.ArrowBack,
-                        contentDescription = "Voltar"
+                        contentDescription = "Back",
+                        tint = Color.White
                     )
                 }
             },
@@ -93,15 +115,19 @@ fun CreateGroupScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(24.dp),
+                .padding(24.dp)
+                .padding(top = paddingValue),
             verticalArrangement = Arrangement.spacedBy(24.dp)
         ) {
             // Campo Nome
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Column(
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+                modifier = Modifier.padding(horizontal = paddingValue)
+            ) {
                 Text(
                     text = stringResource(R.string.name),
                     fontWeight = FontWeight.Medium,
-                    fontSize = 16.sp,
+                    fontSize = titleFontSize,
                     color = Color(0xFF395174)
                 )
 
@@ -111,21 +137,28 @@ fun CreateGroupScreen(
                     modifier = Modifier.fillMaxWidth(),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = Color(0xFF395174),
-                        unfocusedBorderColor = Color(0xFFE0E0E0)
+                        unfocusedBorderColor = Color(0xFF395174)
                     ),
                     keyboardOptions = KeyboardOptions(
                         imeAction = ImeAction.Next
                     ),
-                    singleLine = true
+                    singleLine = true,
+                    textStyle = TextStyle(
+                        fontSize = txtSize,
+                        color = Color.Black
+                    )
                 )
             }
 
             // Campo Descrição
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Column(
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+                modifier = Modifier.padding(horizontal = paddingValue)
+            ) {
                 Text(
                     text = stringResource(R.string.description),
                     fontWeight = FontWeight.Medium,
-                    fontSize = 16.sp,
+                    fontSize = titleFontSize,
                     color = Color(0xFF395174)
                 )
 
@@ -137,21 +170,28 @@ fun CreateGroupScreen(
                         .height(120.dp),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = Color(0xFF395174),
-                        unfocusedBorderColor = Color(0xFFE0E0E0)
+                        unfocusedBorderColor = Color(0xFF395174)
                     ),
                     keyboardOptions = KeyboardOptions(
                         imeAction = ImeAction.Done
                     ),
-                    maxLines = 4
+                    maxLines = 4,
+                    textStyle = TextStyle(
+                        fontSize = txtSize,
+                        color = Color.Black
+                    )
                 )
             }
 
             // Seção Convidar Pessoas
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Column(
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+                modifier = Modifier.padding(horizontal = paddingValue)
+            ) {
                 Text(
                     text = stringResource(R.string.invite_people),
                     fontWeight = FontWeight.Medium,
-                    fontSize = 16.sp,
+                    fontSize = titleFontSize,
                     color = Color(0xFF395174)
                 )
 
@@ -175,13 +215,17 @@ fun CreateGroupScreen(
                     },
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = Color(0xFF395174),
-                        unfocusedBorderColor = Color(0xFFE0E0E0)
+                        unfocusedBorderColor = Color(0xFF395174)
                     ),
                     keyboardOptions = KeyboardOptions(
                         keyboardType = KeyboardType.Text,
                         imeAction = ImeAction.Search
                     ),
-                    singleLine = true
+                    singleLine = true,
+                    textStyle = TextStyle(
+                        fontSize = txtSize,
+                        color = Color.Black
+                    )
                 )
 
                 // Resultados da pesquisa
@@ -209,12 +253,12 @@ fun CreateGroupScreen(
                     }
                 }
 
-                // Usuários convidados
+                // Utilizadores convidados
                 if (uiState.invitedUsers.isNotEmpty()) {
                     Text(
-                        text = "Invited (${uiState.invitedUsers.size})",
+                        text = stringResource(R.string.invited2) + uiState.invitedUsers.size,
                         fontWeight = FontWeight.Medium,
-                        fontSize = 14.sp,
+                        fontSize = (txtSize.value - 2).sp,
                         color = Color(0xFF666666)
                     )
 
@@ -247,11 +291,11 @@ fun CreateGroupScreen(
                                 imageVector = Icons.Default.PersonAdd,
                                 contentDescription = "Convidar pessoas",
                                 tint = Color(0xFF395174),
-                                modifier = Modifier.size(48.dp)
+                                modifier = Modifier.size(logoSize() + 10.dp)
                             )
                             Text(
                                 text = stringResource(R.string.invite_message),
-                                fontSize = 14.sp,
+                                fontSize = (txtSize.value - 2).sp,
                                 color = Color(0xFF9E9E9E),
                                 textAlign = TextAlign.Center
                             )
@@ -267,7 +311,6 @@ fun CreateGroupScreen(
             )
 
             val currentUser by authViewModel.currentUser.collectAsState()
-            val currentUserId = currentUser?.id
             // Botão Criar
             Button(
                 onClick = {
@@ -275,9 +318,12 @@ fun CreateGroupScreen(
                 },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(50.dp),
+                    .padding(bottom = paddingValue2)
+                    .padding(horizontal = paddingValue)
+                    .height(logoSize() + 10.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF395174)
+                    containerColor = Color(0xFF395174),
+                    disabledContainerColor = Color(0xFFB0B0B0)
                 ),
                 shape = RoundedCornerShape(8.dp),
                 enabled = !uiState.isLoading && uiState.groupName.trim().isNotEmpty()
@@ -290,7 +336,7 @@ fun CreateGroupScreen(
                 } else {
                     Text(
                         text = stringResource(R.string.create),
-                        fontSize = 16.sp,
+                        fontSize = txtSize,
                         fontWeight = FontWeight.Medium,
                         color = Color.White
                     )
@@ -333,7 +379,7 @@ fun UserSearchItem(
                     text = user.username?.take(1)?.uppercase() ?: "U",
                     color = Color.White,
                     fontWeight = FontWeight.Bold,
-                    fontSize = 16.sp
+                    fontSize = txtSize()
                 )
             }
 
@@ -341,13 +387,13 @@ fun UserSearchItem(
                 Text(
                     text = user.username ?: "Usuário",
                     fontWeight = FontWeight.Medium,
-                    fontSize = 14.sp,
+                    fontSize = (txtSize().value - 2).sp,
                     color = Color(0xFF2C3E50)
                 )
                 user.email?.let { email ->
                     Text(
                         text = email,
-                        fontSize = 12.sp,
+                        fontSize = (txtSize().value - 4).sp,
                         color = Color(0xFF666666)
                     )
                 }
@@ -393,7 +439,7 @@ fun InvitedUserItem(
                     text = user.username?.take(1)?.uppercase() ?: "U",
                     color = Color.White,
                     fontWeight = FontWeight.Bold,
-                    fontSize = 14.sp
+                    fontSize = (txtSize().value - 2).sp
                 )
             }
 
@@ -401,12 +447,12 @@ fun InvitedUserItem(
                 Text(
                     text = user.username ?: "Usuário",
                     fontWeight = FontWeight.Medium,
-                    fontSize = 14.sp,
+                    fontSize = (txtSize().value - 2).sp,
                     color = Color(0xFF2C3E50)
                 )
                 Text(
-                    text = "Invited",
-                    fontSize = 12.sp,
+                    text = stringResource(R.string.invited),
+                    fontSize = (txtSize().value - 4).sp,
                     color = Color(0xFF395174)
                 )
             }

@@ -24,8 +24,14 @@ fun NavGraphBuilder.groupRoutes(
 ){
     composable("creategroup") {
         CreateGroupScreen(
-            onNavigateBack = { navController.popBackStack() },
-            onGroupCreated = { navController.popBackStack() }
+            onNavigateBack = { navController.navigate("MainScreen?selectedItem=3") {
+                popUpTo("creategroup") { inclusive = true }
+                launchSingleTop = true
+            } },
+            onGroupCreated = { navController.navigate("MainScreen?selectedItem=3") {
+                popUpTo("creategroup") { inclusive = true }
+                launchSingleTop = true
+            } }
         )
     }
     composable("invites") {

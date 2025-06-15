@@ -29,6 +29,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -53,6 +54,8 @@ import java.util.*
 import com.example.colearnhub.repositoryLayer.RatingRepository
 import com.example.colearnhub.modelLayer.Rating
 import com.example.colearnhub.repositoryLayer.FavouritesRepository
+import com.example.colearnhub.ui.utils.logoSize
+import com.example.colearnhub.ui.utils.txtSize
 
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -116,7 +119,10 @@ fun MaterialDetailsScreen(
         if (replyingTo != null) {
             replyingTo = null
         } else {
-            navController.popBackStack()
+            // Navigate back to MainScreen with default selected item (0)
+            navController.navigate("MainScreen?selectedItem=0") {
+                popUpTo("MainScreen") { inclusive = true }
+            }
         }
     }
 
@@ -184,16 +190,24 @@ fun MaterialDetailsScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.White)
+            .background(Color.White),
     ) {
         // Header
         TopAppBar(
             title = {
-                Text(
-                    text = stringResource(R.string.material_details_title),
-                    color = Color.White,
-                    fontWeight = FontWeight.Bold
-                )
+                Box(
+                    modifier = Modifier.fillMaxWidth()
+                        .padding(end = logoSize() - 10.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = stringResource(R.string.material_details_title),
+                        color = Color.White,
+                        fontWeight = FontWeight.Medium,
+                        fontSize = (txtSize().value + 4).sp,
+                        maxLines = 1
+                    )
+                }
             },
             navigationIcon = {
                 IconButton(onClick = {
@@ -270,7 +284,7 @@ fun MaterialDetailsScreen(
                                         }
                                         isFavourite = !isFavourite
                                     } else {
-                                        Toast.makeText(context, "You must be logged in to add favorites", Toast.LENGTH_SHORT).show()
+                                        Toast.makeText(context, context.getText(R.string.dep1), Toast.LENGTH_SHORT).show()
                                     }
                                 }
                             }
@@ -317,7 +331,7 @@ fun MaterialDetailsScreen(
                                     }
                                 },
                                 replyingTo = replyingTo,
-                                userNames = userNames
+                                userNames = userNames,
                             )
                         }
                     } else {
@@ -329,7 +343,7 @@ fun MaterialDetailsScreen(
                                 )
                             ) {
                                 Text(
-                                    text = "Faça login para comentar",
+                                    text = stringResource(R.string.log_com),
                                     modifier = Modifier.padding(16.dp),
                                     color = Color.Gray,
                                     fontSize = 14.sp
@@ -403,16 +417,16 @@ fun MaterialDetailsScreen(
                         onDismissRequest = { showDeleteConfirmationDialog = null },
                         title = {
                             Text(
-                                text = "Delete Comment",
+                                text = stringResource(R.string.delete_comment),
                                 fontWeight = FontWeight.Bold,
-                                color = Color.Black
+                                color = Color(0xFF395174)
                             )
                         },
                         text = {
                             Text(
-                                text = "Are you sure you want to delete this comment?",
+                                text = stringResource(R.string.confirm_delete_comment),
                                 fontSize = 14.sp,
-                                color = Color.Gray
+                                color = Color.Black
                             )
                         },
                         confirmButton = {
@@ -433,7 +447,7 @@ fun MaterialDetailsScreen(
                                 }
                             ) {
                                 Text(
-                                    text = "Delete",
+                                    text = stringResource(R.string.delete),
                                     color = Color.Red
                                 )
                             }
@@ -441,11 +455,12 @@ fun MaterialDetailsScreen(
                         dismissButton = {
                             TextButton(onClick = { showDeleteConfirmationDialog = null }) {
                                 Text(
-                                    text = "Cancel",
-                                    color = Color.Gray
+                                    text = stringResource(R.string.cancel),
+                                    color = Color(0xFF395174)
                                 )
                             }
-                        }
+                        },
+                        containerColor = Color.White
                     )
                 }
             }
@@ -557,14 +572,14 @@ fun CommentsHeader(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "Comments | 📝 $commentCount",
+                text = stringResource(R.string.comments) + " | $commentCount",
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color.Black
             )
 
             Text(
-                text = "Sort by ⚡",
+                text = stringResource(R.string.sort) + " ⚡",
                 fontSize = 14.sp,
                 color = Color.Gray
             )
@@ -579,7 +594,7 @@ fun CommentsHeader(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Replying to: ${userName ?: "Unknown User"}",
+                    text = stringResource(R.string.resp) + (userName ?: stringResource(R.string.desc)),
                     fontSize = 14.sp,
                     color = Color.Gray
                 )
@@ -588,7 +603,7 @@ fun CommentsHeader(
                     modifier = Modifier.padding(start = 8.dp)
                 ) {
                     Text(
-                        text = "Cancel",
+                        text = stringResource(R.string.cancel),
                         color = Color.Red,
                         fontSize = 14.sp
                     )
@@ -647,7 +662,7 @@ fun CommentItem(
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
-                        text = userName ?: "Unknown User",
+                        text = userName ?: stringResource(R.string.desc),
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color.Black
@@ -663,7 +678,7 @@ fun CommentItem(
                 if (depth > 0 || comment.responses.isNotEmpty()) {
                     TextButton(onClick = { isExpanded = !isExpanded }) {
                         Text(
-                            text = if (isExpanded) "Collapse" else "Expand",
+                            text = if (isExpanded) stringResource(R.string.collapse) else stringResource(R.string.expand),
                             fontSize = 12.sp,
                             color = Color.Gray
                         )
@@ -692,7 +707,7 @@ fun CommentItem(
                             onClick = { onReply(comment) }
                         ) {
                             Text(
-                                text = "Reply",
+                                text = stringResource(R.string.response),
                                 fontSize = 12.sp,
                                 color = Color.Gray
                             )
@@ -703,7 +718,7 @@ fun CommentItem(
                                 onClick = { onDelete(comment) }
                             ) {
                                 Text(
-                                    text = "Delete",
+                                    text = stringResource(R.string.delete),
                                     fontSize = 12.sp,
                                     color = Color.Red
                                 )
@@ -798,7 +813,7 @@ fun MaterialInfoSection(
     ) {
         // Title
         Text(
-            text = "Title",
+            text = stringResource(R.string.Title_label),
             fontSize = 12.sp,
             color = Color.Gray,
             fontWeight = FontWeight.Medium
@@ -820,7 +835,7 @@ fun MaterialInfoSection(
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = "Author",
+                    text = stringResource(R.string.author),
                     fontSize = 12.sp,
                     color = Color.Gray,
                     fontWeight = FontWeight.Medium
@@ -836,7 +851,7 @@ fun MaterialInfoSection(
                     )
                     Spacer(modifier = Modifier.width(6.dp))
                     Text(
-                        text = authorName ?: "Unknown",
+                        text = authorName ?: stringResource(R.string.desc2),
                         fontSize = 14.sp,
                         color = Color.Black
                     )
@@ -845,7 +860,7 @@ fun MaterialInfoSection(
 
             Column {
                 Text(
-                    text = "Content language",
+                    text = stringResource(R.string.language),
                     fontSize = 12.sp,
                     color = Color.Gray,
                     fontWeight = FontWeight.Medium
@@ -873,7 +888,7 @@ fun MaterialInfoSection(
         // Description
         if (!material.description.isNullOrEmpty()) {
             Text(
-                text = "Description",
+                text = stringResource(R.string.description),
                 fontSize = 12.sp,
                 color = Color.Gray,
                 fontWeight = FontWeight.Medium
@@ -922,7 +937,7 @@ fun MaterialInfoSection(
                 }
 
                 Text(
-                    text = "Average Rating",
+                    text = stringResource(R.string.average_rating),
                     fontSize = 12.sp,
                     color = Color.Gray,
                     modifier = Modifier.padding(top = 2.dp)
@@ -936,7 +951,7 @@ fun MaterialInfoSection(
                     modifier = Modifier.padding(top = 4.dp)
                 ) {
                     Text(
-                        text = if (currentUserRating != null) "Update Rating" else "Rate Now",
+                        text = if (currentUserRating != null) stringResource(R.string.update_rating) else stringResource(R.string.rate_now),
                         fontSize = 14.sp,
                         color = Color(0xFF395174),
                         fontWeight = FontWeight.Medium
@@ -947,7 +962,7 @@ fun MaterialInfoSection(
             // Show current user rating if exists
             if (currentUserRating != null && totalRatings > 0) {
                 Text(
-                    text = "Your rating: ${currentUserRating.rating} ⭐",
+                    text = stringResource(R.string.your_rating) + " ${currentUserRating.rating} ⭐",
                     fontSize = 12.sp,
                     color = Color.Gray,
                     modifier = Modifier.padding(top = 4.dp)
@@ -960,7 +975,7 @@ fun MaterialInfoSection(
         // Created At
         if (!material.created_at.isNullOrEmpty()) {
             Text(
-                text = "Created",
+                text = stringResource(R.string.created3),
                 fontSize = 12.sp,
                 color = Color.Gray,
                 fontWeight = FontWeight.Medium
@@ -986,7 +1001,7 @@ fun RatingDialog(
     currentRating: Int = 0,
     onDismiss: () -> Unit,
     onRatingSubmit: (Int) -> Unit
-) {
+)   {
     var selectedRating by remember(showDialog) { mutableStateOf(currentRating) }
 
     if (showDialog) {
@@ -994,9 +1009,9 @@ fun RatingDialog(
             onDismissRequest = onDismiss,
             title = {
                 Text(
-                    text = "Rate this Material",
+                    text = stringResource(R.string.rate_this),
                     fontWeight = FontWeight.Bold,
-                    color = Color.Black
+                    color = Color(0xFF395174)
                 )
             },
             text = {
@@ -1005,9 +1020,9 @@ fun RatingDialog(
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text(
-                        text = "How would you rate this material?",
+                        text = stringResource(R.string.how_rates),
                         fontSize = 14.sp,
-                        color = Color.Gray,
+                        color = Color.Black,
                         modifier = Modifier.padding(bottom = 16.dp)
                     )
 
@@ -1023,7 +1038,7 @@ fun RatingDialog(
                                 Text(
                                     text = if (i <= selectedRating) "⭐" else "☆",
                                     fontSize = 32.sp,
-                                    color = if (i <= selectedRating) Color(0xFFFFD700) else Color.Gray
+                                    color = if (i <= selectedRating) Color(0xFFFFD700) else Color.Black
                                 )
                             }
                         }
@@ -1032,11 +1047,11 @@ fun RatingDialog(
                     if (selectedRating > 0) {
                         Text(
                             text = when (selectedRating) {
-                                1 -> "Poor"
-                                2 -> "Fair"
-                                3 -> "Good"
-                                4 -> "Very Good"
-                                5 -> "Excellent"
+                                1 -> stringResource(R.string.poor)
+                                2 -> stringResource(R.string.bad)
+                                3 -> stringResource(R.string.average)
+                                4 -> stringResource(R.string.good)
+                                5 -> stringResource(R.string.excellent)
                                 else -> ""
                             },
                             fontSize = 14.sp,
@@ -1057,7 +1072,7 @@ fun RatingDialog(
                     enabled = selectedRating > 0
                 ) {
                     Text(
-                        text = "Submit",
+                        text = stringResource(R.string.submit),
                         color = if (selectedRating > 0) Color(0xFF395174) else Color.Gray
                     )
                 }
@@ -1065,11 +1080,12 @@ fun RatingDialog(
             dismissButton = {
                 TextButton(onClick = onDismiss) {
                     Text(
-                        text = "Cancel",
-                        color = Color.Gray
+                        text = stringResource(R.string.cancel),
+                        color = Color(0xFFFF0000)
                     )
                 }
-            }
+            },
+            containerColor = Color.White
         )
     }
 }
@@ -1104,7 +1120,7 @@ fun ActionButtonsSection(
             )
             Spacer(modifier = Modifier.width(8.dp))
             Text(
-                text = if (isFavourite) "Remove from Favourites" else "Add to Favourites",
+                text = if (isFavourite) stringResource(R.string.remove_fav) else stringResource(R.string.add_fav),
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Medium
             )
@@ -1138,7 +1154,7 @@ fun ActionButtonsSection(
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = "Download",
+                        text = stringResource(R.string.download),
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Medium,
                         color = Color.White
@@ -1166,7 +1182,7 @@ fun ActionButtonsSection(
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = "Preview",
+                        text = stringResource(R.string.preview),
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Medium,
                         color = Color.White
@@ -1183,7 +1199,7 @@ fun TagsSection(tags: List<String>) {
         modifier = Modifier.fillMaxWidth()
     ) {
         Text(
-            text = "Tags",
+            text = stringResource(R.string.tag),
             fontSize = 14.sp,
             color = Color.Black,
             fontWeight = FontWeight.Bold,
@@ -1213,7 +1229,7 @@ fun TagsSection(tags: List<String>) {
             }
         } else {
             Text(
-                text = "No tags available",
+                text = stringResource(R.string.no_tags),
                 fontSize = 14.sp,
                 color = Color.Gray,
                 modifier = Modifier.padding(top = 4.dp)
@@ -1250,9 +1266,9 @@ fun CommentInputSection(
                 placeholder = {
                     Text(
                         text = if (replyingTo != null) {
-                            val replyToName = userNames[replyingTo.user_id] ?: "Unknown User"
-                            "Reply to ${replyToName}..."
-                        } else "Leave a comment",
+                            val replyToName = userNames[replyingTo.user_id] ?: stringResource(R.string.desc)
+                            stringResource(R.string.resp2) + "${replyToName}..."
+                        } else stringResource(R.string.leave_comment),
                         fontSize = 14.sp,
                         color = Color.Gray
                     )
@@ -1263,6 +1279,7 @@ fun CommentInputSection(
                     focusedBorderColor = Color(0xFF395174),
                     unfocusedBorderColor = Color.Gray.copy(alpha = 0.5f)
                 ),
+                textStyle = TextStyle(color = Color.Black),
                 minLines = 2
             )
 
@@ -1275,7 +1292,7 @@ fun CommentInputSection(
                 if (replyingTo != null) {
                     TextButton(onClick = { onCommentChange("") }) {
                         Text(
-                            text = "Cancel",
+                            text = stringResource(R.string.clean),
                             color = Color.Gray
                         )
                     }
@@ -1290,7 +1307,7 @@ fun CommentInputSection(
                     enabled = commentText.isNotBlank()
                 ) {
                     Text(
-                        text = if (replyingTo != null) "Reply" else "Comment",
+                        text = if (replyingTo != null) stringResource(R.string.response) else stringResource(R.string.comment),
                         color = Color.White
                     )
                 }

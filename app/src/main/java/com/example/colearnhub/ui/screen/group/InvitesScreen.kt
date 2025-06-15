@@ -1,25 +1,50 @@
 package com.example.colearnhub.ui.screen.group
 import android.os.Build
 import android.util.Log
+import androidx.activity.compose.BackHandler
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -32,6 +57,9 @@ import androidx.navigation.NavController
 import com.example.colearnhub.R
 import com.example.colearnhub.modelLayer.GroupResponse
 import com.example.colearnhub.repositoryLayer.GroupRepository
+import com.example.colearnhub.ui.utils.logoSize
+import com.example.colearnhub.ui.utils.spacer3
+import com.example.colearnhub.ui.utils.txtSize
 import com.example.colearnhub.viewModelLayer.AuthViewModelFactory
 import com.example.colearnhub.viewmodel.AuthViewModel
 import kotlinx.coroutines.CoroutineScope
@@ -72,6 +100,12 @@ fun InvitesScreen(navController: NavController) {
         }
     }
 
+    BackHandler {
+        navController.navigate("MainScreen?selectedItem=3") {
+            popUpTo("invites") { inclusive = true }
+        }
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -79,8 +113,8 @@ fun InvitesScreen(navController: NavController) {
     ) {
         // Header
         InvitesHeader(
-            onBackClick = { navController.navigate("MainScreen?selectedItem=3") {
-                popUpTo("groups") { inclusive = true }
+            onBack = { navController.navigate("MainScreen?selectedItem=3") {
+                popUpTo("invites") { inclusive = true }
             } }
         )
 
@@ -150,33 +184,40 @@ fun InvitesScreen(navController: NavController) {
 
 // Header da tela de convites
 @Composable
-fun InvitesHeader(onBackClick: () -> Unit) {
-    Row(
+fun InvitesHeader(onBack: () -> Unit) {
+    val txtSize = (txtSize().value + 4).sp
+    val barSize = spacer3()
+    val logoSize = logoSize() - 13.dp
+
+    Box(
         modifier = Modifier
             .fillMaxWidth()
-            .background(Color(0xFF395174))
-            .padding(horizontal = 16.dp, vertical = 12.dp),
-        verticalAlignment = Alignment.CenterVertically
+            .height(barSize)
+            .background(Color(0xFF395174)),
+        contentAlignment = Alignment.Center
     ) {
-        IconButton(
-            onClick = onBackClick,
-            modifier = Modifier.size(40.dp)
-        ) {
-            Icon(
-                imageVector = Icons.Default.ArrowBack,
-                contentDescription = "Voltar",
-                tint = Color.White,
-                modifier = Modifier.size(24.dp)
-            )
-        }
-
         Text(
-            text = "Invites",
-            fontSize = 20.sp,
-            fontWeight = FontWeight.Bold,
+            text = stringResource(R.string.Invites),
             color = Color.White,
-            modifier = Modifier.padding(start = 8.dp)
+            fontSize = txtSize,
+            fontWeight = FontWeight.Medium
         )
+
+        Row(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(start = 10.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            IconButton(onClick = onBack) {
+                Icon(
+                    imageVector = Icons.Default.ArrowBack,
+                    contentDescription = "Back",
+                    tint = Color.White,
+                    modifier = Modifier.size(logoSize)
+                )
+            }
+        }
     }
 }
 
@@ -312,11 +353,11 @@ fun InviteDetailsScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.White)
+            .background(Color.White),
     ) {
         // Header
         InviteDetailsHeader(
-            onBackClick = { navController.popBackStack() }
+            onBack = { navController.popBackStack() }
         )
 
         if (isLoading) {
@@ -335,6 +376,7 @@ fun InviteDetailsScreen(
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(20.dp)
+                        .verticalScroll(rememberScrollState())
                 ) {
                     // Informações do grupo
                     GroupDetailsContent(
@@ -456,33 +498,40 @@ fun InviteDetailsScreen(
 
 // Header da tela de detalhes do convite
 @Composable
-fun InviteDetailsHeader(onBackClick: () -> Unit) {
-    Row(
+fun InviteDetailsHeader(onBack: () -> Unit) {
+    val txtSize = (txtSize().value + 4).sp
+    val barSize = spacer3()
+    val logoSize = logoSize() - 13.dp
+
+    Box(
         modifier = Modifier
             .fillMaxWidth()
-            .background(Color(0xFF395174))
-            .padding(horizontal = 16.dp, vertical = 12.dp),
-        verticalAlignment = Alignment.CenterVertically
+            .height(barSize)
+            .background(Color(0xFF395174)),
+        contentAlignment = Alignment.Center
     ) {
-        IconButton(
-            onClick = onBackClick,
-            modifier = Modifier.size(40.dp)
-        ) {
-            Icon(
-                imageVector = Icons.Default.ArrowBack,
-                contentDescription = "Voltar",
-                tint = Color.White,
-                modifier = Modifier.size(24.dp)
-            )
-        }
-
         Text(
-            text = "Invite Details",
-            fontSize = 20.sp,
-            fontWeight = FontWeight.Bold,
+            text = stringResource(R.string.invite_details),
             color = Color.White,
-            modifier = Modifier.padding(start = 8.dp)
+            fontSize = txtSize,
+            fontWeight = FontWeight.Medium
         )
+
+        Row(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(start = 10.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            IconButton(onClick = onBack) {
+                Icon(
+                    imageVector = Icons.Default.ArrowBack,
+                    contentDescription = "Back",
+                    tint = Color.White,
+                    modifier = Modifier.size(logoSize)
+                )
+            }
+        }
     }
 }
 
@@ -492,21 +541,23 @@ fun GroupDetailsContent(
     groupResponse: GroupResponse,
     modifier: Modifier = Modifier
 ) {
+    val txtSize = (txtSize().value - 2).sp
+    val txtSize2 = (txtSize().value + 2).sp
     Column(
         modifier = modifier
     ) {
         // Nome do grupo
         groupResponse.group.name?.let { name ->
             Text(
-                text = "Name",
-                fontSize = 14.sp,
+                text = stringResource(R.string.name),
+                fontSize = txtSize,
                 fontWeight = FontWeight.Medium,
                 color = Color(0xFF395174),
                 modifier = Modifier.padding(bottom = 4.dp)
             )
             Text(
                 text = name,
-                fontSize = 18.sp,
+                fontSize = txtSize2,
                 fontWeight = FontWeight.Bold,
                 color = Color.Black,
                 modifier = Modifier.padding(bottom = 20.dp)
@@ -515,23 +566,23 @@ fun GroupDetailsContent(
 
         // Descrição
         Text(
-            text = "Description",
-            fontSize = 14.sp,
+            text = stringResource(R.string.description),
+            fontSize = txtSize,
             fontWeight = FontWeight.Medium,
             color = Color(0xFF395174),
             modifier = Modifier.padding(bottom = 4.dp)
         )
         Text(
-            text = groupResponse.group.description ?: "Sem descrição disponível",
-            fontSize = 16.sp,
+            text = groupResponse.group.description ?: stringResource(R.string.no_description),
+            fontSize = txtSize(),
             color = Color.Black,
             modifier = Modifier.padding(bottom = 20.dp)
         )
 
         // Owner
         Text(
-            text = "Owner",
-            fontSize = 14.sp,
+            text = stringResource(R.string.owner),
+            fontSize = txtSize,
             fontWeight = FontWeight.Medium,
             color = Color(0xFF395174),
             modifier = Modifier.padding(bottom = 8.dp)
@@ -559,7 +610,7 @@ fun GroupDetailsContent(
 
             Text(
                 text = "Owner", // Aqui você pode buscar o nome real do owner
-                fontSize = 16.sp,
+                fontSize = txtSize(),
                 color = Color.Black
             )
         }
@@ -574,8 +625,8 @@ fun GroupDetailsContent(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "Participants (${groupResponse.members.size})",
-                fontSize = 16.sp,
+                text = stringResource (R.string.participants) + " (${groupResponse.members.size})",
+                fontSize = txtSize(),
                 fontWeight = FontWeight.Medium,
                 color = Color.Black
             )
