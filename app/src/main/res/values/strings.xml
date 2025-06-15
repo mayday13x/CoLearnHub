@@ -312,11 +312,16 @@
 
     <!-- Study Session Details Screen -->
     <string name="tags">Tags</string>
-    <string name="session_not_found">Sessão não encontrada</string>
+    <string name="session_not_found">Sessão não encontrada!</string>
     <string name="error_loading_details">Erro ao carregar detalhes: %s</string>
     <string name="going">Aderir</string>
     <string name="session_s_link">Link da Sessão</string>
     <string name="join">Aderir</string>
     <string name="study_session_details">Detalhes da Sessão de Estudo</string>
+    <string name="select_area">Selecione a área</string>
+    <string name="close">Fechar</string>
+    <string name="creating">Criando...</string>
+    <string name="select_group">Selecione o grupo</string>
+    <string name="group_label">grupo</string>
 
 </resources>

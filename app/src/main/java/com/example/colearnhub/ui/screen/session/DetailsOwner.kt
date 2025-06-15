@@ -390,7 +390,7 @@ fun DetailsOwnerIndice(onBack: () -> Unit){
     val minute by remember { mutableStateOf("00") }
     val duration by remember { mutableStateOf("1h") }
 
-    Column{
+    Column(modifier = Modifier.background(Color.White)){
         DetailsOwnerTopBar(onBack = onBack)
         DOSessionName()
         DODescription()
@@ -410,7 +410,7 @@ fun DetailsOwnerIndice(onBack: () -> Unit){
 fun DetailsOwnerScreen(navController: NavHostController){
     val navigateBack = {
         navController.navigate("MainScreen?selectedItem=1") {
-            popUpTo("session_details_owner") { inclusive = true }
+            popUpTo("MainScreen") { inclusive = true }
             launchSingleTop = true
         }
     }
@@ -424,8 +424,6 @@ fun DetailsOwnerScreen(navController: NavHostController){
             .fillMaxSize()
             .background(Color.White)
     ) {
-        Column {
-            DetailsOwnerIndice(onBack = navigateBack)
-        }
+        DetailsOwnerIndice(onBack = navigateBack)
     }
 }

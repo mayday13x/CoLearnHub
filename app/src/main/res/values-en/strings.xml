@@ -222,9 +222,13 @@
     <string name="invite_message">Invite new people to this group.</string>
     <string name="invited_count">Invited (%d)</string>
     <string name="invited">Invited</string>
+    <string name="invited2">Invited</string>
     <string name="remove">Remove</string>
     <string name="create">Create</string>
     <string name="new_group_title">New Group</string>
+
+    <string name="confirm_remove_session">Confirm remove session</string>
+    <string name="remove_session_confirmation">Are you sure you want to remove this session? This action cannot be undone and will delete all associated data.</string>
 
     <!-- Group Participants Screen -->
     <string name="participants">Participants</string>
@@ -312,5 +316,14 @@
     <string name="confirm">Confirm</string>
     <string name="success_material">Material created successfully!</string>
     <string name="no_favourite">No favorite materials yet!</string>
+
+    <string name="tags">Tags</string>
+    <string name="session_not_found">Session not found!</string>
+    <string name="error_loading_details">Error loading details: %s</string>
+    <string name="select_area">Select an area</string>
+    <string name="close">Close</string>
+    <string name="creating">Creating...</string>
+    <string name="select_group">Select a group</string>
+    <string name="group_label">group</string>
 
 </resources>

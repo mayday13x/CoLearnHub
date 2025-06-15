@@ -4,6 +4,7 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Build
 import android.util.Log
+import androidx.activity.compose.BackHandler
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -20,7 +21,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.DateRange
@@ -57,6 +60,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -69,6 +73,8 @@ import com.example.colearnhub.modelLayer.TagData
 import com.example.colearnhub.ui.screen.main.formatDate
 import com.example.colearnhub.ui.screen.main.formatTime
 import com.example.colearnhub.ui.utils.dynamicPadding
+import com.example.colearnhub.ui.utils.logoSize
+import com.example.colearnhub.ui.utils.spacer3
 import com.example.colearnhub.ui.utils.txtSize
 import com.example.colearnhub.ui.utils.verticalSpacing
 import com.example.colearnhub.viewModelLayer.AuthViewModelFactory
@@ -79,27 +85,41 @@ import com.example.colearnhub.viewmodel.AuthViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun StudySessionDetailsTopBar(onBack: () -> Unit) {
-    CenterAlignedTopAppBar(
-        title = {
-            Text(
-                text = stringResource(R.string.study_session_details),
-                color = Color.White,
-                fontWeight = FontWeight.Bold
-            )
-        },
-        navigationIcon = {
+    val txtSize = (txtSize().value + 4).sp
+    val barSize = spacer3()
+    val logoSize = logoSize() - 13.dp
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(barSize)
+            .background(Color(0xFF395174)),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = stringResource(R.string.session_details),
+            color = Color.White,
+            fontSize = txtSize,
+            fontWeight = FontWeight.Medium,
+            modifier = Modifier.padding(start = 10.dp)
+        )
+
+        Row (
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(start = 10.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
             IconButton(onClick = onBack) {
                 Icon(
                     imageVector = Icons.Default.ArrowBack,
                     contentDescription = "Back",
                     tint = Color.White,
+                    modifier = Modifier.size(logoSize)
                 )
             }
-        },
-        colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-            containerColor = Color(0xFF395174)
-        )
-    )
+        }
+    }
 }
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -120,10 +140,12 @@ fun StudySessionDetailsScreen(
 
     val navigateBackToSessions = {
         navController.navigate("MainScreen?selectedItem=1") {
-            popUpTo("study_sessions_route") { inclusive = false }
+            popUpTo("MainScreen") { inclusive = true }
             launchSingleTop = true
         }
     }
+
+    BackHandler(onBack = navigateBackToSessions)
 
     LaunchedEffect(Unit) {
         val sessionId = navController.currentBackStackEntry?.arguments?.getString("sessionId")
@@ -145,6 +167,8 @@ fun StudySessionDetailsScreen(
 
     Column(
         modifier = Modifier.fillMaxSize()
+            .background(Color.White)
+            .verticalScroll(rememberScrollState())
     ) {
         StudySessionDetailsTopBar(onBack = navigateBackToSessions)
 
@@ -160,279 +184,278 @@ fun StudySessionDetailsScreen(
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center
             ) {
-                Text(text = stringResource(R.string.error_loading_details, error ?: "Unknown Error"), color = Color.Red)
+                Text(text = stringResource(R.string.error_loading_details, error ?: stringResource(R.string.desconhecido)), color = Color.Red)
             }
         } else if (selectedStudySession != null) {
-            LazyColumn(
+            Column(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(horizontal = dynamicPadding())
-                    .padding(bottom = 80.dp), // Padding for the bottom navigation bar
+                    .padding(bottom = 20.dp),
                 verticalArrangement = Arrangement.spacedBy(verticalSpacing())
             ) {
-                item {
+                Spacer(modifier = Modifier.height(verticalSpacing() - 30.dp))
+
+                Column(
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = stringResource(R.string.session_name),
+                        fontSize = txtSize(),
+                        fontWeight = FontWeight.SemiBold,
+                        color = Color(0xFF395174)
+                    )
+                    Text(
+                        text = selectedStudySession!!.name,
+                        fontSize = (txtSize().value + 4).sp,
+                        fontWeight = FontWeight.Medium,
+                        color = Color.Black
+                    )
+
+                    Spacer(modifier = Modifier.height(verticalSpacing() / 2))
+
+                    // Description
+                    if (selectedStudySession!!.description.isNotEmpty()) {
+                        Text(
+                            text = stringResource(R.string.description),
+                            fontSize = txtSize(),
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        Text(
+                            text = selectedStudySession!!.description,
+                            fontSize = txtSize(),
+                            color = Color.Black,
+                            modifier = Modifier.padding(top = 4.dp)
+                        )
+                    }
+
                     Spacer(modifier = Modifier.height(verticalSpacing()))
 
-                    Column(
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text(
-                            text = stringResource(R.string.session_name),
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                        Text(
-                            text = selectedStudySession!!.name,
-                            fontSize = 20.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.Black
-                        )
-
-                        Spacer(modifier = Modifier.height(verticalSpacing() / 2))
-
-                        // Description
-                        if (selectedStudySession!!.description.isNotEmpty()) {
-                            Text(
-                                text = stringResource(R.string.description),
-                                fontSize = 16.sp,
-                                fontWeight = FontWeight.SemiBold,
-                                color = MaterialTheme.colorScheme.primary
+                    // Date, Time, Duration
+                    Row(modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Min), horizontalArrangement = Arrangement.SpaceBetween) {
+                        // Date
+                        OutlinedButton(
+                            onClick = { /* No action on click */ },
+                            shape = RoundedCornerShape(8.dp),
+                            modifier = Modifier.weight(1f).height(65.dp).padding(end = 4.dp),
+                            colors = ButtonDefaults.outlinedButtonColors(
+                                containerColor = Color.LightGray.copy(alpha = 0.2f),
+                                contentColor = Color.Black
                             )
-                            Text(
-                                text = selectedStudySession!!.description,
-                                fontSize = 16.sp,
-                                color = Color.Black,
-                                modifier = Modifier.padding(top = 4.dp)
-                            )
-                        }
-
-                        Spacer(modifier = Modifier.height(verticalSpacing()))
-
-                        // Date, Time, Duration
-                        Row(modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Min), horizontalArrangement = Arrangement.SpaceBetween) {
-                            // Date
-                            OutlinedButton(
-                                onClick = { /* No action on click */ },
-                                shape = RoundedCornerShape(8.dp),
-                                modifier = Modifier.weight(1f).height(65.dp).padding(end = 4.dp),
-                                colors = ButtonDefaults.outlinedButtonColors(
-                                    containerColor = Color.LightGray.copy(alpha = 0.2f),
-                                    contentColor = Color.Black
+                        ) {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+                                Icon(Icons.Filled.DateRange, contentDescription = "Date", modifier = Modifier.size(24.dp), tint = Color(0xFF395174))
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text(
+                                    text = formatDate(selectedStudySession!!.date),
+                                    fontSize = (txtSize().value - 4).sp,
+                                    textAlign = TextAlign.Center,
+                                    lineHeight = txtSize(),
+                                    softWrap = true,
+                                    maxLines = 2,
+                                    color = Color(0xFF395174)
                                 )
-                            ) {
-                                Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
-                                    Icon(Icons.Filled.DateRange, contentDescription = "Date", modifier = Modifier.size(24.dp), tint = MaterialTheme.colorScheme.primary)
-                                    Spacer(modifier = Modifier.height(4.dp))
-                                    Text(
-                                        text = formatDate(selectedStudySession!!.date),
-                                        fontSize = 12.sp,
-                                        textAlign = TextAlign.Center,
-                                        lineHeight = 16.sp,
-                                        softWrap = true,
-                                        maxLines = 2
-                                    )
-                                }
-                            }
-
-                            // Start Time
-                            OutlinedButton(
-                                onClick = { /* No action on click */ },
-                                shape = RoundedCornerShape(8.dp),
-                                modifier = Modifier.weight(1f).height(65.dp).padding(horizontal = 4.dp),
-                                colors = ButtonDefaults.outlinedButtonColors(
-                                    containerColor = Color.LightGray.copy(alpha = 0.2f),
-                                    contentColor = Color.Black
-                                )
-                            ) {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Icon(Icons.Filled.Schedule, contentDescription = "Time", modifier = Modifier.size(24.dp), tint = MaterialTheme.colorScheme.primary)
-                                    Spacer(modifier = Modifier.width(4.dp))
-                                    Text(text = formatTime(selectedStudySession!!.startTime), fontSize = 12.sp)
-                                }
-                            }
-
-                            // Duration
-                            OutlinedButton(
-                                onClick = { /* No action on click */ },
-                                shape = RoundedCornerShape(8.dp),
-                                modifier = Modifier.weight(1f).height(65.dp).padding(start = 4.dp),
-                                colors = ButtonDefaults.outlinedButtonColors(
-                                    containerColor = Color.LightGray.copy(alpha = 0.2f),
-                                    contentColor = Color.Black
-                                )
-                            ) {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Icon(Icons.Filled.HourglassEmpty, contentDescription = "Duration", modifier = Modifier.size(24.dp), tint = MaterialTheme.colorScheme.primary)
-                                    Spacer(modifier = Modifier.width(4.dp))
-                                    Text(text = "${selectedStudySession!!.duration} min", fontSize = 14.sp)
-                                }
                             }
                         }
 
-                        Spacer(modifier = Modifier.height(verticalSpacing()))
-
-                        // Tags
-                        selectedStudySession!!.embeddedTag?.let { tag ->
-                            Text(
-                                text = stringResource(R.string.tags),
-                                fontSize = 16.sp,
-                                fontWeight = FontWeight.SemiBold,
-                                color = MaterialTheme.colorScheme.primary
+                        // Start Time
+                        OutlinedButton(
+                            onClick = { /* No action on click */ },
+                            shape = RoundedCornerShape(8.dp),
+                            modifier = Modifier.weight(1f).height(65.dp).padding(horizontal = 4.dp),
+                            colors = ButtonDefaults.outlinedButtonColors(
+                                containerColor = Color.LightGray.copy(alpha = 0.2f),
+                                contentColor = Color.Black
                             )
-                            StudySessionDetailTag(tag = tag)
-                        }
-
-                        Spacer(modifier = Modifier.height(verticalSpacing()))
-
-                        // Going / Participants
-                        Text(
-                            text = stringResource(R.string.going),
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable { 
-                                    navController.navigate("study_session_participants/${selectedStudySession!!.id}")
-                                }
-                                .background(Color.LightGray.copy(alpha = 0.2f), RoundedCornerShape(8.dp))
-                                .padding(12.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(Icons.Filled.People, contentDescription = "Participants", tint = MaterialTheme.colorScheme.primary)
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text(text = stringResource(R.string.participants_count, viewModel.displayParticipantsCount.collectAsState().value))
-                            }
-                            Icon(Icons.Filled.ChevronRight, contentDescription = "View participants")
-                        }
-
-                        Spacer(modifier = Modifier.height(verticalSpacing()))
-
-                        // Session Link (conditional visibility)
-                        if (isUserOwner || isUserInGroup || isUserParticipating) {
-                            selectedStudySession!!.sessionLink?.let { link ->
-                                Text(
-                                    text = stringResource(R.string.session_s_link),
-                                    fontSize = 16.sp,
-                                    fontWeight = FontWeight.SemiBold,
-                                    color = MaterialTheme.colorScheme.primary
-                                )
-                                OutlinedTextField(
-                                    value = link,
-                                    onValueChange = {},
-                                    readOnly = true,
-                                    enabled = false,
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(top = 4.dp),
-                                    colors = OutlinedTextFieldDefaults.colors(
-                                        disabledTextColor = Color.Black,
-                                        disabledBorderColor = Color(0xFF395174),
-                                        disabledTrailingIconColor = Color(0xFF395174)
-                                    ),
-                                    shape = RoundedCornerShape(8.dp),
-                                    trailingIcon = {
-                                        IconButton(onClick = { val intent = Intent(Intent.ACTION_VIEW, Uri.parse(link)); context.startActivity(intent) }) {
-                                            Icon(Icons.Filled.OpenInNew, contentDescription = "Open Link", tint = Color(0xFF395174))
-                                        }
-                                    }
-                                )
+                                Icon(Icons.Filled.Schedule, contentDescription = "Time", modifier = Modifier.size(24.dp), tint = Color(0xFF395174))
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text(text = formatTime(selectedStudySession!!.startTime), fontSize = (txtSize().value - 4).sp, color = Color(0xFF395174))
                             }
                         }
 
-                        Spacer(modifier = Modifier.height(verticalSpacing() * 2))
-
-                        // Join/Leave/Remove Button
-                        val sessionId = selectedStudySession!!.id.toString()
-                        var showRemoveDialog by remember { mutableStateOf(false) }
-
-                        if (isUserOwner) {
-                            Button(
-                                onClick = { showRemoveDialog = true },
-                                modifier = Modifier.fillMaxWidth().height(50.dp),
-                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE53E3E)), // Red for Remove
-                                shape = RoundedCornerShape(12.dp)
-                            ) {
-                                Text(
-                                    text = stringResource(R.string.remove),
-                                    color = Color.White,
-                                    fontSize = 18.sp,
-                                    fontWeight = FontWeight.Bold
-                                )
-                            }
-                        } else {
-                            Button(
-                                onClick = {
-                                    if (isUserParticipating) {
-                                        viewModel.leaveSession(sessionId)
-                                    } else {
-                                        viewModel.joinSession(sessionId)
-                                    }
-                                },
-                                modifier = Modifier.fillMaxWidth().height(50.dp),
-                                colors = ButtonDefaults.buttonColors(containerColor = if (isUserParticipating) Color(0xFFE53E3E) else MaterialTheme.colorScheme.primary),
-                                shape = RoundedCornerShape(12.dp)
-                            ) {
-                                Text(
-                                    text = if (isUserParticipating) stringResource(R.string.leave) else stringResource(R.string.join),
-                                    color = Color.White,
-                                    fontSize = 18.sp,
-                                    fontWeight = FontWeight.Bold
-                                )
+                        // Duration
+                        OutlinedButton(
+                            onClick = { /* No action on click */ },
+                            shape = RoundedCornerShape(8.dp),
+                            modifier = Modifier.weight(1f).height(65.dp).padding(start = 4.dp),
+                            colors = ButtonDefaults.outlinedButtonColors(
+                                containerColor = Color.LightGray.copy(alpha = 0.2f),
+                                contentColor = Color.Black
+                            )
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(Icons.Filled.HourglassEmpty, contentDescription = "Duration", modifier = Modifier.size(24.dp), tint = Color(0xFF395174))
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text(text = "${selectedStudySession!!.duration} min", fontSize = (txtSize().value - 2).sp, color = Color(0xFF395174))
                             }
                         }
+                    }
 
-                        // Remove Confirmation Dialog
-                        if (showRemoveDialog) {
-                            AlertDialog(
-                                onDismissRequest = { showRemoveDialog = false },
-                                title = {
-                                    Text(
-                                        text = stringResource(R.string.confirm_remove_session),
-                                        fontWeight = FontWeight.Bold,
-                                        color = Color.Black
-                                    )
-                                },
-                                text = {
-                                    Text(
-                                        text = stringResource(R.string.remove_session_confirmation),
-                                        lineHeight = 20.sp,
-                                        color = Color.Black
-                                    )
-                                },
-                                confirmButton = {
-                                    TextButton(
-                                        onClick = {
-                                            showRemoveDialog = false
-                                            viewModel.removeStudySession(sessionId) // Call new ViewModel function
-                                            navigateBackToSessions()
-                                        },
-                                        colors = ButtonDefaults.textButtonColors(
-                                            contentColor = Color(0xFFE53E3E)
-                                        )
-                                    ) {
-                                        Text(
-                                            text = stringResource(R.string.remove),
-                                            fontWeight = FontWeight.Medium
-                                        )
+                    Spacer(modifier = Modifier.height(verticalSpacing()))
+
+                    // Tags
+                    selectedStudySession!!.embeddedTag?.let { tag ->
+                        Text(
+                            text = stringResource(R.string.tags),
+                            fontSize = txtSize(),
+                            fontWeight = FontWeight.SemiBold,
+                            color = Color(0xFF395174)
+                        )
+                        StudySessionDetailTag(tag = tag)
+                    }
+
+                    Spacer(modifier = Modifier.height(verticalSpacing()))
+
+                    // Going / Participants
+                    Text(
+                        text = stringResource(R.string.join),
+                        fontSize = txtSize(),
+                        fontWeight = FontWeight.SemiBold,
+                        color = Color(0xFF395174)
+                    )
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                navController.navigate("study_session_participants/${selectedStudySession!!.id}")
+                            }
+                            .background(Color.LightGray.copy(alpha = 0.2f), RoundedCornerShape(8.dp))
+                            .padding(12.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Filled.People, contentDescription = "Participants", tint = Color(0xFF395174))
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(text = stringResource(R.string.participants_count, viewModel.displayParticipantsCount.collectAsState().value), color = Color.Black)
+                        }
+                        Icon(Icons.Filled.ChevronRight, contentDescription = "View participants", tint = Color(0xFF395174))
+                    }
+
+                    Spacer(modifier = Modifier.height(verticalSpacing()))
+
+                    // Session Link (conditional visibility)
+                    if (isUserOwner || isUserInGroup || isUserParticipating) {
+                        selectedStudySession!!.sessionLink?.let { link ->
+                            Text(
+                                text = stringResource(R.string.session_s_link),
+                                fontSize = txtSize(),
+                                fontWeight = FontWeight.SemiBold,
+                                color = Color(0xFF395174)
+                            )
+                            OutlinedTextField(
+                                value = link,
+                                onValueChange = {},
+                                readOnly = true,
+                                enabled = false,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(top = 4.dp),
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    disabledTextColor = Color.Black,
+                                    disabledBorderColor = Color(0xFF395174),
+                                    disabledTrailingIconColor = Color(0xFF395174)
+                                ),
+                                shape = RoundedCornerShape(8.dp),
+                                trailingIcon = {
+                                    IconButton(onClick = { val intent = Intent(Intent.ACTION_VIEW, Uri.parse(link)); context.startActivity(intent) }) {
+                                        Icon(Icons.Filled.OpenInNew, contentDescription = "Open Link", tint = Color(0xFF395174))
                                     }
-                                },
-                                dismissButton = {
-                                    TextButton(onClick = { showRemoveDialog = false }) {
-                                        Text(
-                                            text = stringResource(R.string.cancel),
-                                            color = Color.Black
-                                        )
-                                    }
-                                },
-                                containerColor = Color.White
+                                }
                             )
                         }
+                    }
+
+                    Spacer(modifier = Modifier.height(verticalSpacing() * 2))
+
+                    // Join/Leave/Remove Button
+                    val sessionId = selectedStudySession!!.id.toString()
+                    var showRemoveDialog by remember { mutableStateOf(false) }
+
+                    if (isUserOwner) {
+                        Button(
+                            onClick = { showRemoveDialog = true },
+                            modifier = Modifier.fillMaxWidth().height(50.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE53E3E)), // Red for Remove
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Text(
+                                text = stringResource(R.string.remove),
+                                color = Color.White,
+                                fontSize = (txtSize().value + 2).sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    } else {
+                        Button(
+                            onClick = {
+                                if (isUserParticipating) {
+                                    viewModel.leaveSession(sessionId)
+                                } else {
+                                    viewModel.joinSession(sessionId)
+                                }
+                            },
+                            modifier = Modifier.fillMaxWidth().height(50.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = if (isUserParticipating) Color(0xFFE53E3E) else MaterialTheme.colorScheme.primary),
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Text(
+                                text = if (isUserParticipating) stringResource(R.string.leave) else stringResource(R.string.join),
+                                color = Color.White,
+                                fontSize = (txtSize().value + 2).sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
+
+                    // Remove Confirmation Dialog
+                    if (showRemoveDialog) {
+                        AlertDialog(
+                            onDismissRequest = { showRemoveDialog = false },
+                            title = {
+                                Text(
+                                    text = stringResource(R.string.confirm_remove_session),
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color.Black
+                                )
+                            },
+                            text = {
+                                Text(
+                                    text = stringResource(R.string.remove_session_confirmation),
+                                    lineHeight = 20.sp,
+                                    color = Color.Black
+                                )
+                            },
+                            confirmButton = {
+                                TextButton(
+                                    onClick = {
+                                        showRemoveDialog = false
+                                        viewModel.removeStudySession(sessionId) // Call new ViewModel function
+                                        navigateBackToSessions()
+                                    },
+                                    colors = ButtonDefaults.textButtonColors(
+                                        contentColor = Color(0xFFE53E3E)
+                                    )
+                                ) {
+                                    Text(
+                                        text = stringResource(R.string.remove),
+                                        fontWeight = FontWeight.Medium
+                                    )
+                                }
+                            },
+                            dismissButton = {
+                                TextButton(onClick = { showRemoveDialog = false }) {
+                                    Text(
+                                        text = stringResource(R.string.cancel),
+                                        color = Color.Black
+                                    )
+                                }
+                            },
+                            containerColor = Color.White
+                        )
                     }
                 }
             }

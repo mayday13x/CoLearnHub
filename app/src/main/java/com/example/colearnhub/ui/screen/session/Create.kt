@@ -1,11 +1,13 @@
 package com.example.colearnhub.ui.screen.session
 
 import android.os.Build
+import android.util.Log
 import androidx.activity.compose.BackHandler
+import androidx.annotation.RequiresApi
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -18,13 +20,17 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowForwardIos
 import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -37,11 +43,14 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.RadioButton
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -54,35 +63,23 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.example.colearnhub.R
+import com.example.colearnhub.modelLayer.GroupResponse
+import com.example.colearnhub.repositoryLayer.TagRepository
 import com.example.colearnhub.ui.screen.main.Private
 import com.example.colearnhub.ui.screen.main.ScrollableOutlinedTextField
-import com.example.colearnhub.ui.screen.main.ShareBtn
 import com.example.colearnhub.ui.utils.logoSize
 import com.example.colearnhub.ui.utils.sbutton
 import com.example.colearnhub.ui.utils.spacer2
 import com.example.colearnhub.ui.utils.spacer3
 import com.example.colearnhub.ui.utils.textFieldHeight
 import com.example.colearnhub.ui.utils.txtSize
+import com.example.colearnhub.viewModelLayer.StudySessionViewModel
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
-import androidx.compose.material3.AlertDialog
-import androidx.compose.runtime.collectAsState
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.colearnhub.viewModelLayer.StudySessionViewModel
-import com.example.colearnhub.repositoryLayer.TagRepository
-import android.util.Log
-import androidx.annotation.RequiresApi
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.RadioButton
-import androidx.compose.material3.Surface
-import androidx.compose.runtime.rememberCoroutineScope
-import com.example.colearnhub.modelLayer.GroupResponse
-import androidx.compose.material.icons.filled.ArrowForwardIos
 
 @Composable
 fun NSSTopBar(onBack: () -> Unit) {
@@ -110,7 +107,9 @@ fun NSSTopBar(onBack: () -> Unit) {
                 .padding(start = 10.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            IconButton(onClick = onBack) {
+            IconButton(
+                onClick = onBack
+            ) {
                 Icon(
                     imageVector = Icons.Default.ArrowBack,
                     contentDescription = "Back",
@@ -306,7 +305,6 @@ fun NSSTimeAndDuration(
     onMinuteChange: (String) -> Unit,
     onDurationChange: (String) -> Unit
 ) {
-    val textFieldHeight = textFieldHeight()
     val paddingValue = logoSize() + 10.dp
     val titleFontSize = (txtSize().value + 1).sp
 
@@ -428,7 +426,6 @@ fun Tags(
     var tags by remember { mutableStateOf(listOf<String>()) }
     var isLoading by remember { mutableStateOf(true) }
     var error by remember { mutableStateOf<String?>(null) }
-    val coroutineScope = rememberCoroutineScope()
 
     // Carregar tags quando o diálogo é aberto
     LaunchedEffect(showDialog) {
@@ -513,9 +510,9 @@ fun Tags(
             onDismissRequest = { showDialog = false },
             title = {
                 Text(
-                    text = "Selecione a área",
+                    text = stringResource(R.string.select_area),
                     color = Color(0xFF395174),
-                    fontSize = 18.sp
+                    fontSize = (txtSize().value +2).sp
                 )
             },
             text = {
@@ -540,7 +537,7 @@ fun Tags(
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
-                                text = error ?: "Erro desconhecido",
+                                text = error ?: stringResource(R.string.desconhecido),
                                 color = Color.Red,
                                 textAlign = TextAlign.Center,
                                 modifier = Modifier.padding(16.dp)
@@ -569,7 +566,7 @@ fun Tags(
                                     Spacer(modifier = Modifier.width(8.dp))
                                     Text(
                                         text = tag,
-                                        fontSize = 16.sp,
+                                        fontSize = txtSize(),
                                         color = Color(0xFF395174)
                                     )
                                 }
@@ -585,7 +582,7 @@ fun Tags(
                         containerColor = Color(0xFF395174)
                     )
                 ) {
-                    Text("Fechar")
+                    Text(stringResource(R.string.close))
                 }
             }
         )
@@ -630,7 +627,7 @@ fun CreateBtn(
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = "Criando...",
+                    text = stringResource(R.string.creating),
                     fontSize = txtSize(),
                     modifier = Modifier.padding(vertical = shareButtonSize)
                 )
@@ -664,9 +661,9 @@ fun GroupSelectionDialog(
             onDismissRequest = onDismiss,
             title = {
                 Text(
-                    text = "Selecione o Grupo",
+                    text = stringResource(R.string.select_group),
                     color = Color(0xFF395174),
-                    fontSize = 18.sp
+                    fontSize = (txtSize().value + 2).sp
                 )
             },
             text = {
@@ -728,7 +725,7 @@ fun GroupSelectionDialog(
                         containerColor = Color(0xFF395174)
                     )
                 ) {
-                    Text("Fechar")
+                    Text(stringResource(R.string.close))
                 }
             }
         )
@@ -826,7 +823,7 @@ fun NSSIndice(
                     .padding(top = 16.dp)
             ) {
                 Text(
-                    text = "grupo",
+                    text = stringResource(R.string.group_label),
                     fontSize = titleFontSize,
                     fontWeight = FontWeight.Medium,
                     color = Color(0xFF395174),
@@ -845,7 +842,7 @@ fun NSSIndice(
                     border = BorderStroke(1.dp, Color(0xFF395174))
                 ) {
                     Text(
-                        text = selectedGroupName ?: "Selecione um Grupo",
+                        text = selectedGroupName ?: stringResource(R.string.select_group),
                         fontSize = titleFontSize,
                         fontWeight = FontWeight.Normal,
                         textAlign = TextAlign.Start,
@@ -893,7 +890,7 @@ fun NSSIndice(
 fun NSSScreen(navController: NavHostController){
     val navigateBack = {
         navController.navigate("MainScreen?selectedItem=1") {
-            popUpTo("group_details") { inclusive = true }
+            popUpTo("MainScreen") { inclusive = true }
             launchSingleTop = true
         }
     }

@@ -29,6 +29,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -43,6 +44,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -113,6 +115,8 @@ fun SessionSearchBar(
             .fillMaxWidth()
             .padding(horizontal = 16.dp)
             .padding(top = 16.dp),
+        colors = OutlinedTextFieldDefaults.colors(
+            focusedTextColor = Color.Black),
         placeholder = {
             Text(
                 text = stringResource(R.string.search_participants),
@@ -127,7 +131,7 @@ fun SessionSearchBar(
             )
         },
         shape = RoundedCornerShape(8.dp),
-        singleLine = true
+        singleLine = true,
     )
 }
 
@@ -178,14 +182,14 @@ fun SessionParticipantItem(
             ) {
                 Text(
                     text = participant.username,
-                    fontSize = 16.sp,
+                    fontSize = txtSize(),
                     fontWeight = FontWeight.Medium,
                     color = Color.Black
                 )
                 participant.email?.let { email ->
                     Text(
                         text = email,
-                        fontSize = 14.sp,
+                        fontSize = (txtSize().value - 2).sp,
                         color = Color.Gray
                     )
                 }
@@ -201,7 +205,7 @@ fun SessionParticipantItem(
                     Text(
                         text = stringResource(R.string.owner_badge),
                         color = Color.White,
-                        fontSize = 12.sp,
+                        fontSize = (txtSize().value - 4).sp,
                         fontWeight = FontWeight.Medium,
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                     )
