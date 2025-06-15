@@ -275,20 +275,20 @@ fun NSSDate(selectedDate: String, onDateChange: (String) -> Unit) {
                         showDatePicker = false
                     }
                 ) {
-                    Text("OK", color = Color(0xFF395174))
+                    Text(stringResource(R.string.select2), color = Color(0xFF0065FF))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showDatePicker = false }) {
-                    Text("Cancel", color = Color(0xFF395174))
+                    Text(stringResource(R.string.cancel), color = Color(0xFF0066FF))
                 }
             }
         ) {
             DatePicker(
                 state = datePickerState,
                 colors = DatePickerDefaults.colors(
-                    selectedDayContainerColor = Color(0xFF395174),
-                    todayContentColor = Color(0xFF395174),
+                    selectedDayContainerColor = Color(0xFF006AFF),
+                    todayContentColor = Color(0xFF0067FF),
                     todayDateBorderColor = Color(0xFF395174)
                 )
             )

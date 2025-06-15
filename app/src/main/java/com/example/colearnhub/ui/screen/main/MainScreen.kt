@@ -895,7 +895,6 @@ fun SearchBar(
                         containerColor = Color.White
                     )
                 ) {
-                    // Use Box instead of nested Columns for proper positioning
                     Box(
                         modifier = Modifier.fillMaxSize()
                     ) {
@@ -909,8 +908,8 @@ fun SearchBar(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                text = "Filters",
-                                fontSize = 20.sp,
+                                text = stringResource(R.string.filters),
+                                fontSize = (txtSize().value + 4).sp,
                                 fontWeight = FontWeight.Bold,
                                 color = Color(0xFF395174)
                             )
@@ -955,18 +954,20 @@ fun SearchBar(
                                         Icon(
                                             imageVector = Icons.Default.CalendarMonth,
                                             contentDescription = "Date Filter",
-                                            tint = Color.Gray,
+                                            tint = Color(0xFF395174),
                                             modifier = Modifier.size(24.dp).padding(end = 8.dp)
                                         )
                                         Text(
-                                            text = "Date",
+                                            text = stringResource(R.string.date),
                                             fontWeight = FontWeight.Bold,
-                                            fontSize = 16.sp
+                                            fontSize = txtSize(),
+                                            color = Color(0xFF395174)
                                         )
                                     }
                                     Icon(
                                         imageVector = if (isDateFilterExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
-                                        contentDescription = if (isDateFilterExpanded) "Collapse" else "Expand"
+                                        contentDescription = if (isDateFilterExpanded) "Collapse" else "Expand",
+                                        tint = Color(0xFF395174)
                                     )
                                 }
 
@@ -997,7 +998,7 @@ fun SearchBar(
                                                         Icon(Icons.Default.DateRange, contentDescription = "Select Start Date")
                                                     }
                                                 },
-                                                placeholder = { Text("Start Date") },
+                                                placeholder = { Text(stringResource(R.string.start_date)) },
                                                 modifier = Modifier
                                                     .fillMaxWidth()
                                                     .clickable { showStartDatePicker = true },
@@ -1006,6 +1007,8 @@ fun SearchBar(
                                                     unfocusedBorderColor = Color.LightGray,
                                                     focusedContainerColor = Color.White,
                                                     unfocusedContainerColor = Color.White,
+                                                    focusedTextColor = Color.Black,
+                                                    unfocusedTextColor = Color.Black,
                                                     cursorColor = Color.Black
                                                 ),
                                                 shape = RoundedCornerShape(8.dp)
@@ -1022,15 +1025,17 @@ fun SearchBar(
                                                         Icon(Icons.Default.DateRange, contentDescription = "Select End Date")
                                                     }
                                                 },
-                                                placeholder = { Text("End Date") },
+                                                placeholder = { Text(stringResource(R.string.end_date)) },
                                                 modifier = Modifier
                                                     .fillMaxWidth()
                                                     .clickable { showEndDatePicker = true },
                                                 colors = OutlinedTextFieldDefaults.colors(
                                                     focusedBorderColor = Color.LightGray,
+                                                    unfocusedTextColor = Color.Black,
                                                     unfocusedBorderColor = Color.LightGray,
                                                     focusedContainerColor = Color.White,
                                                     unfocusedContainerColor = Color.White,
+                                                    focusedTextColor = Color.Black,
                                                     cursorColor = Color.Black
                                                 ),
                                                 shape = RoundedCornerShape(8.dp)
@@ -1047,10 +1052,12 @@ fun SearchBar(
                                                             materialViewModel.setStartDateFilter(localDateTime)
                                                         }
                                                         showStartDatePicker = false
-                                                    }) { Text("Select") }
+                                                    }) { Text(stringResource(R.string.select2)) }
                                                 },
                                                 dismissButton = {
-                                                    Button(onClick = { showStartDatePicker = false }) { Text("Cancel") }
+                                                    Button(onClick = { showStartDatePicker = false }) { Text(
+                                                        stringResource(R.string.cancel)
+                                                    ) }
                                                 }
                                             ) {
                                                 DatePicker(state = datePickerState)
@@ -1067,10 +1074,12 @@ fun SearchBar(
                                                             materialViewModel.setEndDateFilter(localDateTime)
                                                         }
                                                         showEndDatePicker = false
-                                                    }) { Text("Select") }
+                                                    }) { Text(stringResource(R.string.select2)) }
                                                 },
                                                 dismissButton = {
-                                                    Button(onClick = { showEndDatePicker = false }) { Text("Cancel") }
+                                                    Button(onClick = { showEndDatePicker = false }) { Text(
+                                                        stringResource(R.string.cancel)
+                                                    ) }
                                                 }
                                             ) {
                                                 DatePicker(state = datePickerState)
@@ -1102,18 +1111,20 @@ fun SearchBar(
                                         Icon(
                                             imageVector = Icons.Default.Bookmark,
                                             contentDescription = "Area Filter",
-                                            tint = Color.Gray,
+                                            tint = Color(0xFF395174),
                                             modifier = Modifier.size(24.dp).padding(end = 8.dp)
                                         )
                                         Text(
-                                            text = "Area",
+                                            text = stringResource(R.string.area),
                                             fontWeight = FontWeight.Bold,
-                                            fontSize = 16.sp
+                                            fontSize = txtSize(),
+                                            color = Color(0xFF395174)
                                         )
                                     }
                                     Icon(
                                         imageVector = if (isTagFilterExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
-                                        contentDescription = if (isTagFilterExpanded) "Collapse" else "Expand"
+                                        contentDescription = if (isTagFilterExpanded) "Collapse" else "Expand",
+                                        tint = Color(0xFF395174)
                                     )
                                 }
 
@@ -1151,13 +1162,12 @@ fun SearchBar(
                             Button(
                                 onClick = {
                                     materialViewModel.resetAllFilters()
-                                    showFilterModal = false
                                 },
                                 colors = ButtonDefaults.buttonColors(containerColor = Color.LightGray),
                                 shape = RoundedCornerShape(8.dp),
                                 modifier = Modifier.weight(1f).padding(end = 8.dp)
                             ) {
-                                Text("Reset", color = Color.Black)
+                                Text(stringResource(R.string.clean), color = Color.Black)
                             }
 
                             // Apply Button
@@ -1170,7 +1180,7 @@ fun SearchBar(
                                 shape = RoundedCornerShape(8.dp),
                                 modifier = Modifier.weight(1f).padding(start = 8.dp)
                             ) {
-                                Text("Apply", color = Color.White)
+                                Text(stringResource(R.string.apply), color = Color.White)
                             }
                         }
                     }

@@ -323,5 +323,10 @@
     <string name="creating">Criando...</string>
     <string name="select_group">Selecione o grupo</string>
     <string name="group_label">grupo</string>
+    <string name="start_date">Data Início</string>
+    <string name="end_date">Data Fim</string>
+    <string name="select2">Selecionar</string>
+    <string name="apply">Aplicar</string>
+    <string name="filters">Filtros</string>
 
 </resources>
