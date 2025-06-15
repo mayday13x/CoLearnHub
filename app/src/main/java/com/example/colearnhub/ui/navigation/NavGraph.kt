@@ -42,7 +42,6 @@ fun NavGraph() {
         profileRoutes(navController)
         groupRoutes(navController)
         favouritesRoutes(navController)
-
         sessionRoutes(navController)
     }
 }

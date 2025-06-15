@@ -947,16 +947,6 @@ fun Indice4(){
             onClick = { createMaterial() }
         )
 
-        // Mostrar tags selecionadas para debug
-        if (selectedTags.isNotEmpty()) {
-            Text(
-                text = "Tags selecionadas: ${selectedTags.joinToString(", ")}",
-                color = Color.Gray,
-                fontSize = 12.sp,
-                modifier = Modifier.padding(horizontal = 32.dp, vertical = 4.dp)
-            )
-        }
-
         // Mostrar mensagens de erro ou sucesso
         createError?.let { error ->
             Text(
@@ -967,19 +957,5 @@ fun Indice4(){
             )
         }
 
-        if (createSuccess) {
-            Text(
-                text = "Material criado com sucesso!",
-                color = Color.Green,
-                fontSize = 14.sp,
-                modifier = Modifier.padding(horizontal = 32.dp, vertical = 8.dp)
-            )
-
-            // Limpar mensagem de sucesso após alguns segundos
-            LaunchedEffect(createSuccess) {
-                kotlinx.coroutines.delay(3000)
-                createSuccess = false
-            }
-        }
     }
 }
