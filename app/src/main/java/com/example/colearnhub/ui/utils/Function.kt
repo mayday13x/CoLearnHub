@@ -101,9 +101,9 @@ fun SearchBar() {
         ScreenSize.LARGE -> 18.sp
     }
     val verticalSpacing = when (screenSize) {
-        ScreenSize.SMALL -> 27.dp
-        ScreenSize.MEDIUM -> 35.dp
-        ScreenSize.LARGE -> 47.dp
+        ScreenSize.SMALL -> 20.dp
+        ScreenSize.MEDIUM -> 28.dp
+        ScreenSize.LARGE -> 40.dp
     }
 
     Column(

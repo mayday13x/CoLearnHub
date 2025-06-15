@@ -193,10 +193,7 @@ fun Indice(
     ) {
         SearchBar(materialViewModel = materialViewModel)
 
-        Spacer(modifier = Modifier.height(verticalSpacing))
-
-        // Botão Share - posicionado no topo quando há dados
-        val currentMaterials = if (selectedTab == 0) materials else userMaterials
+        Spacer(modifier = Modifier.height(65.dp))
 
         // Tabs
         Row(
@@ -804,9 +801,9 @@ fun SearchBar(
         ScreenSize.LARGE -> 18.sp
     }
     val verticalSpacing = when (screenSize) {
-        ScreenSize.SMALL -> 27.dp
-        ScreenSize.MEDIUM -> 35.dp
-        ScreenSize.LARGE -> 47.dp
+        ScreenSize.SMALL -> 18.dp
+        ScreenSize.MEDIUM -> 26.dp
+        ScreenSize.LARGE -> 38.dp
     }
 
     // Obter o valor atual da pesquisa do ViewModel
@@ -830,7 +827,7 @@ fun SearchBar(
 
     Column(
         modifier = Modifier
-            .padding(padding),
+            .padding(5.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Image(
@@ -1192,8 +1189,8 @@ fun SearchBar(
         ) {
             Text(
                 stringResource(R.string.Knowledge),
-                color = Color.White,
-                fontWeight = FontWeight.Bold
+                color = Color.White
+                //fontWeight = FontWeight.Bold
             )
         }
     }
