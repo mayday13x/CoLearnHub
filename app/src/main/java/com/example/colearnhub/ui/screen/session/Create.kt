@@ -512,13 +512,13 @@ fun CreateBtn(
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
                     text = "Criando...",
-                    fontSize = 16.sp,
+                    fontSize = txtSize(),
                     modifier = Modifier.padding(vertical = shareButtonSize)
                 )
             } else {
                 Text(
                     text = stringResource(R.string.create),
-                    fontSize = 16.sp,
+                    fontSize = txtSize(),
                     modifier = Modifier.padding(vertical = shareButtonSize)
                 )
             }

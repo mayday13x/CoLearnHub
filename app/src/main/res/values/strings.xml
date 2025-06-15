@@ -232,6 +232,7 @@
     <string name="invite_message">Convide novas pessoas para este grupo.</string>
     <string name="invited_count">Convidados (%d)</string>
     <string name="invited">Convidado</string>
+    <string name="invited2">Convidados</string>
     <string name="remove">Remover</string>
     <string name="create">Criar</string>
     <string name="new_group_title">Novo Grupo</string>

@@ -170,7 +170,7 @@ fun GroupCard(
 
                 if (isOwner) {
                     Text(
-                        text = "Owner 👑",
+                        text = stringResource(R.string.owner) + " 👑",
                         fontSize = 12.sp,
                         color = Color(0xFF395174),
                         fontWeight = FontWeight.Medium
