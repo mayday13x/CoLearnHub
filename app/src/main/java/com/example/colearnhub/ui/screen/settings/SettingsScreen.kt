@@ -289,7 +289,7 @@ fun SettingsScreen(
         }
     }
 
- /*   val navigateBack = {
+    val navigateBack = {
         navController.navigate("MainScreen?selectedItem=4") {
             popUpTo("MainScreen") { inclusive = true }
             launchSingleTop = true
@@ -298,7 +298,7 @@ fun SettingsScreen(
 
     BackHandler {
         navigateBack()
-    }*/
+    }
 
     Box(
         modifier = Modifier
