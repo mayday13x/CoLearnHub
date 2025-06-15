@@ -248,7 +248,7 @@ fun StudySessionDetailsScreen(
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     Icon(Icons.Filled.Schedule, contentDescription = "Time", modifier = Modifier.size(24.dp), tint = MaterialTheme.colorScheme.primary)
                                     Spacer(modifier = Modifier.width(4.dp))
-                                    Text(text = formatTime(selectedStudySession!!.startTime), fontSize = 14.sp)
+                                    Text(text = formatTime(selectedStudySession!!.startTime), fontSize = 12.sp)
                                 }
                             }
 

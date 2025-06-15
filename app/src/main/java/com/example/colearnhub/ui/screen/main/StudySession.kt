@@ -501,7 +501,7 @@ fun formatTime(timeString: String): String {
     return try {
         val timeFormatter = DateTimeFormatter.ofPattern("HH:mm:ssX")
         val time = OffsetTime.parse(timeString, timeFormatter)
-        time.format(DateTimeFormatter.ofPattern("HH:mm"))
+        time.format(DateTimeFormatter.ofPattern("HH\u00A0mm"))
     } catch (e: Exception) {
         timeString
     }
