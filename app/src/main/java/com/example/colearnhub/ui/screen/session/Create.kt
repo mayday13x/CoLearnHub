@@ -1,5 +1,6 @@
 package com.example.colearnhub.ui.screen.session
 
+import android.os.Build
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -40,6 +41,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -66,6 +68,21 @@ import com.example.colearnhub.ui.utils.txtSize
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import androidx.compose.material3.AlertDialog
+import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.colearnhub.viewModelLayer.StudySessionViewModel
+import com.example.colearnhub.repositoryLayer.TagRepository
+import android.util.Log
+import androidx.annotation.RequiresApi
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.RadioButton
+import androidx.compose.material3.Surface
+import androidx.compose.runtime.rememberCoroutineScope
+import com.example.colearnhub.modelLayer.GroupResponse
+import androidx.compose.material.icons.filled.ArrowForwardIos
 
 @Composable
 fun NSSTopBar(onBack: () -> Unit) {
@@ -403,20 +420,45 @@ fun NSSTimeAndDuration(
 }
 
 @Composable
-fun Tags() {
+fun Tags(
+    selectedTag: String?,
+    onTagSelected: (String?) -> Unit
+) {
     var showDialog by remember { mutableStateOf(false) }
+    var tags by remember { mutableStateOf(listOf<String>()) }
+    var isLoading by remember { mutableStateOf(true) }
+    var error by remember { mutableStateOf<String?>(null) }
+    val coroutineScope = rememberCoroutineScope()
+
+    // Carregar tags quando o diálogo é aberto
+    LaunchedEffect(showDialog) {
+        if (showDialog) {
+            isLoading = true
+            error = null
+            try {
+                val tagRepository = TagRepository()
+                val result = tagRepository.getAllTags()
+                tags = result.map { it.description }
+            } catch (e: Exception) {
+                error = "Erro ao carregar tags: ${e.message}"
+                Log.e("TagSelectionDialog", "Error loading tags", e)
+            } finally {
+                isLoading = false
+            }
+        }
+    }
+
     val paddingValue = logoSize() + 10.dp
     val paddingValue2 = logoSize() - 20.dp
     val titleFontSize = (txtSize().value + 1).sp
 
     Column {
         Text(
-            text = stringResource(R.string.tag),
+            text = stringResource(R.string.area),
             fontSize = titleFontSize,
             fontWeight = FontWeight.Medium,
             color = Color(0xFF395174),
-            modifier = Modifier
-                .padding(bottom = 8.dp)
+            modifier = Modifier.padding(bottom = 8.dp)
                 .padding(horizontal = paddingValue)
                 .padding(top = paddingValue2)
         )
@@ -445,31 +487,108 @@ fun Tags() {
                 )
             }
 
-            /* Mostrar tags selecionadas
-            Row(
-                modifier = Modifier
-                    .padding(start = 8.dp)
-                    .weight(1f),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                selectedTags.forEach { tag ->
-                    Box(
-                        modifier = Modifier
-                            .background(
-                                color = Color(0xFF395174),
-                                shape = RoundedCornerShape(4.dp)
-                            )
-                            .padding(horizontal = 8.dp, vertical = 4.dp)
-                    ) {
-                        Text(
-                            text = tag,
-                            color = Color.White,
-                            fontSize = 12.sp
+            // Mostrar tag selecionada
+            if (selectedTag != null) {
+                Box(
+                    modifier = Modifier
+                        .padding(start = 8.dp)
+                        .background(
+                            color = Color(0xFF395174),
+                            shape = RoundedCornerShape(4.dp)
                         )
+                        .padding(horizontal = 8.dp, vertical = 4.dp)
+                ) {
+                    Text(
+                        text = selectedTag,
+                        color = Color.White,
+                        fontSize = 12.sp
+                    )
+                }
+            }
+        }
+    }
+
+    if (showDialog) {
+        AlertDialog(
+            onDismissRequest = { showDialog = false },
+            title = {
+                Text(
+                    text = "Selecione a área",
+                    color = Color(0xFF395174),
+                    fontSize = 18.sp
+                )
+            },
+            text = {
+                Surface(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(300.dp)
+                ) {
+                    if (isLoading) {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator(
+                                color = Color(0xFF395174),
+                                modifier = Modifier.size(40.dp)
+                            )
+                        }
+                    } else if (error != null) {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = error ?: "Erro desconhecido",
+                                color = Color.Red,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.padding(16.dp)
+                            )
+                        }
+                    } else {
+                        LazyColumn {
+                            items(tags) { tag ->
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clickable {
+                                            onTagSelected(tag)
+                                            showDialog = false
+                                        }
+                                        .padding(vertical = 8.dp, horizontal = 16.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    RadioButton(
+                                        selected = selectedTag == tag,
+                                        onClick = {
+                                            onTagSelected(tag)
+                                            showDialog = false
+                                        }
+                                    )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text(
+                                        text = tag,
+                                        fontSize = 16.sp,
+                                        color = Color(0xFF395174)
+                                    )
+                                }
+                            }
+                        }
                     }
                 }
-            }*/
-        }
+            },
+            confirmButton = {
+                Button(
+                    onClick = { showDialog = false },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFF395174)
+                    )
+                ) {
+                    Text("Fechar")
+                }
+            }
+        )
     }
 }
 
@@ -477,7 +596,7 @@ fun Tags() {
 fun CreateBtn(
     enabled: Boolean,
     isCreating: Boolean,
-    //onClick: () -> Unit
+    onClick: () -> Unit
 ) {
     val paddingValue = logoSize() + 10.dp
     val paddingValue2 = logoSize() - 20.dp
@@ -490,8 +609,8 @@ fun CreateBtn(
             .padding(vertical = paddingValue2)
     ) {
         Button(
-            onClick = {  },
-            enabled = enabled, // && !isCreating,
+            onClick = onClick,
+            enabled = enabled && !isCreating,
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(bottom = paddingValue2),
@@ -526,8 +645,102 @@ fun CreateBtn(
     }
 }
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun NSSIndice(onBack: () -> Unit){
+fun GroupSelectionDialog(
+    showDialog: Boolean,
+    onDismiss: () -> Unit,
+    userGroups: List<GroupResponse>,
+    selectedGroupId: Long?,
+    onGroupSelected: (Long?) -> Unit
+) {
+    var searchQuery by remember { mutableStateOf("") }
+    val filteredGroups = userGroups.filter {
+        it.group.name?.contains(searchQuery, ignoreCase = true) ?: false
+    }
+
+    if (showDialog) {
+        AlertDialog(
+            onDismissRequest = onDismiss,
+            title = {
+                Text(
+                    text = "Selecione o Grupo",
+                    color = Color(0xFF395174),
+                    fontSize = 18.sp
+                )
+            },
+            text = {
+                Column {
+                    OutlinedTextField(
+                        value = searchQuery,
+                        onValueChange = { searchQuery = it },
+                        label = { Text("Pesquisar Grupo") },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 8.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = Color(0xFF395174),
+                            unfocusedBorderColor = Color(0xFF395174)
+                        ),
+                        shape = RoundedCornerShape(12.dp)
+                    )
+
+                    Surface(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(300.dp)
+                    ) {
+                        LazyColumn {
+                            items(filteredGroups) { groupResponse ->
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clickable {
+                                            onGroupSelected(groupResponse.group.id)
+                                            onDismiss()
+                                        }
+                                        .padding(vertical = 8.dp, horizontal = 16.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    RadioButton(
+                                        selected = selectedGroupId == groupResponse.group.id,
+                                        onClick = {
+                                            onGroupSelected(groupResponse.group.id)
+                                            onDismiss()
+                                        }
+                                    )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text(
+                                        text = groupResponse.group.name ?: "",
+                                        fontSize = 16.sp,
+                                        color = Color(0xFF395174)
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = onDismiss,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFF395174)
+                    )
+                ) {
+                    Text("Fechar")
+                }
+            }
+        )
+    }
+}
+
+@RequiresApi(Build.VERSION_CODES.O)
+@Composable
+fun NSSIndice(
+    onBack: () -> Unit,
+    viewModel: StudySessionViewModel = viewModel()
+) {
     var name by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
     var link by remember { mutableStateOf("") }
@@ -536,11 +749,48 @@ fun NSSIndice(onBack: () -> Unit){
     var startMinute by remember { mutableStateOf("") }
     var duration by remember { mutableStateOf("") }
     var isPrivate by remember { mutableStateOf(false) }
-    val isCreatingMaterial by remember { mutableStateOf(false) }
+    var selectedGroupId by remember { mutableStateOf<Long?>(null) }
+    var selectedTag by remember { mutableStateOf<String?>(null) }
+    var selectedTagId by remember { mutableStateOf<Long?>(null) }
+    var selectedGroupName by remember { mutableStateOf<String?>(null) }
 
-    val isCreateEnabled = name.isNotBlank() && link.isNotBlank() && selectedDate.isNotBlank() && startHour.isNotBlank() && startMinute.isNotBlank() && duration.isNotBlank()
+    val isCreating by viewModel.isCreating.collectAsState()
+    val userGroups by viewModel.userGroups.collectAsState()
+    val createdSession by viewModel.createdSession.collectAsState()
 
-    Column{
+    val isCreateEnabled = name.isNotBlank() && link.isNotBlank() && selectedDate.isNotBlank() && 
+                         startHour.isNotBlank() && startMinute.isNotBlank() && duration.isNotBlank()
+
+    // Função para converter tag em ID
+    suspend fun getTagId(tagName: String?): Long? {
+        if (tagName == null) return null
+        return try {
+            val tagRepository = TagRepository()
+            val tagIds = tagRepository.getTagIdsByNames(listOf(tagName))
+            tagIds.firstOrNull()
+        } catch (e: Exception) {
+            Log.e("Create", "Erro ao converter tag: ${e.message}")
+            null
+        }
+    }
+
+    // Atualizar tagId quando a tag selecionada mudar
+    LaunchedEffect(selectedTag) {
+        selectedTagId = getTagId(selectedTag)
+    }
+
+    // Atualizar selectedGroupName quando selectedGroupId mudar
+    LaunchedEffect(selectedGroupId, userGroups) {
+        selectedGroupName = userGroups.find { it.group.id == selectedGroupId }?.group?.name
+    }
+
+    LaunchedEffect(createdSession) {
+        if (createdSession != null) {
+            onBack()
+        }
+    }
+
+    Column {
         NSSTopBar(onBack = onBack)
         NSSName(title = name) { name = it }
         NSSDescription(title = description) { description = it }
@@ -554,18 +804,91 @@ fun NSSIndice(onBack: () -> Unit){
             onMinuteChange = { startMinute = it },
             onDurationChange = { duration = it }
         )
-        Tags()
+        Tags(
+            selectedTag = selectedTag,
+            onTagSelected = { selectedTag = it }
+        )
         Private(
             isPrivate = isPrivate,
             onPrivateChange = { isPrivate = it }
         )
+        
+        // Group Selection UI (when private)
+        if (isPrivate) {
+            var showGroupDialog by remember { mutableStateOf(false) }
+            val paddingValue = logoSize() + 10.dp
+            val titleFontSize = (txtSize().value + 1).sp
+
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = paddingValue)
+                    .padding(top = 16.dp)
+            ) {
+                Text(
+                    text = "grupo",
+                    fontSize = titleFontSize,
+                    fontWeight = FontWeight.Medium,
+                    color = Color(0xFF395174),
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+                Button(
+                    onClick = { showGroupDialog = true },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(paddingValue),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.White,
+                        contentColor = Color.Black
+                    ),
+                    shape = RoundedCornerShape(8.dp),
+                    border = BorderStroke(1.dp, Color(0xFF395174))
+                ) {
+                    Text(
+                        text = selectedGroupName ?: "Selecione um Grupo",
+                        fontSize = titleFontSize,
+                        fontWeight = FontWeight.Normal,
+                        textAlign = TextAlign.Start,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Icon(imageVector = Icons.Default.ArrowForwardIos, contentDescription = "Select Group", tint = Color(0xFF395174))
+                }
+            }
+
+            GroupSelectionDialog(
+                showDialog = showGroupDialog,
+                onDismiss = { showGroupDialog = false },
+                userGroups = userGroups,
+                selectedGroupId = selectedGroupId,
+                onGroupSelected = { id ->
+                    selectedGroupId = id
+                }
+            )
+        }
+
         CreateBtn(
+
             enabled = isCreateEnabled,
-            isCreating = isCreatingMaterial
+            isCreating = isCreating,
+            onClick = {
+                viewModel.createStudySession(
+                    name = name,
+                    description = description,
+                    groupId = if (isPrivate) selectedGroupId else null, // Pass groupId if private
+                    visibility = !isPrivate,
+                    date = selectedDate,
+                    startTime = "$startHour:$startMinute",
+                    duration = duration.toLongOrNull() ?: 0L,
+                    tagId = selectedTagId,
+                    sessionLink = link
+                )
+            }
         )
+        Log.d("SCEEN TAG", "Tag: ${selectedTagId}")
     }
 }
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun NSSScreen(navController: NavHostController){
     val navigateBack = {

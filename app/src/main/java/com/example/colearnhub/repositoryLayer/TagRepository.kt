@@ -66,7 +66,7 @@ class TagRepository {
                 return@withContext emptyList()
             }
 
-            Log.d("TagRepository", "Convertendo nomes de tags para IDs: $tagNames")
+            Log.d("TagRepository", "[getTagIdsByNames] Tentando converter nomes para IDs: $tagNames")
 
             val result = SupabaseClient.client
                 .from("Tags")
@@ -78,13 +78,13 @@ class TagRepository {
                 .decodeList<TagData>()
 
             val tagIds = result.map { it.id }
-            Log.d("TagRepository", "IDs encontrados: $tagIds")
+            Log.d("TagRepository", "[getTagIdsByNames] IDs encontrados para $tagNames: $tagIds. Resultados brutos: $result")
 
             // Verificar se todas as tags foram encontradas
             val foundNames = result.map { it.description }
             val missingNames = tagNames - foundNames.toSet()
             if (missingNames.isNotEmpty()) {
-                Log.w("TagRepository", "Tags não encontradas: $missingNames")
+                Log.w("TagRepository", "[getTagIdsByNames] Tags não encontradas no BD: $missingNames")
             }
 
             tagIds
@@ -99,7 +99,7 @@ class TagRepository {
      */
     suspend fun getTagByName(tagName: String): TagData? = withContext(Dispatchers.IO) {
         return@withContext try {
-            Log.d("TagRepository", "Buscando tag por nome: $tagName")
+            Log.d("TagRepository", "[getTagByName] Buscando tag por nome: $tagName")
 
             val result = SupabaseClient.client
                 .from("Tags")
@@ -111,9 +111,9 @@ class TagRepository {
                 .decodeSingleOrNull<TagData>()
 
             if (result != null) {
-                Log.d("TagRepository", "Tag encontrada: ID ${result.id}")
+                Log.d("TagRepository", "[getTagByName] Tag encontrada: ID ${result.id}, Descrição: ${result.description}")
             } else {
-                Log.w("TagRepository", "Tag '$tagName' não encontrada")
+                Log.w("TagRepository", "[getTagByName] Tag '$tagName' não encontrada")
             }
 
             result
