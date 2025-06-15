@@ -1,6 +1,8 @@
 package com.example.colearnhub.repositoryLayer
 
+import android.os.Build
 import android.util.Log
+import androidx.annotation.RequiresApi
 import com.example.colearnhub.modelLayer.CreateMaterialRequest
 import com.example.colearnhub.modelLayer.Material
 import com.example.colearnhub.modelLayer.MaterialTag
@@ -9,6 +11,11 @@ import com.example.colearnhub.modelLayer.SupabaseClient
 import io.github.jan.supabase.postgrest.from
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.datetime.Instant
+import kotlinx.datetime.toJavaLocalDateTime
+import kotlinx.datetime.toKotlinInstant
+import java.time.LocalDateTime
+import java.time.ZoneOffset
 
 class MaterialsRepository {
 
@@ -160,26 +167,57 @@ class MaterialsRepository {
     }
 
     /**
-     * Busca materiais públicos (visibility = true)
+     * Busca materiais públicos (visibility = true) com filtros
      */
-    suspend fun getPublicMaterials(): List<Material> = withContext(Dispatchers.IO) {
+    @RequiresApi(Build.VERSION_CODES.O)
+    suspend fun getPublicMaterials(
+        searchQuery: String? = null,
+        startDate: LocalDateTime? = null,
+        endDate: LocalDateTime? = null,
+        tagIds: List<Long>? = null
+    ): List<Material> = withContext(Dispatchers.IO) {
         return@withContext try {
+            Log.d("MaterialRepository", "Buscando materiais públicos com filtros. Query: $searchQuery, StartDate: $startDate, EndDate: $endDate, Tags: $tagIds")
+
             val materials = SupabaseClient.client
                 .from("Materials")
                 .select {
                     filter {
                         eq("visibility", true)
+
+                        if (!searchQuery.isNullOrBlank()) {
+                            or {
+                                ilike("title", "%$searchQuery%")
+                                ilike("description", "%$searchQuery%")
+                            }
+                        }
+
+                        startDate?.let {
+                            gte("created_at", it.toInstant(ZoneOffset.UTC).toString())
+                        }
+                        endDate?.let {
+                            lte("created_at", it.toInstant(ZoneOffset.UTC).toString())
+                        }
                     }
                 }
                 .decodeList<Material>()
 
-            Log.d("MaterialRepository", "Encontrados ${materials.size} materiais públicos")
+            Log.d("MaterialRepository", "Encontrados ${materials.size} materiais públicos (antes de filtrar por tags)")
 
-            // Carregar tags e average rating para cada material
-            materials.map { material ->
+            val materialsWithTags = materials.map { material ->
                 val tags = getTagsByMaterialId(material.id)
                 addAverageRatingToMaterial(material.copy(tags = tags))
             }
+
+            // Client-side filtering for tags if provided
+            if (!tagIds.isNullOrEmpty()) {
+                materialsWithTags.filter { material ->
+                    material.tags?.any { tag -> tagIds.contains(tag.id) } == true
+                }
+            } else {
+                materialsWithTags
+            }
+
         } catch (e: Exception) {
             Log.e("MaterialRepository", "Erro ao buscar materiais públicos: ${e.message}")
             emptyList()
@@ -188,31 +226,10 @@ class MaterialsRepository {
 
     /**
      * Pesquisa materiais por título
+     * DEPRECATED: Use getPublicMaterials with searchQuery
      */
-    suspend fun searchMaterialsByTitle(query: String): List<Material> = withContext(Dispatchers.IO) {
-        return@withContext try {
-            Log.d("MaterialsRepository", "searchMaterialsByTitle: query = $query")
-            val materials = SupabaseClient.client
-                .from("Materials")
-                .select {
-                    filter {
-                        ilike("title", "%$query%")
-                    }
-                }
-                .decodeList<Material>()
-
-            Log.d("MaterialsRepository", "searchMaterialsByTitle: response size = ${materials.size}")
-
-            // Carregar tags e average rating para cada material
-            materials.map { material ->
-                val tags = getTagsByMaterialId(material.id)
-                addAverageRatingToMaterial(material.copy(tags = tags))
-            }
-        } catch (e: Exception) {
-            Log.e("MaterialsRepository", "Erro ao pesquisar materiais: ${e.message}")
-            emptyList()
-        }
-    }
+    @Deprecated("Use getPublicMaterials with searchQuery parameter instead")
+    suspend fun searchMaterialsByTitle(query: String): List<Material> = emptyList()
 
     /**
      * Atualiza um material
@@ -260,27 +277,58 @@ class MaterialsRepository {
     }
 
     /**
-     * Obtém materiais por autor
+     * Obtém materiais por autor com filtros
      */
-    suspend fun getMaterialsByAuthor(authorId: String): List<Material> = withContext(Dispatchers.IO) {
+    @RequiresApi(Build.VERSION_CODES.O)
+    suspend fun getMaterialsByAuthor(
+        authorId: String,
+        searchQuery: String? = null,
+        startDate: LocalDateTime? = null,
+        endDate: LocalDateTime? = null,
+        tagIds: List<Long>? = null
+    ): List<Material> = withContext(Dispatchers.IO) {
         return@withContext try {
-            Log.d("MaterialsRepository", "getMaterialsByAuthor: authorId = $authorId")
+            Log.d("MaterialsRepository", "getMaterialsByAuthor: authorId = $authorId, Query: $searchQuery, StartDate: $startDate, EndDate: $endDate, Tags: $tagIds")
             val materials = SupabaseClient.client
                 .from("Materials")
                 .select {
                     filter {
                         eq("author_id", authorId)
+
+                        if (!searchQuery.isNullOrBlank()) {
+                            or {
+                                ilike("title", "%$searchQuery%")
+                                ilike("description", "%$searchQuery%")
+                            }
+                        }
+
+                        startDate?.let {
+                            gte("created_at", it.toInstant(ZoneOffset.UTC).toString())
+                        }
+                        endDate?.let {
+                            lte("created_at", it.toInstant(ZoneOffset.UTC).toString())
+                        }
                     }
                 }
                 .decodeList<Material>()
 
-            Log.d("MaterialsRepository", "getMaterialsByAuthor: response size = ${materials.size}")
+            Log.d("MaterialsRepository", "getMaterialsByAuthor: response size = ${materials.size} (antes de filtrar por tags)")
 
             // Carregar tags e average rating para cada material
-            materials.map { material ->
+            val materialsWithTags = materials.map { material ->
                 val tags = getTagsByMaterialId(material.id)
                 addAverageRatingToMaterial(material.copy(tags = tags))
             }
+
+            // Client-side filtering for tags if provided
+            if (!tagIds.isNullOrEmpty()) {
+                materialsWithTags.filter { material ->
+                    material.tags?.any { tag -> tagIds.contains(tag.id) } == true
+                }
+            } else {
+                materialsWithTags
+            }
+
         } catch (e: Exception) {
             Log.e("MaterialsRepository", "Erro ao obter materiais por autor: ${e.message}")
             emptyList()
@@ -289,51 +337,10 @@ class MaterialsRepository {
 
     /**
      * Busca materiais por tag
+     * DEPRECATED: Use getPublicMaterials or getMaterialsByAuthor with tagIds
      */
-    suspend fun getMaterialsByTag(tagId: Long): List<Material> = withContext(Dispatchers.IO) {
-        return@withContext try {
-            Log.d("MaterialRepository", "Buscando materiais com tag ID: $tagId")
-
-            // Primeiro buscar os IDs dos materiais na tabela Material_Tag
-            val materialTagResults = SupabaseClient.client
-                .from("Material_Tag")
-                .select() {
-                    filter {
-                        eq("tag_id", tagId)
-                    }
-                }
-                .decodeList<MaterialTag>()
-
-            val materialIds = materialTagResults.map { it.material_id }
-
-            if (materialIds.isEmpty()) {
-                Log.d("MaterialRepository", "Nenhum material encontrado com a tag $tagId")
-                return@withContext emptyList()
-            }
-
-            // Depois buscar os materiais propriamente ditos
-            val materials = SupabaseClient.client
-                .from("Materials")
-                .select {
-                    filter {
-                        isIn("id", materialIds)
-                        eq("visibility", true) // Apenas materiais públicos
-                    }
-                }
-                .decodeList<Material>()
-
-            Log.d("MaterialRepository", "Encontrados ${materials.size} materiais com a tag $tagId")
-
-            // Carregar tags e average rating para cada material
-            materials.map { material ->
-                val tags = getTagsByMaterialId(material.id)
-                addAverageRatingToMaterial(material.copy(tags = tags))
-            }
-        } catch (e: Exception) {
-            Log.e("MaterialRepository", "Erro ao buscar por tag: ${e.message}")
-            emptyList()
-        }
-    }
+    @Deprecated("Use getPublicMaterials or getMaterialsByAuthor with tagIds parameter instead")
+    suspend fun getMaterialsByTag(tagId: Long): List<Material> = emptyList()
 
     /**
      * Elimina um material
@@ -371,38 +378,16 @@ class MaterialsRepository {
 
     /**
      * Busca materiais por idioma
+     * DEPRECATED: Filtering by language will be handled in MaterialViewModel
      */
-    suspend fun getMaterialsByLanguage(languageId: Long): List<Material> = withContext(Dispatchers.IO) {
-        return@withContext try {
-            Log.d("MaterialRepository", "Buscando materiais no idioma ID: $languageId")
-
-            val materials = SupabaseClient.client
-                .from("Materials")
-                .select {
-                    filter {
-                        eq("language", languageId)
-                        eq("visibility", true)
-                    }
-                }
-                .decodeList<Material>()
-
-            Log.d("MaterialRepository", "Encontrados ${materials.size} materiais no idioma $languageId")
-
-            // Carregar tags e average rating para cada material
-            materials.map { material ->
-                val tags = getTagsByMaterialId(material.id)
-                addAverageRatingToMaterial(material.copy(tags = tags))
-            }
-        } catch (e: Exception) {
-            Log.e("MaterialRepository", "Erro ao buscar por idioma: ${e.message}")
-            emptyList()
-        }
-    }
+    @Deprecated("Filtering by language will be handled in MaterialViewModel")
+    suspend fun getMaterialsByLanguage(languageId: Long): List<Material> = emptyList()
 
     /**
      * Busca as tags de um material específico
      */
-    private suspend fun getTagsByMaterialId(materialId: Long): List<TagData> {
+    private suspend fun getTagsByMaterialId(materialId: Long?): List<TagData> {
+        if (materialId == null) return emptyList()
         return try {
             // Buscar os registros da tabela Material_Tag
             val materialTagResults = SupabaseClient.client

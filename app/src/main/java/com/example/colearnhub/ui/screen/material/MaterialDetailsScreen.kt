@@ -199,7 +199,8 @@ fun MaterialDetailsScreen(
                 IconButton(onClick = {
                     scope.launch {
                         replyingTo = null
-                        navController.popBackStack("MainScreen", false)
+                        //navController.popBackStack("MainScreen", false)
+                        navController.popBackStack()
                     }
                 }) {
                     Icon(

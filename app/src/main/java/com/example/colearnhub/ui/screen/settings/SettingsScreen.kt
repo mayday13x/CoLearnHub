@@ -58,7 +58,7 @@ import com.example.colearnhub.ui.utils.verticalSpacing
 import com.example.colearnhub.viewmodel.AuthViewModel
 
 @Composable
-fun TopSettingsBar(onBack: () -> Unit) {
+fun TopSettingsBar(navController: NavHostController) {
     val txtSize = (txtSize().value + 4).sp
     val barSize = spacer3()
     val logoSize = logoSize() - 13.dp
@@ -83,7 +83,7 @@ fun TopSettingsBar(onBack: () -> Unit) {
                 .padding(start = 10.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            IconButton(onClick = onBack) {
+            IconButton(onClick = { navController.navigate("MainScreen?selectedItem=4") }) {
                 Icon(
                     imageVector = Icons.Default.ArrowBack,
                     contentDescription = "Back",
@@ -268,8 +268,8 @@ fun VersionApp(){
 }
 
 @Composable
-fun SettingsIndice(onBack: () -> Unit, authViewModel: AuthViewModel = viewModel()){
-    TopSettingsBar(onBack = onBack)
+fun SettingsIndice(navController: NavHostController, authViewModel: AuthViewModel = viewModel()){
+    TopSettingsBar(navController)
     SettingsList(authViewModel = authViewModel)
     VersionApp()
 }
@@ -289,7 +289,7 @@ fun SettingsScreen(
         }
     }
 
-    val navigateBack = {
+ /*   val navigateBack = {
         navController.navigate("MainScreen?selectedItem=4") {
             popUpTo("group_details") { inclusive = true }
             launchSingleTop = true
@@ -298,7 +298,7 @@ fun SettingsScreen(
 
     BackHandler {
         navigateBack()
-    }
+    }*/
 
     Box(
         modifier = Modifier
@@ -308,7 +308,7 @@ fun SettingsScreen(
         Column(
             modifier = Modifier.fillMaxSize()
         ) {
-            SettingsIndice(onBack = navigateBack, authViewModel = authViewModel)
+            SettingsIndice(navController = navController, authViewModel = authViewModel)
         }
     }
 }

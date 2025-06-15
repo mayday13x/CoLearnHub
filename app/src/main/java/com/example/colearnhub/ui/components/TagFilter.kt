@@ -19,7 +19,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.colearnhub.modelLayer.TagData
+import androidx.compose.foundation.layout.FlowRow
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun TagFilterSection(
     availableTags: List<TagData>,
@@ -31,75 +33,25 @@ fun TagFilterSection(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .background(Color.White, RoundedCornerShape(10.dp))
-            .border(1.dp, Color.LightGray, RoundedCornerShape(10.dp))
-            .padding(16.dp)
+            .padding(vertical = 8.dp)
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+        // All Tags
+        FlowRow(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            Text(
-                text = "Filter by Area",
-                fontWeight = FontWeight.Bold,
-                fontSize = 16.sp
-            )
-
-            if (selectedTags.isNotEmpty()) {
-                TextButton(
-                    onClick = onClearAll,
-                    colors = ButtonDefaults.textButtonColors(
-                        contentColor = Color(0xFF395174)
-                    )
-                ) {
-                    Text("Clear All", fontSize = 14.sp)
-                }
-            }
-        }
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        // Selected Tags
-        if (selectedTags.isNotEmpty()) {
-            Text(
-                text = "Selected:",
-                fontSize = 14.sp,
-                fontWeight = FontWeight.Medium,
-                color = Color.Gray,
-                modifier = Modifier.padding(bottom = 8.dp)
-            )
-
-            LazyRow(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                modifier = Modifier.padding(bottom = 12.dp)
-            ) {
-                items(selectedTags) { tag ->
+            availableTags.forEach { tag ->
+                if (selectedTags.contains(tag)) {
                     SelectedTagChip(
                         tag = tag,
                         onRemove = { onTagToggle(tag) }
                     )
+                } else {
+                    AvailableTagChip(
+                        tag = tag,
+                        onSelect = { onTagToggle(tag) }
+                    )
                 }
-            }
-        }
-
-        // Available Tags
-        Text(
-            text = "Available Areas:",
-            fontSize = 14.sp,
-            fontWeight = FontWeight.Medium,
-            color = Color.Gray,
-            modifier = Modifier.padding(bottom = 8.dp)
-        )
-
-        LazyRow(
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            items(availableTags.filter { !selectedTags.contains(it) }) { tag ->
-                AvailableTagChip(
-                    tag = tag,
-                    onSelect = { onTagToggle(tag) }
-                )
             }
         }
     }
@@ -130,6 +82,7 @@ fun SelectedTagChip(
                 color = tagColor,
                 shape = RoundedCornerShape(20.dp)
             )
+            .clickable { onRemove() }
             .padding(horizontal = 12.dp, vertical = 6.dp)
     ) {
         Row(
@@ -147,9 +100,7 @@ fun SelectedTagChip(
                 imageVector = Icons.Default.Close,
                 contentDescription = "Remove ${tag.description}",
                 tint = Color.White,
-                modifier = Modifier
-                    .size(16.dp)
-                    .clickable { onRemove() }
+                modifier = Modifier.size(16.dp)
             )
         }
     }
@@ -198,7 +149,6 @@ fun AvailableTagChip(
                 color = tagColor,
                 fontWeight = FontWeight.Medium
             )
-
             Icon(
                 imageVector = Icons.Default.Add,
                 contentDescription = "Add ${tag.description}",
