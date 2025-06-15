@@ -832,7 +832,7 @@ fun EditProfileScreen(
 
     val navigateBack = {
         navController.navigate("MainScreen?selectedItem=4") {
-            popUpTo("group_details") { inclusive = true }
+            popUpTo("MainScreen") { inclusive = true }
             launchSingleTop = true
         }
     }

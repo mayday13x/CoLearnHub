@@ -124,12 +124,13 @@ fun GDName(groupName: String?){
 @Composable
 fun GDDescription(groupDescription: String?){
     val paddingValue = logoSize() + 10.dp
+    val paddingValue2 = logoSize() - 10.dp
     val titleFontSize = (txtSize().value + 1).sp
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = paddingValue)
-            .padding(top = paddingValue)
+            .padding(top = paddingValue2)
             .padding(bottom = 8.dp),
     ){
         Text(
@@ -235,7 +236,7 @@ fun GDLeaveBtn(onLeaveClick: () -> Unit, isLoading: Boolean = false){
     Column(modifier = Modifier
         .fillMaxWidth()
         .padding(horizontal = paddingValue)
-        .padding(top = paddingValue + 30.dp)
+        .padding(top = paddingValue + 50.dp)
         .padding(bottom = 8.dp)
     ){
         Button(
@@ -384,7 +385,7 @@ fun GroupDetailsScreen(
 
     val navigateBack = {
         navController.navigate("MainScreen?selectedItem=3") {
-            popUpTo("group_details") { inclusive = true }
+            popUpTo("MainScreen") { inclusive = true }
             launchSingleTop = true
         }
     }

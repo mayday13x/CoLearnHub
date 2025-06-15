@@ -308,5 +308,6 @@
     <string name="desconhecido">Unknown error</string>
     <string name="confirm">Confirm</string>
     <string name="success_material">Material created successfully!</string>
+    <string name="no_favourite">No favorite materials yet!</string>
 
 </resources>

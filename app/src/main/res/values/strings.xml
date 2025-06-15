@@ -305,5 +305,6 @@
     <string name="desconhecido">Erro desconhecido</string>
     <string name="confirm">Confirmar</string>
     <string name="success_material">Material criado com sucesso!</string>
+    <string name="no_favourite">Nenhum material favorito ainda!</string>
 
 </resources>
