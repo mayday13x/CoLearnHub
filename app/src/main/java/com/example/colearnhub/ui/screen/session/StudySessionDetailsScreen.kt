@@ -311,7 +311,7 @@ fun StudySessionDetailsScreen(
 
                     // Going / Participants
                     Text(
-                        text = stringResource(R.string.join),
+                        text = stringResource(R.string.going),
                         fontSize = txtSize(),
                         fontWeight = FontWeight.SemiBold,
                         color = Color(0xFF395174)
@@ -399,7 +399,7 @@ fun StudySessionDetailsScreen(
                                 }
                             },
                             modifier = Modifier.fillMaxWidth().height(50.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = if (isUserParticipating) Color(0xFFE53E3E) else MaterialTheme.colorScheme.primary),
+                            colors = ButtonDefaults.buttonColors(containerColor = if (isUserParticipating) Color(0xFFE53E3E) else Color(0xFF395174)),
                             shape = RoundedCornerShape(12.dp)
                         ) {
                             Text(
