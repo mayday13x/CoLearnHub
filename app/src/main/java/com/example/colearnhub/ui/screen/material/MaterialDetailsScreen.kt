@@ -306,7 +306,7 @@ fun MaterialDetailsScreen(
                         )
                     }
 
-                    // Comment Input - só mostra se o usuário estiver logado
+                    // Comment Input - só mostra se o utilizador estiver logado
                     if (currentUserId != null) {
                         item {
                             CommentInputSection(
@@ -315,6 +315,14 @@ fun MaterialDetailsScreen(
                                 onSendComment = {
                                     scope.launch {
                                         try {
+
+                                            // Fetch the new user's name and update the userNames map
+                                            currentUserId.let { userId ->
+                                                userRepository.getUserById(userId)?.let { user ->
+                                                    userNames = userNames + (userId to user.name)
+                                                }
+                                            }
+
                                             commentsRepository.createComment(
                                                 userId = currentUserId,
                                                 materialId = materialId,
@@ -323,6 +331,8 @@ fun MaterialDetailsScreen(
                                             )
                                             // Refresh comments
                                             comments = commentsRepository.getCommentsForMaterial(materialId)
+
+                                            
                                             commentText = ""
                                             replyingTo = null
                                         } catch (e: Exception) {
