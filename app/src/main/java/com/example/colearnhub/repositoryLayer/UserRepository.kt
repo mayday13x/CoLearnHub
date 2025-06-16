@@ -216,12 +216,34 @@ class UserRepository {
      */
     suspend fun getUserById(userId: String): User? {
         return try {
-            val user = SupabaseClient.client
+            SupabaseClient.client
                 .from("Users")
                 .select {
                     filter {
                         eq("id", userId)
                 }
+                }
+                .decodeSingleOrNull<User>()
+
+
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    /**
+     * Obtém um utilizador pelo ID
+     * @param userId ID do utilizador
+     * @return Utilizador ou null se não encontrado
+     */
+    suspend fun getSharedPreferencesUserById(userId: String): User? {
+        return try {
+            val user = SupabaseClient.client
+                .from("Users")
+                .select {
+                    filter {
+                        eq("id", userId)
+                    }
                 }
                 .decodeSingleOrNull<User>()
 
@@ -294,11 +316,12 @@ class UserRepository {
             emptyList()
         }
     }
+
     suspend fun getUsersByIds(userIds: List<String>): List<User> = withContext(Dispatchers.IO) {
         try {
             if (userIds.isEmpty()) return@withContext emptyList()
 
-            val users = SupabaseClient.client
+            SupabaseClient.client
                 .from("Users")
                 .select {
                     filter {
@@ -307,23 +330,10 @@ class UserRepository {
                 }
                 .decodeList<User>()
 
-            // Se houver alterações offline para o usuário atual, mantém as alterações locais
-            if (hasOfflineChanges()) {
-                val localUser = getUserFromPrefs()
-                if (localUser != null && userIds.contains(localUser.id)) {
-                    // Tenta sincronizar as alterações offline
-                    syncOfflineChanges(localUser)
-                    return@withContext users.map { if (it.id == localUser.id) localUser else it }
-                }
-            }
-
-            // Se não houver alterações offline, salva apenas os dados do usuário (preservando dados adicionais)
-            users.find { it.id == userIds.firstOrNull() }?.let { saveUserOnlyToPrefs(it) }
-            users
         } catch (e: Exception) {
             Log.e("UserRepository", "Error fetching users: ${e.message}", e)
             // Em caso de erro, retorna os dados locais
-            getUserFromPrefs()?.let { listOf(it) } ?: emptyList()
+            emptyList()
         }
     }
 

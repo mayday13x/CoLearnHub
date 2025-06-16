@@ -86,7 +86,7 @@ class UserViewModel(application: Application) : AndroidViewModel(application) {
             loadUserFromPrefs()
             
             try {
-                val user = userRepository.getUserById(userId)
+                val user = userRepository.getSharedPreferencesUserById(userId)
                 if (user != null) {
                     _user.value = user
                     
@@ -142,7 +142,7 @@ class UserViewModel(application: Application) : AndroidViewModel(application) {
             loadUserFromPrefs()
             
             try {
-                val user = userRepository.getUserById(userId)
+                val user = userRepository.getSharedPreferencesUserById(userId)
                 if (user != null) {
                     _user.value = user
                     
